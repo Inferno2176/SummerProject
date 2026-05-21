@@ -174,6 +174,13 @@ If you'd like to contribute:
 
 This project will be released under the MIT License.
 
+## Legal
+
+- [MIT License](LICENSE)
+- [Trademark Policy](TRADEMARK.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contributing Guide](CONTRIBUTING.MD)
+
 ---
 
 ## 🌍 Open Source Mission
