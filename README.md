@@ -2,6 +2,8 @@
 
 **Your AI-Powered Local Job Application Assistant**
 
+![alt text](image.png)
+
 CareerForges is an open-source desktop application designed to help job seekers automate and optimize their job application process using AI agents running completely on their local machine.
 
 Instead of requiring coding knowledge or cloud subscriptions, CareerForges allows users to use pre-installed AI agents like Claude CLI, Ollama, or other local AI tools directly from a simple desktop interface.
