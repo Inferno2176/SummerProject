@@ -101,6 +101,30 @@
     }
     .nav-cta:hover { opacity: 0.85; color: #fff !important; }
 
+    .nav-toggle {
+      display: none;
+      background: transparent;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      color: var(--text);
+      transition: transform 0.2s ease;
+    }
+
+    .nav-toggle span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      margin: 4px 0;
+      border-radius: 2px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .nav-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
     /* ── HERO ── */
     .hero {
       min-height: 100vh;
@@ -560,14 +584,49 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
-      nav { padding: 18px 24px; }
-      .nav-links { gap: 20px; }
+      nav {
+        padding: 18px 24px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .nav-toggle {
+        display: inline-flex;
+      }
+
+      .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+        padding-top: 16px;
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .nav-links a {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.03);
+      }
+
       section { padding: 72px 24px; }
+      .hero { padding: 100px 22px 60px; }
+      .hero p { max-width: 100%; }
+      .hero-buttons { flex-direction: column; }
+      .hero-buttons a { width: 100%; justify-content: center; }
       .features-grid { grid-template-columns: 1fr; }
+      .feature-card { padding: 28px; }
       #vision { grid-template-columns: 1fr; gap: 48px; padding: 72px 24px; }
+      .vision-card { padding: 32px; }
       .oss-card { padding: 52px 28px; }
+      .creator-box { padding: 28px; }
       footer { flex-direction: column; gap: 12px; text-align: center; }
-      .stats-bar { flex-direction: column; max-width: 300px; }
+      .stats-bar { flex-direction: column; max-width: 100%; }
       .stat { border-right: none; border-bottom: 1px solid var(--border); }
       .stat:last-child { border-bottom: none; }
     }
@@ -581,6 +640,11 @@
       <div class="logo-icon">⚒</div>
       CareerForges
     </div>
+    <button class="nav-toggle" aria-expanded="false" aria-label="Open navigation menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#vision">Vision</a>
@@ -758,6 +822,26 @@
       });
     }, { threshold: 0.12 });
     reveals.forEach(el => io.observe(el));
+
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinksContainer = document.querySelector('.nav-links');
+    const navLinkItems = document.querySelectorAll('.nav-links a');
+
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinksContainer.classList.toggle('open');
+      navToggle.classList.toggle('open', isOpen);
+      navToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    navLinkItems.forEach(link => {
+      link.addEventListener('click', () => {
+        if (navLinksContainer.classList.contains('open')) {
+          navLinksContainer.classList.remove('open');
+          navToggle.classList.remove('open');
+          navToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
 
     // Nav active state
     const sections = document.querySelectorAll('section[id], header');
