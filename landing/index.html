@@ -1,26 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareerForges</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <meta name="description"
+    content="CareerForges is an open-source local AI career assistant that helps users build ATS-friendly resumes, analyze job descriptions, and streamline job applications privately on their own machine." />
+  <meta name="keywords"
+    content="CareerForges, ATS resume builder, local AI, AI resume optimizer, privacy-first AI, job application assistant, Claude CLI, Ollama, open source AI tools" />
+  <meta name="author" content="Matta Joshi" />
+
+  <meta property="og:title" content="CareerForges — Privacy-First Local AI Career Assistant" />
+  <meta property="og:description" content="Open-source AI-powered career assistant running locally on your machine." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.careerforges.app/" />
+  <meta property="og:image" content="https://www.careerforges.app/assets/og-image.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="CareerForges — Privacy-First Local AI Career Assistant" />
+  <meta name="twitter:description" content="Open-source AI-powered career assistant running locally on your machine." />
+  <meta name="twitter:image" content="https://www.careerforges.app/assets/og-image.png" />
+
+  <meta name="theme-color" content="#f97316" />
+
+  <title>CareerForges — Privacy-First Local AI Career Assistant</title>
+
+  <link rel="canonical" href="https://www.careerforges.app/" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
+    rel="stylesheet">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicon/apple-touch-icon.png">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon/favicon-32x32.png">
+
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon/favicon-16x16.png">
+
+  <link rel="shortcut icon" href="./assets/favicon/favicon.ico">
+
+  <link rel="manifest" href="./assets/favicon/site.webmanifest">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #0a0a0f;
       --surface: #111118;
       --surface2: #16161f;
-      --border: rgba(255,255,255,0.07);
+      --border: rgba(255, 255, 255, 0.07);
       --accent: #f97316;
       --accent2: #fb923c;
       --text: #f0eff5;
       --muted: #8b8a9a;
-      --glow: rgba(249,115,22,0.15);
+      --glow: rgba(249, 115, 22, 0.15);
     }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       font-family: 'DM Sans', sans-serif;
@@ -43,13 +85,15 @@
     /* ── NAV ── */
     nav {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 20px 60px;
-      background: rgba(10,10,15,0.7);
+      background: rgba(10, 10, 15, 0.7);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
@@ -66,11 +110,11 @@
     }
 
     .nav-logo .logo-icon {
-      width: 32px; height: 32px;
-      background: var(--accent);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      display: block;
+      flex-shrink: 0;
     }
 
     .nav-links {
@@ -88,7 +132,9 @@
       transition: color 0.2s;
     }
 
-    .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover {
+      color: var(--text);
+    }
 
     .nav-cta {
       padding: 9px 22px;
@@ -99,7 +145,11 @@
       font-size: 0.875rem !important;
       transition: opacity 0.2s !important;
     }
-    .nav-cta:hover { opacity: 0.85; color: #fff !important; }
+
+    .nav-cta:hover {
+      opacity: 0.85;
+      color: #fff !important;
+    }
 
     .nav-toggle {
       display: none;
@@ -121,9 +171,17 @@
       transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
-    .nav-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-    .nav-toggle.open span:nth-child(2) { opacity: 0; }
-    .nav-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+    .nav-toggle.open span:nth-child(1) {
+      transform: translateY(6px) rotate(45deg);
+    }
+
+    .nav-toggle.open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .nav-toggle.open span:nth-child(3) {
+      transform: translateY(-6px) rotate(-45deg);
+    }
 
     /* ── HERO ── */
     .hero {
@@ -142,10 +200,12 @@
     .hero::after {
       content: '';
       position: absolute;
-      top: -200px; left: 50%;
+      top: -200px;
+      left: 50%;
       transform: translateX(-50%);
-      width: 900px; height: 600px;
-      background: radial-gradient(ellipse at center, rgba(249,115,22,0.12) 0%, transparent 65%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.12) 0%, transparent 65%);
       pointer-events: none;
     }
 
@@ -154,8 +214,8 @@
       align-items: center;
       gap: 8px;
       padding: 6px 16px;
-      background: rgba(249,115,22,0.1);
-      border: 1px solid rgba(249,115,22,0.25);
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.25);
       border-radius: 100px;
       font-size: 0.78rem;
       font-weight: 500;
@@ -167,7 +227,8 @@
     }
 
     .hero-badge .dot {
-      width: 6px; height: 6px;
+      width: 6px;
+      height: 6px;
       background: var(--accent);
       border-radius: 50%;
       animation: pulse 2s infinite;
@@ -220,12 +281,12 @@
       font-size: 0.95rem;
       text-decoration: none;
       transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 0 0 0 rgba(249,115,22,0);
+      box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(249,115,22,0.35);
+      box-shadow: 0 8px 30px rgba(249, 115, 22, 0.35);
     }
 
     .btn-secondary {
@@ -245,7 +306,7 @@
 
     .btn-secondary:hover {
       transform: translateY(-2px);
-      border-color: rgba(255,255,255,0.18);
+      border-color: rgba(255, 255, 255, 0.18);
     }
 
     /* ── STATS BAR ── */
@@ -268,7 +329,9 @@
       border-right: 1px solid var(--border);
     }
 
-    .stat:last-child { border-right: none; }
+    .stat:last-child {
+      border-right: none;
+    }
 
     .stat-num {
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -354,11 +417,14 @@
     }
 
     .feature-icon {
-      width: 48px; height: 48px;
-      background: rgba(249,115,22,0.1);
-      border: 1px solid rgba(249,115,22,0.2);
+      width: 48px;
+      height: 48px;
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.2);
       border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 22px;
       margin-bottom: 24px;
     }
@@ -387,9 +453,9 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       border-radius: 6px;
-      background: rgba(249,115,22,0.08);
+      background: rgba(249, 115, 22, 0.08);
       color: var(--accent2);
-      border: 1px solid rgba(249,115,22,0.15);
+      border: 1px solid rgba(249, 115, 22, 0.15);
     }
 
     /* ── VISION ── */
@@ -418,9 +484,11 @@
     .vision-card::before {
       content: '';
       position: absolute;
-      top: -60px; right: -60px;
-      width: 200px; height: 200px;
-      background: radial-gradient(circle, rgba(249,115,22,0.15), transparent 65%);
+      top: -60px;
+      right: -60px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(249, 115, 22, 0.15), transparent 65%);
     }
 
     .vision-list {
@@ -440,11 +508,14 @@
     }
 
     .vision-list .check {
-      width: 22px; height: 22px;
-      background: rgba(249,115,22,0.12);
-      border: 1px solid rgba(249,115,22,0.3);
+      width: 22px;
+      height: 22px;
+      background: rgba(249, 115, 22, 0.12);
+      border: 1px solid rgba(249, 115, 22, 0.3);
       border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
       margin-top: 1px;
       font-size: 11px;
@@ -468,20 +539,29 @@
     }
 
     .creator-avatar {
-      width: 88px; height: 88px;
+      width: 88px;
+      height: 88px;
       background: linear-gradient(135deg, var(--accent), #fbbf24);
       border-radius: 24px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 2rem;
       font-weight: 800;
       color: #fff;
       margin-bottom: 28px;
-      box-shadow: 0 12px 40px rgba(249,115,22,0.3);
+      box-shadow: 0 12px 40px rgba(249, 115, 22, 0.3);
     }
 
-    .creator-inner .section-title { margin-bottom: 16px; }
-    .creator-inner .section-sub { margin: 0 auto 36px; text-align: center; }
+    .creator-inner .section-title {
+      margin-bottom: 16px;
+    }
+
+    .creator-inner .section-sub {
+      margin: 0 auto 36px;
+      text-align: center;
+    }
 
     /* ── OPEN SOURCE ── */
     #opensource {
@@ -503,13 +583,18 @@
     .oss-card::before {
       content: '';
       position: absolute;
-      bottom: -100px; left: 50%;
+      bottom: -100px;
+      left: 50%;
       transform: translateX(-50%);
-      width: 600px; height: 300px;
-      background: radial-gradient(ellipse, rgba(249,115,22,0.1), transparent 65%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(249, 115, 22, 0.1), transparent 65%);
     }
 
-    .oss-card .section-title { margin-bottom: 20px; }
+    .oss-card .section-title {
+      margin-bottom: 20px;
+    }
+
     .oss-card p {
       color: var(--muted);
       font-size: 1rem;
@@ -529,7 +614,9 @@
       margin-top: 24px;
     }
 
-    .github-line svg { opacity: 0.5; }
+    .github-line svg {
+      opacity: 0.5;
+    }
 
     /* ── FOOTER ── */
     footer {
@@ -558,17 +645,33 @@
       transition: color 0.2s;
     }
 
-    footer a:hover { color: var(--text); }
+    footer a:hover {
+      color: var(--text);
+    }
 
     /* ── ANIMATIONS ── */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.4; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
     }
 
     /* scroll reveal */
@@ -577,6 +680,7 @@
       transform: translateY(30px);
       transition: opacity 0.65s ease, transform 0.65s ease;
     }
+
     .reveal.visible {
       opacity: 1;
       transform: none;
@@ -611,33 +715,85 @@
         width: 100%;
         padding: 12px 14px;
         border-radius: 12px;
-        background: rgba(255,255,255,0.03);
+        background: rgba(255, 255, 255, 0.03);
       }
 
-      section { padding: 72px 24px; }
-      .hero { padding: 100px 22px 60px; }
-      .hero p { max-width: 100%; }
-      .hero-buttons { flex-direction: column; }
-      .hero-buttons a { width: 100%; justify-content: center; }
-      .features-grid { grid-template-columns: 1fr; }
-      .feature-card { padding: 28px; }
-      #vision { grid-template-columns: 1fr; gap: 48px; padding: 72px 24px; }
-      .vision-card { padding: 32px; }
-      .oss-card { padding: 52px 28px; }
-      .creator-box { padding: 28px; }
-      footer { flex-direction: column; gap: 12px; text-align: center; }
-      .stats-bar { flex-direction: column; max-width: 100%; }
-      .stat { border-right: none; border-bottom: 1px solid var(--border); }
-      .stat:last-child { border-bottom: none; }
+      section {
+        padding: 72px 24px;
+      }
+
+      .hero {
+        padding: 100px 22px 60px;
+      }
+
+      .hero p {
+        max-width: 100%;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+      }
+
+      .hero-buttons a {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        padding: 28px;
+      }
+
+      #vision {
+        grid-template-columns: 1fr;
+        gap: 48px;
+        padding: 72px 24px;
+      }
+
+      .vision-card {
+        padding: 32px;
+      }
+
+      .oss-card {
+        padding: 52px 28px;
+      }
+
+      .creator-box {
+        padding: 28px;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .stats-bar {
+        flex-direction: column;
+        max-width: 100%;
+      }
+
+      .stat {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .stat:last-child {
+        border-bottom: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <!-- NAV -->
   <nav>
     <div class="nav-logo">
-      <div class="logo-icon">⚒</div>
+      <img src="./assets/logo.png" alt="CareerForges Logo" class="logo-icon" />
       CareerForges
     </div>
     <button class="nav-toggle" aria-expanded="false" aria-label="Open navigation menu">
@@ -708,28 +864,32 @@
         <div class="feature-card">
           <div class="feature-icon">📄</div>
           <h3>ATS Resume Builder</h3>
-          <p>Generate optimized resumes tailored for modern ATS systems and real-world recruiters. Beat filters before a human ever sees your name.</p>
+          <p>Generate optimized resumes tailored for modern ATS systems and real-world recruiters. Beat filters before a
+            human ever sees your name.</p>
           <span class="feature-tag">Available now</span>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
           <h3>AI Job Search</h3>
-          <p>Search the latest openings using powerful local AI agents including Ollama and Claude CLI. Smart matching, zero cloud dependency.</p>
+          <p>Search the latest openings using powerful local AI agents including Ollama and Claude CLI. Smart matching,
+            zero cloud dependency.</p>
           <span class="feature-tag">Available now</span>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">🔒</div>
           <h3>Privacy First</h3>
-          <p>Your resumes, searches, and AI workflows stay completely on your device. No tracking, no telemetry, no third-party data sharing.</p>
+          <p>Your resumes, searches, and AI workflows stay completely on your device. No tracking, no telemetry, no
+            third-party data sharing.</p>
           <span class="feature-tag">By design</span>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">⚡</div>
           <h3>Future Automation</h3>
-          <p>Planned support for end-to-end automated workflows and smarter AI-assisted application pipelines. The roadmap is ambitious.</p>
+          <p>Planned support for end-to-end automated workflows and smarter AI-assisted application pipelines. The
+            roadmap is ambitious.</p>
           <span class="feature-tag">Coming soon</span>
         </div>
       </div>
@@ -742,7 +902,8 @@
       <div class="reveal">
         <span class="section-label">Why CareerForges</span>
         <h2 class="section-title">Privacy isn't<br>a feature. It's<br>the foundation.</h2>
-        <p class="section-sub">Most AI career tools rely on cloud infrastructure and harvest your data. CareerForges takes a radically different approach.</p>
+        <p class="section-sub">Most AI career tools rely on cloud infrastructure and harvest your data. CareerForges
+          takes a radically different approach.</p>
       </div>
 
       <div class="vision-visual reveal">
@@ -780,10 +941,12 @@
       <div class="creator-avatar">MJ</div>
       <span class="section-label">The Creator</span>
       <h2 class="section-title">Matta Joshi</h2>
-      <p class="section-sub">Developer, builder, and creator passionate about AI-powered tools that solve real-world problems and empower people globally.</p>
+      <p class="section-sub">Developer, builder, and creator passionate about AI-powered tools that solve real-world
+        problems and empower people globally.</p>
       <div class="hero-buttons">
         <a class="btn-primary" href="https://mattajoshi.in" target="_blank">Personal Website</a>
-        <a class="btn-secondary" href="https://www.linkedin.com/in/matta-joshi-mani-pavan-akash-44b2b512a/" target="_blank">LinkedIn →</a>
+        <a class="btn-secondary" href="https://www.linkedin.com/in/matta-joshi-mani-pavan-akash-44b2b512a/"
+          target="_blank">LinkedIn →</a>
       </div>
     </div>
   </section>
@@ -793,12 +956,16 @@
     <div class="oss-card reveal">
       <span class="section-label">Open Source</span>
       <h2 class="section-title">Built for everyone.<br>Owned by no one.</h2>
-      <p>CareerForges is an open-source initiative built for job seekers worldwide. Contributions, ideas, and community support are always welcome.</p>
+      <p>CareerForges is an open-source initiative built for job seekers worldwide. Contributions, ideas, and community
+        support are always welcome.</p>
       <a class="btn-primary" href="https://github.com/JoshiNaidu/career-forges" target="_blank">
         ⭐ Star the Repository
       </a>
       <div class="github-line">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z" />
+        </svg>
         github.com/JoshiNaidu/career-forges
       </div>
     </div>
@@ -858,4 +1025,5 @@
   </script>
 
 </body>
+
 </html>
