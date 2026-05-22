@@ -7,7 +7,7 @@ export default function WelcomePage() {
       <div className="max-w-3xl text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-4 py-2 text-sm text-orange-400">
           <div className="h-2 w-2 rounded-full bg-orange-500" />
-          Local AI Powered
+          Local AI Career Assistant
         </div>
 
         <h1 className="text-6xl font-bold leading-tight tracking-tight">
