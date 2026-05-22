@@ -59,7 +59,7 @@ export default function Sidebar() {
                     </h1>
 
                     <p className="text-xs text-[var(--muted)]">
-                        Local AI Career OS
+                        Local AI Career Assistant
                     </p>
                 </div>
             </div>
