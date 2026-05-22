@@ -31,7 +31,7 @@ MAJOR.MINOR.PATCH
 - Active development phase
 - Features may be incomplete
 - Expect breaking changes between versions
-- **Currently:** v0.1.0
+- **Currently:** v0.2.0 Alpha
 
 ### **Release (1.0.0+)**
 - Stable, production-ready version
@@ -119,7 +119,7 @@ When releasing a new version, update:
 - **Purpose:** Direct users to latest prerelease builds
 
 ### 2. **Version Badge** (Stats Bar)
-- **Text:** `v0.1.0` (or current version)
+- **Text:** `v0.2.0 Alpha` (or current version)
 - **Label:** `Early Access` (or `Stable` for 1.0.0+)
 - **Styling:** Orange accent with border
 - **Location:** Right side of stats bar
@@ -177,7 +177,7 @@ Users can select the appropriate binary for their OS (Windows, macOS, Linux).
 
 Consider adding version-specific links in the future:
 ```
-https://github.com/JoshiNaidu/career-forges/releases/tag/v0.1.0
+https://github.com/JoshiNaidu/career-forges/releases/tag/v0.2.0 Alpha
 ```
 
 ---
