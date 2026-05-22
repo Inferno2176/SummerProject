@@ -370,7 +370,7 @@
 
     /* ── SECTION SHARED ── */
     section {
-      padding: 100px 60px;
+      padding: 50px 60px;
     }
 
     .section-label {
@@ -558,22 +558,22 @@
       text-align: center;
     }
 
-.creator-avatar {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-bottom: 28px;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 40px rgba(249, 115, 22, 0.12);
-}
+    .creator-avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin-bottom: 28px;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 40px rgba(249, 115, 22, 0.12);
+    }
 
-.creator-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+    .creator-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
 
     .creator-inner .section-title {
       margin-bottom: 16px;
@@ -651,22 +651,22 @@
     }
 
     .footer-logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
 
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--text);
-}
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+    }
 
-.footer-logo-icon {
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
-  display: block;
-}
+    .footer-logo-icon {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      display: block;
+    }
 
     footer p {
       font-size: 0.825rem;
@@ -718,6 +718,222 @@
     .reveal.visible {
       opacity: 1;
       transform: none;
+    }
+
+    /* ── OPEN SOURCE NEW LAYOUT ── */
+
+    .oss-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 80px;
+      align-items: center;
+
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+
+      padding: 40px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .oss-layout::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+
+      background:
+        radial-gradient(circle at center,
+          rgba(249, 115, 22, 0.10),
+          transparent 65%);
+
+      pointer-events: none;
+    }
+
+    .oss-left {
+      position: relative;
+      z-index: 2;
+    }
+
+    .oss-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+
+      font-size: clamp(2.5rem, 4.5vw, 4.8rem);
+
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+
+      font-weight: 800;
+
+      margin-bottom: 32px;
+
+      max-width: none;
+    }
+
+    .oss-title span {
+      color: var(--accent);
+
+      white-space: nowrap;
+    }
+
+    .oss-title span {
+      color: var(--accent);
+    }
+
+    .oss-text {
+      max-width: 560px;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--muted);
+
+      margin-bottom: 40px;
+    }
+
+    .oss-right {
+      position: relative;
+      height: 500px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stack-card {
+      position: absolute;
+
+      width: 280px;
+      padding: 28px;
+
+      border-radius: 24px;
+
+      background:
+        linear-gradient(145deg,
+          rgba(255, 255, 255, 0.06),
+          rgba(255, 255, 255, 0.02));
+
+      border: 1px solid rgba(255, 255, 255, 0.08);
+
+      backdrop-filter: blur(12px);
+
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.4);
+
+      transition:
+        transform 0.3s ease,
+        border-color 0.3s ease;
+    }
+
+    .stack-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(249, 115, 22, 0.35);
+    }
+
+    .stack-card h4 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .stack-card p {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.92rem;
+    }
+
+    .stack-icon {
+      width: 52px;
+      height: 52px;
+
+      border-radius: 14px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(249, 115, 22, 0.12);
+
+      margin-bottom: 18px;
+
+      font-size: 1.3rem;
+    }
+
+.top {
+  top: -30px;
+  right: 10px;
+
+  opacity: 0.92;
+
+  transform:
+    rotate(-8deg)
+    scale(1.02);
+}
+
+.middle {
+  z-index: 3;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(249,115,22,1),
+      rgba(251,146,60,0.92)
+    );
+
+  color: white;
+
+  transform:
+    scale(0.96)
+    translateY(40px);
+
+  box-shadow:
+    0 20px 60px rgba(249,115,22,0.25);
+}
+
+    .middle p {
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+.bottom {
+  top: 120px;
+  left: 0;
+
+  opacity: 0.9;
+
+  transform:
+    rotate(8deg)
+    scale(0.94);
+}
+
+    /* MOBILE */
+
+    @media (max-width: 900px) {
+
+      .oss-layout {
+        grid-template-columns: 1fr;
+        gap: 60px;
+
+        padding: 52px 28px;
+      }
+
+      .oss-right {
+        height: 420px;
+      }
+
+      .stack-card {
+        width: 220px;
+        padding: 22px;
+      }
+
+      .top {
+        right: 0;
+      }
+
+      .bottom {
+        left: 0;
+      }
+
+      .oss-title {
+        font-size: 3rem;
+      }
     }
 
     /* ── RESPONSIVE ── */
@@ -969,6 +1185,83 @@
     </div>
   </section>
 
+  <!-- OPEN SOURCE -->
+  <section id="opensource">
+    <!-- <div class="oss-card reveal">
+      <span class="section-label">Open Source</span>
+      <h2 class="section-title">Built for everyone.<br>Open at its core.<br>Premium when you need more.</h2>
+      <p>CareerForges is an open-source initiative built for job seekers worldwide. Contributions, ideas, and community
+        support are always welcome.</p>
+      <a class="btn-primary" href="https://github.com/JoshiNaidu/career-forges" target="_blank">
+        ⭐ Star the Repository
+      </a>
+      <div class="github-line">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z" />
+        </svg>
+        github.com/JoshiNaidu/career-forges
+      </div>
+    </div> -->
+    <div class="oss-layout reveal">
+
+      <!-- LEFT -->
+      <div class="oss-left">
+        <span class="section-label">Open Source</span>
+
+        <h2 class="oss-title">
+          Built for everyone.<br>
+          Open at its core.<br>
+          <span>Your software,<br>our service.</span>
+        </h2>
+
+        <p class="oss-text">
+          CareerForges is an open-source initiative built for job seekers worldwide.
+          Self-host it, customize it, and own your workflow — while optional services
+          help you move faster.
+        </p>
+
+        <a class="btn-primary" href="https://github.com/JoshiNaidu/career-forges" target="_blank">
+          ⭐ Star the Repository
+        </a>
+
+        <div class="github-line">
+          github.com/JoshiNaidu/career-forges
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="oss-right">
+
+        <div class="stack-card top">
+          <div class="stack-icon">👤</div>
+          <div>
+            <h4>Your Software</h4>
+            <p>You control it. You own it.</p>
+          </div>
+        </div>
+
+        <div class="stack-card middle">
+          <div class="stack-icon">⌘</div>
+          <div>
+            <h4>Open Source</h4>
+            <p>Transparent. Community driven</p>
+          </div>
+        </div>
+
+        <div class="stack-card bottom">
+          <div class="stack-icon">☁️</div>
+          <div>
+            <h4>Our Service</h4>
+            <p>Hosted. Managed. Optimized.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
   <!-- CREATOR -->
   <section id="creator">
     <div class="creator-inner reveal">
@@ -987,33 +1280,14 @@
     </div>
   </section>
 
-  <!-- OPEN SOURCE -->
-  <section id="opensource">
-    <div class="oss-card reveal">
-      <span class="section-label">Open Source</span>
-      <h2 class="section-title">Built for everyone.<br>Open at its core.<br>Premium when you need more.</h2>
-      <p>CareerForges is an open-source initiative built for job seekers worldwide. Contributions, ideas, and community
-        support are always welcome.</p>
-      <a class="btn-primary" href="https://github.com/JoshiNaidu/career-forges" target="_blank">
-        ⭐ Star the Repository
-      </a>
-      <div class="github-line">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z" />
-        </svg>
-        github.com/JoshiNaidu/career-forges
-      </div>
-    </div>
-  </section>
-
   <!-- FOOTER -->
   <footer>
     <div class="footer-logo">
       <img src="./assets/logo.png" alt="CareerForges Logo" class="footer-logo-icon" />
       CareerForges
     </div>
-    <p>© 2026 CareerForges • v0.1.0 Prerelease • Built by <a href="https://mattajoshi.in" target="_blank">Matta Joshi</a> • <a href="https://github.com/JoshiNaidu/career-forges/releases" target="_blank">Release Notes</a></p>
+    <p>© 2026 CareerForges • v0.1.0 Prerelease • Built by <a href="https://mattajoshi.in" target="_blank">Matta
+        Joshi</a> • <a href="https://github.com/JoshiNaidu/career-forges/releases" target="_blank">Release Notes</a></p>
   </footer>
 
   <script>
