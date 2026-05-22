@@ -170,6 +170,11 @@ If you'd like to contribute:
 
 ---
 
+## Documentation
+
+- [Developer Setup Guide](./docs/setup/developer-setup.md)
+- [Development Environment Guide](./docs/setup/development-setup.md)
+
 ## 📜 License
 
 This project will be released under the MIT License.
