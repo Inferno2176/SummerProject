@@ -1,0 +1,71 @@
+import { createBrowserRouter, Navigate } from "react-router-dom";
+
+import AppLayout from "./layouts/app-layout";
+import OnboardingLayout from "./layouts/onboarding-layout";
+
+import WelcomePage from "../pages/onboarding/welcome";
+import SetupAIPage from "../pages/onboarding/setup-ai";
+import UploadResumePage from "../pages/onboarding/upload-resume";
+
+import DashboardPage from "../pages/dashboard";
+import ATSPage from "../pages/ats";
+import JobsPage from "../pages/jobs";
+import AppliedPage from "../pages/applied";
+import InterviewPage from "../pages/interview";
+import SettingsPage from "../pages/settings";
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <OnboardingLayout />,
+    children: [
+      {
+        index: true,
+        element: <WelcomePage />,
+      },
+      {
+        path: "setup-ai",
+        element: <SetupAIPage />,
+      },
+      {
+        path: "upload-resume",
+        element: <UploadResumePage />,
+      },
+    ],
+  },
+
+  {
+    path: "/app",
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/app/dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <DashboardPage />,
+      },
+      {
+        path: "ats",
+        element: <ATSPage />,
+      },
+      {
+        path: "jobs",
+        element: <JobsPage />,
+      },
+      {
+        path: "applied",
+        element: <AppliedPage />,
+      },
+      {
+        path: "interview",
+        element: <InterviewPage />,
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
+      },
+    ],
+  },
+]);

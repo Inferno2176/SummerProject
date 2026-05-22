@@ -1,9 +1,23 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import { RouterProvider } from "react-router-dom";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+import "./index.css";
+
+import { router } from "./app/router";
+
+const savedTheme =
+  localStorage.getItem("theme") || "dark";
+
+document.documentElement.setAttribute(
+  "data-theme",
+  savedTheme,
+);
+
+ReactDOM.createRoot(
+  document.getElementById("root") as HTMLElement,
+).render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>,
 );
