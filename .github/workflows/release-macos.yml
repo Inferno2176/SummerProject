@@ -1,0 +1,71 @@
+name: Release macOS
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-13
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.13.0"
+          cache: "npm"
+          cache-dependency-path: app/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust Dependencies
+        uses: swatinem/rust-cache@v2
+
+      - name: Install Dependencies
+        run: |
+          cd app
+          npm ci
+
+      - name: Build Tauri App
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          cd app
+          npm run tauri build
+
+      - name: Generate latest-darwin-x86_64.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          SIG_FILE=$(find app/src-tauri/target/release/bundle -type f \( -name "*.app.tar.gz.sig" -o -name "*.dmg.sig" \) | head -n 1)
+          if [ -z "${SIG_FILE:-}" ]; then
+            echo "No macOS updater signature file found."
+            exit 1
+          fi
+          UPDATER_FILE="${SIG_FILE%.sig}"
+          UPDATER_NAME="$(basename "$UPDATER_FILE")"
+          export VERSION UPDATER_NAME SIG_FILE
+          node -e "const fs=require('fs');const sig=fs.readFileSync(process.env.SIG_FILE,'utf8').trim();const out={version:process.env.VERSION,notes:process.env.GITHUB_EVENT_RELEASE_BODY||'',pub_date:process.env.GITHUB_EVENT_RELEASE_PUBLISHED_AT,platforms:{'darwin-x86_64':{signature:sig,url:`https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.GITHUB_REF_NAME}/${process.env.UPDATER_NAME}`}}};fs.writeFileSync('latest-darwin-x86_64.json',JSON.stringify(out,null,2));"
+        env:
+          GITHUB_EVENT_RELEASE_BODY: ${{ github.event.release.body }}
+          GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            latest-darwin-x86_64.json
+            app/src-tauri/target/release/bundle/**/*.dmg
+            app/src-tauri/target/release/bundle/**/*.app.tar.gz
+            app/src-tauri/target/release/bundle/**/*.sig
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

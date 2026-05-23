@@ -66,12 +66,12 @@ cat app/src-tauri/tauri.key
 
 1. Go to GitHub repo → Settings → Secrets and variables → Actions
 2. Click "New repository secret"
-3. Name: `TAURI_PRIVATE_KEY`
+3. Name: `TAURI_SIGNING_PRIVATE_KEY`
 4. Value: Paste your entire private key content
 5. Click "Add secret"
 
 **If you have a password on your key:**
-1. Create another secret named `TAURI_PRIVATE_KEY_PASSWORD`
+1. Create another secret named `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
 2. Value: Your key password
 
 ### Step 2: Test the Workflow

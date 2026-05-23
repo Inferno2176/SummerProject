@@ -52,9 +52,9 @@
     "updater": {
       "active": true,
       "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI0RDBDOENEMTZBRTY2QkYKUldTL1pxNFd6Y2pRdEw1UHEyRnNTenlETWNYV1pPdUdKNTgyRFlzZTBwYUV5MnlOcHU0bEpaUDUK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRCMEZFMkU2M0JGOTJCOEYKUldTUEsvazc1dUlQU3lTZ1VlWm9aY2dnbTIvYVFuSnRTRTJ2eXdrT1owendpbzEvOWFKMUorWXEK",
       "endpoints": [
-        "https://github.com/JoshiNaidu/career-forges/releases/latest/download/latest.json"
+        "https://github.com/JoshiNaidu/career-forges/releases/latest/download/latest-{{target}}.json"
       ]
     }
   }
