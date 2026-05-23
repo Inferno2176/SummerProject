@@ -12,6 +12,7 @@ import ATSPage from "../pages/ats";
 import JobsPage from "../pages/jobs";
 import AppliedPage from "../pages/applied";
 import InterviewPage from "../pages/interview";
+import CommunityPage from "../pages/community";
 import SettingsPage from "../pages/settings";
 
 export const router = createBrowserRouter([
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
       {
         path: "interview",
         element: <InterviewPage />,
+      },
+      {
+        path: "community",
+        element: <CommunityPage />,
       },
       {
         path: "settings",

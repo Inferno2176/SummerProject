@@ -5,6 +5,7 @@ import {
     Settings,
     Sparkles,
     UserCheck,
+    Users,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -35,6 +36,11 @@ const items = [
         label: "Interview",
         icon: FileText,
         path: "/app/interview",
+    },
+    {
+        label: "Community",
+        icon: Users,
+        path: "/app/community",
     },
     {
         label: "Settings",
