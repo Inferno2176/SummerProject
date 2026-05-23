@@ -7,53 +7,53 @@ on:
 jobs:
   publish:
     runs-on: windows-latest
-    
+
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      
+          node-version: '24.13.0'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-      
-      - name: Restore private key
-        run: |
-          # Your private key must be stored in GitHub Secrets as TAURI_PRIVATE_KEY
-          # Base64 encoded for safety
-          $privateKeyBase64 = "${{ secrets.TAURI_PRIVATE_KEY }}"
-          $privateKey = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($privateKeyBase64))
-          $privateKey | Out-File -Path "app/src-tauri/tauri.key" -Encoding UTF8
-          
-      - name: Install dependencies
+
+      - name: Cache Rust Dependencies
+        uses: swatinem/rust-cache@v2
+
+      - name: Install Dependencies
         run: |
           cd app
-          npm install
-          
+          npm ci
+
       - name: Build Tauri App
         env:
-          TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
         run: |
           cd app
           npm run tauri build
-          
+
       - name: Generate latest.json
+        shell: pwsh
         run: |
-          # Get the release version
+          # Release version
           $version = "${{ github.event.release.tag_name }}".TrimStart('v')
-          
-          # Find the .sig file
-          $sigPath = Get-ChildItem -Path "app/src-tauri/target/release/bundle/msi" -Filter "*.exe.sig" | Select-Object -First 1
-          
+
+          # Find signature file
+          $sigPath = Get-ChildItem -Path "app/src-tauri/target/release/bundle/nsis" -Filter "*.sig" | Select-Object -First 1
+
           if (-not $sigPath) {
             Write-Error "No .sig file found!"
             exit 1
           }
-          
+
           $signature = Get-Content $sigPath.FullName -Raw
-          
+
           # Create latest.json
           $latestJson = @{
               version = $version
@@ -66,13 +66,17 @@ jobs:
                   }
               }
           } | ConvertTo-Json -Depth 10
-          
+
           # Save latest.json
           $latestJson | Out-File -Path "latest.json" -Encoding UTF8
-          
-      - name: Upload latest.json to Release
+
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
-          files: latest.json
+          files: |
+            latest.json
+            app/src-tauri/target/release/bundle/msi/*.msi
+            app/src-tauri/target/release/bundle/nsis/*.exe
+            app/src-tauri/target/release/bundle/nsis/*.sig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
