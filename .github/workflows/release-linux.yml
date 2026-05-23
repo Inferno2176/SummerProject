@@ -64,7 +64,23 @@ jobs:
           UPDATER_FILE="${SIG_FILE%.sig}"
           UPDATER_NAME="$(basename "$UPDATER_FILE")"
           export VERSION UPDATER_NAME SIG_FILE
-          node -e "const fs=require('fs');const sig=fs.readFileSync(process.env.SIG_FILE,'utf8').trim();const out={version:process.env.VERSION,notes:process.env.GITHUB_EVENT_RELEASE_BODY||'',pub_date:process.env.GITHUB_EVENT_RELEASE_PUBLISHED_AT,platforms:{'linux-x86_64':{signature:sig,url:`https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.GITHUB_REF_NAME}/${process.env.UPDATER_NAME}`}}};fs.writeFileSync('latest-linux-x86_64.json',JSON.stringify(out,null,2));"
+          cat > generate-latest-linux.js <<'EOF'
+          const fs = require("fs");
+          const sig = fs.readFileSync(process.env.SIG_FILE, "utf8").trim();
+          const out = {
+            version: process.env.VERSION,
+            notes: process.env.GITHUB_EVENT_RELEASE_BODY || "",
+            pub_date: process.env.GITHUB_EVENT_RELEASE_PUBLISHED_AT,
+            platforms: {
+              "linux-x86_64": {
+                signature: sig,
+                url: `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.GITHUB_REF_NAME}/${process.env.UPDATER_NAME}`
+              }
+            }
+          };
+          fs.writeFileSync("latest-linux-x86_64.json", JSON.stringify(out, null, 2));
+          EOF
+          node generate-latest-linux.js
         env:
           GITHUB_EVENT_RELEASE_BODY: ${{ github.event.release.body }}
           GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
