@@ -1,9 +1,16 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 
 import Sidebar from "../../components/sidebar";
 import Topbar from "../../components/topbar";
+import { checkForUpdatesInBackground } from "../../lib/updater";
 
 export default function AppLayout() {
+  useEffect(() => {
+    // Check for updates on app launch
+    checkForUpdatesInBackground();
+  }, []);
+
   return (
     <div className="flex h-screen bg-[var(--bg)] text-[var(--text)]">
       <Sidebar />

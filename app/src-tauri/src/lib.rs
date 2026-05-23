@@ -13,3 +13,11 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[tauri::command]
+async fn debug_updater_info() -> String {
+    format!(
+        "Updater configured - Check logs for more details. Version: {}",
+        env!("CARGO_PKG_VERSION")
+    )
+}

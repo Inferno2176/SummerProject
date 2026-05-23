@@ -1,0 +1,78 @@
+name: Publish Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Restore private key
+        run: |
+          # Your private key must be stored in GitHub Secrets as TAURI_PRIVATE_KEY
+          # Base64 encoded for safety
+          $privateKeyBase64 = "${{ secrets.TAURI_PRIVATE_KEY }}"
+          $privateKey = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($privateKeyBase64))
+          $privateKey | Out-File -Path "app/src-tauri/tauri.key" -Encoding UTF8
+          
+      - name: Install dependencies
+        run: |
+          cd app
+          npm install
+          
+      - name: Build Tauri App
+        env:
+          TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
+        run: |
+          cd app
+          npm run tauri build
+          
+      - name: Generate latest.json
+        run: |
+          # Get the release version
+          $version = "${{ github.event.release.tag_name }}".TrimStart('v')
+          
+          # Find the .sig file
+          $sigPath = Get-ChildItem -Path "app/src-tauri/target/release/bundle/msi" -Filter "*.exe.sig" | Select-Object -First 1
+          
+          if (-not $sigPath) {
+            Write-Error "No .sig file found!"
+            exit 1
+          }
+          
+          $signature = Get-Content $sigPath.FullName -Raw
+          
+          # Create latest.json
+          $latestJson = @{
+              version = $version
+              notes = "${{ github.event.release.body }}"
+              pub_date = (Get-Date -AsUTC -Format "yyyy-MM-ddTHH:mm:ssZ")
+              platforms = @{
+                  "windows-x86_64" = @{
+                      signature = $signature
+                      url = "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/CareerForges_${version}_x64-setup.exe"
+                  }
+              }
+          } | ConvertTo-Json -Depth 10
+          
+          # Save latest.json
+          $latestJson | Out-File -Path "latest.json" -Encoding UTF8
+          
+      - name: Upload latest.json to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
