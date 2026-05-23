@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "CareerForges",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "identifier": "com.careerforges.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -51,7 +51,7 @@
     "updater": {
       "active": true,
       "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCMjkyQUFBNzg3RkZFMzMKUldRei9uOTRxaW9weTdGbVN3c2RXWXVxeHcrbGp6WS9SY3RkekZpb3NNVUhmTGdHWXNGWGduTGoK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI0RDBDOENEMTZBRTY2QkYKUldTL1pxNFd6Y2pRdEw1UHEyRnNTenlETWNYV1pPdUdKNTgyRFlzZTBwYUV5MnlOcHU0bEpaUDUK",
       "endpoints": [
         "https://github.com/JoshiNaidu/career-forges/releases/latest/download/latest.json"
       ]
