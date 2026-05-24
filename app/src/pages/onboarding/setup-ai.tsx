@@ -1,8 +1,18 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import SplashScreen from "../../splashScreen";
 
 export default function SetupAIPage() {
+  const [isInstalling, setIsInstalling] = useState(false);
+
   return (
-    <section className="flex min-h-screen items-center justify-center px-6">
+    <section className="relative flex min-h-screen items-center justify-center px-6">
+      {isInstalling ? (
+        <div className="absolute inset-0 z-20 bg-[var(--bg)]/95 backdrop-blur-sm">
+          <SplashScreen />
+        </div>
+      ) : null}
+
       <div className="w-full max-w-3xl rounded-3xl border border-white/5 bg-[var(--surface)] p-10">
         <p className="text-sm uppercase tracking-[0.2em] text-orange-400">
           AI Setup
@@ -35,7 +45,12 @@ export default function SetupAIPage() {
           </div>
 
           <div className="mt-8 flex gap-4">
-            <button className="rounded-xl bg-[var(--accent)] px-5 py-3 font-medium text-white transition hover:opacity-90">
+            <button
+              onClick={() => {
+                setIsInstalling(true);
+              }}
+              className="rounded-xl bg-[var(--accent)] px-5 py-3 font-medium text-white transition hover:opacity-90"
+            >
               Install Ollama
             </button>
 
@@ -43,6 +58,18 @@ export default function SetupAIPage() {
               Manual Setup
             </button>
           </div>
+
+          {isInstalling ? (
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-orange-500/25 bg-orange-500/10 px-4 py-3 text-xs text-orange-300">
+              <span>Setup preview mode active</span>
+              <button
+                onClick={() => setIsInstalling(false)}
+                className="rounded-lg border border-orange-500/40 px-3 py-1 transition hover:bg-orange-500/20"
+              >
+                Close Loader
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-10 flex justify-end">

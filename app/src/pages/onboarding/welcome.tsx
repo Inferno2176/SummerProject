@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import SplashScreen from "../../splashScreen";
+import LaunchLoader from "../../components/launch-loader";
 
 export default function WelcomePage() {
   const [showSplash, setShowSplash] = useState(true);
@@ -10,7 +10,7 @@ export default function WelcomePage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setShowSplash(false);
-    }, 5000);
+    }, 3400);
 
     return () => window.clearTimeout(timer);
   }, []);
@@ -25,7 +25,9 @@ export default function WelcomePage() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45, ease: "easeInOut" }}
         >
-          <SplashScreen />
+          <section className="min-h-screen bg-[var(--bg)]">
+            <LaunchLoader />
+          </section>
         </motion.div>
       ) : (
         <motion.section
