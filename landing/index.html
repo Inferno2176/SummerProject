@@ -81,12 +81,11 @@
       z-index: 2000;
       background: #070709;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 14px;
       opacity: 1;
       transition: opacity 0.45s ease;
+      overflow: hidden;
     }
 
     .landing-splash.hide {
@@ -94,62 +93,71 @@
       pointer-events: none;
     }
 
-    .landing-splash-stage {
-      width: 50vw;
-      height: 50vh;
-      min-width: 320px;
-      min-height: 260px;
-      max-width: 780px;
-      max-height: 520px;
+    .landing-splash-wrap {
+      position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative;
+      gap: 14px;
+      text-align: center;
     }
 
     .landing-splash-glow {
       position: absolute;
-      width: 460px;
-      height: 460px;
+      width: 320px;
+      height: 320px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 122, 26, 0.85) 0%, rgba(255, 122, 26, 0.10) 65%, rgba(255, 122, 26, 0.02) 100%);
-      filter: blur(28px);
-      animation: splashGlowPulse 1.6s ease-in-out infinite;
+      background: radial-gradient(circle, rgba(255, 122, 26, 0.66) 0%, rgba(255, 122, 26, 0.12) 64%, rgba(255, 122, 26, 0.02) 100%);
+      filter: blur(34px);
+      animation: splashGlowPulse 1.8s ease-in-out infinite;
     }
 
     .landing-splash-logo {
-      width: 140px;
+      width: 68px;
       z-index: 2;
       filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.6)) drop-shadow(0 0 25px rgba(255, 122, 26, 0.4));
-      transform-origin: center;
-      animation: splashLogoPulse 1.6s ease-in-out infinite;
+      animation: splashLogoIn 0.5s ease-out both;
     }
 
     .landing-splash-line {
-      width: 42vw;
-      max-width: 560px;
-      min-width: 240px;
+      width: 210px;
       height: 1px;
       background: linear-gradient(to right, rgba(255, 122, 26, 0.15), rgba(255, 122, 26, 0.9), rgba(255, 122, 26, 0.15));
-      transform-origin: left;
-      animation: splashLineIn 1s ease-out both;
+      animation: splashLineIn 0.45s 0.62s ease-out both;
+    }
+
+    .landing-splash-title,
+    .landing-splash-tagline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    .landing-splash-title span {
+      color: #fafafa;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      transform: translateX(14px);
+      animation: splashTitleIn 0.32s ease forwards;
     }
 
     .landing-splash-tagline {
-      color: rgba(255, 255, 255, 0.92);
-      font-size: 14px;
-      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 11px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       font-weight: 600;
-      display: flex;
-      align-items: center;
-      white-space: nowrap;
     }
 
     .landing-splash-tagline span {
       opacity: 0;
       transform: translateX(-8px);
-      animation: splashLetterIn 0.2s ease forwards;
+      animation: splashTaglineIn 0.24s ease forwards;
     }
 
     /* ── NOISE OVERLAY ── */
@@ -789,44 +797,39 @@
       }
     }
 
-    @keyframes splashLogoPulse {
-      0% {
-        transform: scale(0);
-        opacity: 0.5;
+    @keyframes splashLogoIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5) translateY(14px);
       }
 
-      50% {
-        transform: scale(0.5);
+      to {
         opacity: 1;
-      }
-
-      100% {
-        transform: scale(0);
-        opacity: 0.5;
+        transform: scale(1) translateY(0);
       }
     }
 
     @keyframes splashGlowPulse {
       0% {
-        transform: scale(0.8);
-        opacity: 0.5;
+        transform: scale(0.94);
+        opacity: 0.35;
       }
 
       50% {
-        transform: scale(1);
-        opacity: 1;
+        transform: scale(1.05);
+        opacity: 0.58;
       }
 
       100% {
-        transform: scale(0.8);
-        opacity: 0.5;
+        transform: scale(0.94);
+        opacity: 0.35;
       }
     }
 
     @keyframes splashLineIn {
       from {
         transform: scaleX(0);
-        opacity: 0.5;
+        opacity: 0;
       }
 
       to {
@@ -835,7 +838,14 @@
       }
     }
 
-    @keyframes splashLetterIn {
+    @keyframes splashTitleIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes splashTaglineIn {
       to {
         opacity: 1;
         transform: translateX(0);
@@ -1174,12 +1184,13 @@
 
 <body>
   <div id="landingSplash" class="landing-splash" aria-hidden="true">
-    <div class="landing-splash-stage">
+    <div class="landing-splash-wrap">
       <div class="landing-splash-glow"></div>
       <img src="./assets/logo.png" alt="CareerForges" class="landing-splash-logo" />
+      <div class="landing-splash-title" id="landingSplashTitle"></div>
+      <div class="landing-splash-tagline" id="landingSplashTagline"></div>
+      <div class="landing-splash-line"></div>
     </div>
-    <div class="landing-splash-line"></div>
-    <div class="landing-splash-tagline" id="landingSplashTagline"></div>
   </div>
 
   <!-- NAV -->
@@ -1434,14 +1445,23 @@
 
   <script>
     document.body.classList.add('splash-active');
-    const splashTaglineText = 'A local career AI assistant';
+    const splashTitleText = 'CareerForges';
+    const splashTaglineText = 'Forge your future with private local AI';
+    const splashTitle = document.getElementById('landingSplashTitle');
     const splashTagline = document.getElementById('landingSplashTagline');
     const splash = document.getElementById('landingSplash');
+
+    splashTitleText.split('').forEach((char, idx) => {
+      const span = document.createElement('span');
+      span.textContent = char === ' ' ? '\u00A0' : char;
+      span.style.animationDelay = `${0.16 + idx * 0.042}s`;
+      splashTitle.appendChild(span);
+    });
 
     splashTaglineText.split('').forEach((char, idx) => {
       const span = document.createElement('span');
       span.textContent = char === ' ' ? '\u00A0' : char;
-      span.style.animationDelay = `${0.7 + idx * 0.035}s`;
+      span.style.animationDelay = `${0.62 + idx * 0.016}s`;
       splashTagline.appendChild(span);
     });
 
@@ -1449,7 +1469,7 @@
       splash.classList.add('hide');
       document.body.classList.remove('splash-active');
       window.setTimeout(() => splash.remove(), 500);
-    }, 3000);
+    }, 2000);
 
     // Scroll reveal
     const reveals = document.querySelectorAll('.reveal');
