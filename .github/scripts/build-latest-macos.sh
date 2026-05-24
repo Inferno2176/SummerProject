@@ -1,26 +1,50 @@
 #!/bin/bash
 set -euo pipefail
 
-# Pre-build all variables
+echo "Starting macOS updater metadata generation..."
+
 VERSION="${GITHUB_REF_NAME#v}"
-SIG_FILE=$(find app/src-tauri/target/release/bundle -type f \( -name "*.app.tar.gz.sig" -o -name "*.dmg.sig" \) | head -n 1)
+
+echo "Version: $VERSION"
+
+echo "Searching for macOS updater signature..."
+
+SIG_FILE=$(find app/src-tauri/target/release/bundle -type f \
+  \( -name "*.app.tar.gz.sig" -o -name "*.tar.gz.sig" \) \
+  | head -n 1)
 
 if [ -z "${SIG_FILE:-}" ]; then
-  echo "No macOS updater signature file found."
+  echo "ERROR: No macOS updater signature file found."
+
+  echo "Available bundle files:"
+  find app/src-tauri/target/release/bundle -type f
+
   exit 1
 fi
 
+echo "Found signature:"
+echo "$SIG_FILE"
+
 UPDATER_FILE="${SIG_FILE%.sig}"
 UPDATER_NAME="$(basename "$UPDATER_FILE")"
+
 DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${UPDATER_NAME}"
 
-# Export all variables
-export VERSION UPDATER_NAME SIG_FILE DOWNLOAD_URL
+echo "Updater file:"
+echo "$UPDATER_NAME"
 
-# Generate the JSON file
+echo "Download URL:"
+echo "$DOWNLOAD_URL"
+
+export VERSION
+export SIG_FILE
+export DOWNLOAD_URL
+
 cat > generate-latest-macos.js <<'EOF'
 const fs = require("fs");
+
 const sig = fs.readFileSync(process.env.SIG_FILE, "utf8").trim();
+
 const out = {
   version: process.env.VERSION,
   notes: process.env.GITHUB_EVENT_RELEASE_BODY || "",
@@ -32,7 +56,15 @@ const out = {
     }
   }
 };
-fs.writeFileSync("latest-darwin-x86_64.json", JSON.stringify(out, null, 2));
+
+fs.writeFileSync(
+  "latest-darwin-x86_64.json",
+  JSON.stringify(out, null, 2)
+);
+
+console.log("Generated latest-darwin-x86_64.json");
 EOF
 
 node generate-latest-macos.js
+
+echo "Done."
