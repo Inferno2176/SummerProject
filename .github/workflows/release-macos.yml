@@ -42,7 +42,7 @@ jobs:
 
       - name: Generate latest-darwin-x86_64.json
         shell: bash
-        run: .github/scripts/build-latest-macos.sh
+        run: bash .github/scripts/build-latest-macos.sh
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF_NAME: ${{ github.ref_name }}

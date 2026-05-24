@@ -64,9 +64,7 @@ jobs:
           GITHUB_REF_NAME: ${{ github.event.inputs.version }}
           GITHUB_EVENT_RELEASE_BODY: "Manual macOS build"
           GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${{ github.event.repository.updated_at }}
-        run: |
-          chmod +x .github/scripts/build-latest-macos.sh
-          .github/scripts/build-latest-macos.sh
+        run: bash .github/scripts/build-latest-macos.sh
 
       - name: Upload to Release (Optional)
         if: ${{ github.event.inputs.upload_to_release == 'true' }}

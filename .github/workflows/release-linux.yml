@@ -64,8 +64,7 @@ jobs:
           GITHUB_EVENT_RELEASE_BODY: ${{ github.event.release.body }}
           GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: |
-          chmod +x .github/scripts/build-latest-linux.sh
-          .github/scripts/build-latest-linux.sh
+          bash .github/scripts/build-latest-linux.sh
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
