@@ -12,7 +12,7 @@ fi
 
 UPDATER_FILE="${SIG_FILE%.sig}"
 UPDATER_NAME="$(basename "$UPDATER_FILE")"
-DOWNLOAD_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/$UPDATER_NAME"
+DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${UPDATER_NAME}"
 
 # Export all variables
 export VERSION UPDATER_NAME SIG_FILE DOWNLOAD_URL
