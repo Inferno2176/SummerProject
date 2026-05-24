@@ -1,7 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "Starting macOS updater metadata generation..."
+echo "=== DEBUG: Environment Variables ==="
+echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
+echo "GITHUB_EVENT_RELEASE_BODY: ${GITHUB_EVENT_RELEASE_BODY:-'(empty)'}"
+echo "GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${GITHUB_EVENT_RELEASE_PUBLISHED_AT:-'(empty)'}"
+echo "=== Starting macOS updater metadata generation ==="
 
 VERSION="${GITHUB_REF_NAME#v}"
 
@@ -30,15 +35,18 @@ UPDATER_NAME="$(basename "$UPDATER_FILE")"
 
 DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${UPDATER_NAME}"
 
-echo "Updater file:"
-echo "$UPDATER_NAME"
+echo "Constructed URL: $DOWNLOAD_URL"
 
-echo "Download URL:"
-echo "$DOWNLOAD_URL"
+if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "https://github.com//releases/download//" ]; then
+  echo "ERROR: DOWNLOAD_URL is empty or malformed!"
+  exit 1
+fi
 
 export VERSION
 export SIG_FILE
 export DOWNLOAD_URL
+export GITHUB_EVENT_RELEASE_BODY
+export GITHUB_EVENT_RELEASE_PUBLISHED_AT
 
 cat > generate-latest-macos.js <<'EOF'
 const fs = require("fs");
