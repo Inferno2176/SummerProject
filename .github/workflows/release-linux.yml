@@ -53,34 +53,7 @@ jobs:
 
       - name: Generate latest-linux-x86_64.json
         shell: bash
-        run: |
-          set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
-          SIG_FILE=$(find app/src-tauri/target/release/bundle -type f \( -name "*.AppImage.tar.gz.sig" -o -name "*.AppImage.sig" \) | head -n 1)
-          if [ -z "${SIG_FILE:-}" ]; then
-            echo "No Linux updater signature file found."
-            exit 1
-          fi
-          UPDATER_FILE="${SIG_FILE%.sig}"
-          UPDATER_NAME="$(basename "$UPDATER_FILE")"
-          export VERSION UPDATER_NAME SIG_FILE
-          cat > generate-latest-linux.js <<'EOF'
-          const fs = require("fs");
-          const sig = fs.readFileSync(process.env.SIG_FILE, "utf8").trim();
-          const out = {
-            version: process.env.VERSION,
-            notes: process.env.GITHUB_EVENT_RELEASE_BODY || "",
-            pub_date: process.env.GITHUB_EVENT_RELEASE_PUBLISHED_AT,
-            platforms: {
-              "linux-x86_64": {
-                signature: sig,
-                url: `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.GITHUB_REF_NAME}/${process.env.UPDATER_NAME}`
-              }
-            }
-          };
-          fs.writeFileSync("latest-linux-x86_64.json", JSON.stringify(out, null, 2));
-          EOF
-          node generate-latest-linux.js
+        run: .github/scripts/build-latest-linux.sh
         env:
           GITHUB_EVENT_RELEASE_BODY: ${{ github.event.release.body }}
           GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
