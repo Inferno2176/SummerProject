@@ -18,7 +18,7 @@ export default function Topbar() {
     window.addEventListener("ai-preferences-updated", sync);
     return () => window.removeEventListener("ai-preferences-updated", sync);
   }, []);
-
+  console.log("Current model in topbar:", model);
   useEffect(() => {
     let mounted = true;
     const loadAgents = async () => {
