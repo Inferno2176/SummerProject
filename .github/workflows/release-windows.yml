@@ -74,6 +74,7 @@ jobs:
           node - <<'EOF'
           const fs = require("fs");
           const sig = fs.readFileSync(process.env.SIG_FILE, "utf8").trim();
+          const url = `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.GITHUB_REF_NAME}/${process.env.UPDATER_NAME}`;
           const out = {
             version: process.env.VERSION,
             notes: process.env.GITHUB_EVENT_RELEASE_BODY || "",
@@ -81,7 +82,11 @@ jobs:
             platforms: {
               "windows-x86_64": {
                 signature: sig,
-                url: `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.GITHUB_REF_NAME}/${process.env.UPDATER_NAME}`
+                url
+              },
+              "windows-x86_64-msvc": {
+                signature: sig,
+                url
               }
             }
           };

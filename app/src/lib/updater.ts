@@ -64,13 +64,7 @@ export async function checkForUpdatesDebug(): Promise<UpdaterDebugStatus> {
 }
 
 export async function checkForUpdatesInBackground() {
-  // Check for updates on a schedule (every 24 hours)
-  const lastCheck = localStorage.getItem('lastUpdateCheck');
-  const now = Date.now();
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  if (!lastCheck || now - parseInt(lastCheck) > oneDay) {
-    localStorage.setItem('lastUpdateCheck', now.toString());
-    await checkForUpdates();
-  }
+  // Always check on app launch
+  localStorage.setItem('lastUpdateCheck', Date.now().toString());
+  await checkForUpdates();
 }

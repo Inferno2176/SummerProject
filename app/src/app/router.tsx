@@ -15,6 +15,7 @@ import InterviewPage from "../pages/interview";
 import CommunityPage from "../pages/community";
 import ChatPage from "../pages/chat";
 import SettingsPage from "../pages/settings";
+import DebugUpdatePage from "../pages/debug-update";
 
 export const router = createBrowserRouter([
   {
@@ -75,6 +76,10 @@ export const router = createBrowserRouter([
       {
         path: "settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "debug-update",
+        element: <DebugUpdatePage />,
       },
     ],
   },
