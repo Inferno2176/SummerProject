@@ -1,203 +1,20 @@
+pub mod types;
+pub mod utils;
+pub mod db;
+pub mod commands;
+
 use futures_util::StreamExt;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
-use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use sysinfo::System;
 use tauri::Emitter;
+use tauri::Manager;
+use crate::commands::*;
 
-#[derive(Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct SetupStep {
-    name: String,
-    status: String,
-    detail: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OllamaSetupReport {
-    success: bool,
-    os: String,
-    arch: String,
-    ollama_installed: bool,
-    ollama_running: bool,
-    model_ready: bool,
-    model_name: String,
-    steps: Vec<SetupStep>,
-}
-
-#[derive(Clone)]
-struct CmdResult {
-    ok: bool,
-    stdout: String,
-    stderr: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ChatReply {
-    success: bool,
-    model: String,
-    response: String,
-    error: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct ChatInputMessage {
-    role: String,
-    content: String,
-}
-
-#[derive(Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct StreamChunkPayload {
-    chunk: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OllamaModelInfo {
-    name: String,
-    quality: String,
-    speed: String,
-    cpu_friendliness: String,
-    recommended: bool,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OllamaModelsResponse {
-    success: bool,
-    models: Vec<OllamaModelInfo>,
-    recommended_model: Option<String>,
-    error: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct SetupDiagnostics {
-    os: String,
-    arch: String,
-    ram_gb: u64,
-    performance_tier: String,
-    ollama_installed: bool,
-    ollama_running: bool,
-    installed_models: Vec<String>,
-    recommended_model: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ModelCatalogItem {
-    name: String,
-    size_label: String,
-    estimated_ram_gb: f32,
-    speed: String,
-    quality: String,
-    best_use_case: String,
-    free: bool,
-    installed: bool,
-    recommended: bool,
-    tag: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ModelCatalogResponse {
-    success: bool,
-    models: Vec<ModelCatalogItem>,
-    recommended_model: Option<String>,
-    error: Option<String>,
-}
-
-#[derive(Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct ModelInstallProgressPayload {
-    model: String,
-    status: String,
-    completed: Option<u64>,
-    total: Option<u64>,
-    percent: Option<f32>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ModelInstallResult {
-    success: bool,
-    model: String,
-    error: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct OllamaTagsResponse {
-    models: Vec<OllamaTagModel>,
-}
-
-#[derive(Deserialize)]
-struct OllamaTagModel {
-    name: String,
-}
-
-#[derive(Deserialize)]
-struct OllamaChatStreamChunk {
-    message: Option<OllamaChatMessage>,
-    done: Option<bool>,
-    error: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct OllamaChatMessage {
-    role: String,
-    content: String,
-}
-
-#[derive(Serialize)]
-struct OllamaChatRequest {
-    model: String,
-    stream: bool,
-    messages: Vec<OllamaChatMessage>,
-    options: OllamaGenerationOptions,
-}
-
-#[derive(Serialize)]
-struct OllamaGenerationOptions {
-    temperature: f32,
-    top_p: f32,
-    repeat_penalty: f32,
-    num_predict: i32,
-}
-
-#[derive(Serialize)]
-struct OllamaPullRequest {
-    name: String,
-    stream: bool,
-}
-
-#[derive(Deserialize)]
-struct OllamaPullStreamChunk {
-    status: Option<String>,
-    completed: Option<u64>,
-    total: Option<u64>,
-    error: Option<String>,
-}
-
-fn run_cmd(program: &str, args: &[&str]) -> CmdResult {
-    match Command::new(program).args(args).output() {
-        Ok(output) => CmdResult {
-            ok: output.status.success(),
-            stdout: String::from_utf8_lossy(&output.stdout).trim().to_string(),
-            stderr: String::from_utf8_lossy(&output.stderr).trim().to_string(),
-        },
-        Err(err) => CmdResult {
-            ok: false,
-            stdout: String::new(),
-            stderr: err.to_string(),
-        },
-    }
-}
+use crate::types::*;
+use crate::utils::*;
+use crate::db::{init_db, MigrationRunner, get_migrations};
 
 fn preferred_model(installed: &[String]) -> Option<String> {
     let priorities = ["qwen2.5:3b", "phi3:mini", "mistral:7b"];
@@ -352,30 +169,6 @@ fn generation_options_for(model: &str, mode: &str) -> OllamaGenerationOptions {
         repeat_penalty: 1.1,
         num_predict: 380,
     }
-}
-
-fn command_exists(name: &str) -> bool {
-    if cfg!(target_os = "windows") {
-        run_cmd("where", &[name]).ok
-    } else {
-        run_cmd("which", &[name]).ok
-    }
-}
-
-fn detect_os() -> String {
-    if cfg!(target_os = "windows") {
-        "windows".to_string()
-    } else if cfg!(target_os = "macos") {
-        "macos".to_string()
-    } else if cfg!(target_os = "linux") {
-        "linux".to_string()
-    } else {
-        "unknown".to_string()
-    }
-}
-
-fn detect_arch() -> String {
-    std::env::consts::ARCH.to_string()
 }
 
 fn ensure_ollama_installed(steps: &mut Vec<SetupStep>) -> bool {
@@ -955,10 +748,48 @@ async fn get_cpu_usage() -> f32 {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Initialize logger
+    env_logger::Builder::from_default_env()
+        .format_timestamp_millis()
+        .init();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            // Initialize database
+            let app_data_dir = app.path().app_data_dir()
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+            let db_path = app_data_dir.join("careerforges.db");
+            
+            log::info!("Initializing database at {:?}", db_path);
+            
+            match init_db(&db_path) {
+                Ok(pool) => {
+                    log::info!("Database initialized successfully");
+                    
+                    // Run migrations
+                    {
+                        let mut conn = db::get_connection(&pool)
+                            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                        let migrations = get_migrations();
+                        match MigrationRunner::run_migrations(&mut *conn, migrations) {
+                            Ok(_) => log::info!("Migrations completed successfully"),
+                            Err(e) => log::error!("Migration error: {}", e),
+                        }
+                    }
+                    
+                    app.manage(pool);
+                    Ok(())
+                }
+                Err(e) => {
+                    log::error!("Failed to initialize database: {}", e);
+                    Err(Box::new(e) as Box<dyn std::error::Error>)
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
+            // Legacy commands
             greet,
             debug_updater_info,
             run_ollama_setup,
@@ -968,7 +799,56 @@ pub fn run() {
             install_model,
             uninstall_model,
             chat_with_ollama,
-            get_cpu_usage
+            get_cpu_usage,
+            
+            // App State Commands
+            db_get_app_state,
+            db_set_app_state,
+            db_get_app_state_bool,
+            db_get_app_state_string,
+            db_list_app_state,
+            db_delete_app_state,
+            db_is_onboarding_completed,
+            db_complete_onboarding,
+            db_reset_onboarding,
+            db_get_onboarding_step,
+            db_set_onboarding_step,
+            db_get_selected_provider,
+            db_set_selected_provider,
+            db_get_selected_model,
+            db_set_selected_model,
+            db_set_ollama_detected,
+            db_set_claude_detected,
+            
+            // AI Agent Commands
+            db_create_ai_agent,
+            db_get_ai_agent,
+            db_list_ai_agents_by_provider,
+            db_list_installed_ai_agents,
+            db_get_default_ai_agent,
+            db_set_default_ai_agent,
+            db_update_ai_agent_install_status,
+            db_update_ai_agent_availability,
+            db_delete_ai_agent,
+            db_list_all_ai_agents,
+            
+            // Settings Commands
+            db_get_setting,
+            db_set_setting,
+            db_get_setting_bool,
+            db_get_setting_string,
+            db_get_setting_number,
+            db_list_settings,
+            db_delete_setting,
+            db_reset_settings_to_defaults,
+            db_get_theme,
+            db_set_theme,
+            db_get_auto_save_sessions,
+            db_set_auto_save_sessions,
+            
+            // Database Health
+            db_ping,
+            db_get_size,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

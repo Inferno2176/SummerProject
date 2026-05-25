@@ -75,6 +75,13 @@ export default function ChatPage() {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(messages));
   }, [messages]);
 
+  useEffect(() => {
+    if (listRef.current) {
+      const scrollElement = listRef.current;
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+    }
+  }, [messages]);
+
   const contextMessages = useMemo<ChatInputMessage[]>(
     () =>
       messages.slice(-10).map((message) => ({
@@ -165,17 +172,17 @@ export default function ChatPage() {
   };
 
   return (
-    <section className="mx-auto flex h-[calc(100vh-9rem)] w-full max-w-5xl flex-col rounded-3xl border border-white/10 bg-[var(--surface)]/70 shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
-      <div className="border-b border-white/10 px-6 py-4">
-        <h1 className="text-xl font-semibold tracking-tight">CareerForges Chat (A Trained Expert)</h1>
-        <p className="mt-1 text-xs text-[var(--muted)]">
-          {provider.toUpperCase()} | {agentName} | Session memory enabled
+    <section className="mx-auto flex h-[82vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/5 bg-[var(--surface)]/50 shadow-lg">
+      <div className="border-b border-white/5 px-5 py-3">
+        <h1 className="text-sm font-semibold tracking-tight">CareerForges Chat</h1>
+        <p className="mt-0.5 text-xs text-[var(--muted)]/70">
+          {provider.toUpperCase()} • {agentName}
         </p>
       </div>
 
-      <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
         {messages.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-[var(--muted)]">
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 text-xs text-[var(--muted)]/60">
             Ask me anything about resumes, job descriptions, or interview prep.
           </div>
         ) : null}
@@ -184,16 +191,19 @@ export default function ChatPage() {
           {messages.map((message) => (
             <motion.div
               key={message.id}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user"
-                ? "ml-auto bg-[var(--accent)] text-white"
-                : "bg-white/[0.05] text-[var(--text)]"
-              }`}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className={`flex w-full ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <div className="whitespace-pre-wrap break-words">{message.content}</div>
+              <div className={`max-w-[78%] rounded-xl px-3.5 py-2.5 text-sm leading-5 ${message.role === "user"
+                ? "bg-orange-500/80 text-white"
+                : "bg-white/[0.04] text-[var(--text)]"
+              }`}
+              >
+                <div className="whitespace-pre-wrap break-words">{message.content}</div>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -202,26 +212,26 @@ export default function ChatPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-fit rounded-2xl bg-white/[0.05] px-4 py-3 text-sm text-[var(--muted)]"
+            className="w-fit rounded-xl bg-white/[0.04] px-3.5 py-2.5 text-sm text-[var(--muted)]/70"
           >
             Thinking...
           </motion.div>
         ) : null}
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-white/10 p-4">
-        <div className="flex items-end gap-3">
+      <form onSubmit={handleSubmit} className="border-t border-white/5 px-5 py-3">
+        <div className="flex items-end gap-2.5">
           <textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             disabled={isLoading}
-            className="min-h-[52px] max-h-44 flex-1 resize-y rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm outline-none focus:border-orange-500/50"
-            placeholder="Message CareerForges AI..."
+            className="min-h-[40px] max-h-32 flex-1 resize-none rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm placeholder-[var(--muted)]/40 outline-none transition focus:border-orange-500/40 focus:bg-white/[0.06]"
+            placeholder="Message..."
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="h-[52px] rounded-2xl bg-[var(--accent)] px-5 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="h-10 rounded-xl bg-orange-500 px-4 text-xs font-medium text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Send
           </button>
@@ -229,7 +239,7 @@ export default function ChatPage() {
       </form>
 
       {error ? (
-        <div className="mx-4 mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="mx-5 mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3.5 py-2.5 text-xs text-red-200/80">
           {error}
         </div>
       ) : null}
