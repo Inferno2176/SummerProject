@@ -45,6 +45,9 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ github.event.release.tag_name }}".TrimStart('v')
+          $releaseNotes = @"
+          ${{ github.event.release.body }}
+          "@
           $sigFile = Get-ChildItem -Path "app/src-tauri/target/release/bundle" -Recurse -File |
             Where-Object { $_.Name -match '\.exe\.sig$|\.msi\.zip\.sig$' } |
             Select-Object -First 1
@@ -59,7 +62,7 @@ jobs:
 
           $latestJson = @{
             version = $version
-            notes = "${{ github.event.release.body }}"
+            notes = $releaseNotes.Trim()
             pub_date = "${{ github.event.release.published_at }}"
             platforms = @{
               "windows-x86_64" = @{
