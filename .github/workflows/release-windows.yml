@@ -43,11 +43,15 @@ jobs:
 
       - name: Generate latest-windows-x86_64.json
         shell: pwsh
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_EVENT_RELEASE_BODY: ${{ github.event.release.body }}
+          GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: |
-          $version = "${{ github.event.release.tag_name }}".TrimStart('v')
-          $releaseNotes = @"
-          ${{ github.event.release.body }}
-          "@
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+          $releaseNotes = $env:GITHUB_EVENT_RELEASE_BODY
+          
           $sigFile = Get-ChildItem -Path "app/src-tauri/target/release/bundle" -Recurse -File |
             Where-Object { $_.Name -match '\.exe\.sig$|\.msi\.zip\.sig$' } |
             Select-Object -First 1
@@ -62,12 +66,12 @@ jobs:
 
           $latestJson = @{
             version = $version
-            notes = $releaseNotes.Trim()
-            pub_date = "${{ github.event.release.published_at }}"
+            notes = $releaseNotes
+            pub_date = $env:GITHUB_EVENT_RELEASE_PUBLISHED_AT
             platforms = @{
               "windows-x86_64" = @{
                 signature = $signature
-                url = "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/$($updaterFile.Name)"
+                url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:GITHUB_REF_NAME/$($updaterFile.Name)"
               }
             }
           } | ConvertTo-Json -Depth 10
