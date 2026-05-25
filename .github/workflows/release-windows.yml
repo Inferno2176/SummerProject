@@ -42,42 +42,53 @@ jobs:
           npm run tauri build
 
       - name: Generate latest-windows-x86_64.json
-        shell: pwsh
+        shell: bash
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_EVENT_RELEASE_BODY: ${{ github.event.release.body }}
           GITHUB_EVENT_RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: |
-          $version = $env:GITHUB_REF_NAME -replace '^v', ''
-          $releaseNotes = $env:GITHUB_EVENT_RELEASE_BODY
-          
-          $sigFile = Get-ChildItem -Path "app/src-tauri/target/release/bundle" -Recurse -File |
-            Where-Object { $_.Name -match '\.exe\.sig$|\.msi\.zip\.sig$' } |
-            Select-Object -First 1
+          VERSION="${GITHUB_REF_NAME#v}"
 
-          if (-not $sigFile) {
-            Write-Error "No Windows updater signature file found."
+          SIG_FILE=$(find app/src-tauri/target/release/bundle -type f \
+            \( -name "*.exe.sig" -o -name "*.msi.zip.sig" \) \
+            | head -n 1)
+
+          if [ -z "${SIG_FILE:-}" ]; then
+            echo "ERROR: No Windows updater signature file found."
             exit 1
-          }
+          fi
 
-          $updaterFile = Get-Item ($sigFile.FullName -replace '\.sig$', '')
-          $signature = (Get-Content $sigFile.FullName -Raw).Trim()
+          UPDATER_FILE="${SIG_FILE%.sig}"
+          UPDATER_NAME="$(basename "$UPDATER_FILE")"
 
-          $latestJson = @{
-            version = $version
-            notes = $releaseNotes
-            pub_date = $env:GITHUB_EVENT_RELEASE_PUBLISHED_AT
-            platforms = @{
-              "windows-x86_64" = @{
-                signature = $signature
-                url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:GITHUB_REF_NAME/$($updaterFile.Name)"
+          export VERSION
+          export SIG_FILE
+          export UPDATER_NAME
+          export GITHUB_REPOSITORY
+          export GITHUB_REF_NAME
+          export GITHUB_EVENT_RELEASE_BODY
+          export GITHUB_EVENT_RELEASE_PUBLISHED_AT
+
+          node - <<'EOF'
+          const fs = require("fs");
+          const sig = fs.readFileSync(process.env.SIG_FILE, "utf8").trim();
+          const out = {
+            version: process.env.VERSION,
+            notes: process.env.GITHUB_EVENT_RELEASE_BODY || "",
+            pub_date: process.env.GITHUB_EVENT_RELEASE_PUBLISHED_AT,
+            platforms: {
+              "windows-x86_64": {
+                signature: sig,
+                url: `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/${process.env.GITHUB_REF_NAME}/${process.env.UPDATER_NAME}`
               }
             }
-          } | ConvertTo-Json -Depth 10
-
-          $latestJson | Out-File -Path "latest-windows-x86_64.json" -Encoding utf8
-          $latestJson | Out-File -Path "latest.json" -Encoding utf8
+          };
+          fs.writeFileSync("latest-windows-x86_64.json", JSON.stringify(out, null, 2));
+          fs.writeFileSync("latest.json", JSON.stringify(out, null, 2));
+          console.log("Generated latest-windows-x86_64.json");
+          EOF
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
