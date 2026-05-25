@@ -1,5 +1,6 @@
 import { useThemeStore } from "../store/theme-store";
-import { Moon, Search, Sun } from "lucide-react";
+import { useSidebarStore } from "../store/sidebar-store";
+import { Moon, Search, Sun, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AgentOption, getAvailableAgents, getCurrentModel, setAgentByModel } from "../lib/ai-preferences";
 import { invoke } from "@tauri-apps/api/core";
@@ -7,6 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export default function Topbar() {
   const { theme, setTheme } = useThemeStore();
+  const { toggleSidebar } = useSidebarStore();
   const [model, setModel] = useState(getCurrentModel());
   const [agents, setAgents] = useState<AgentOption[]>([]);
   const [cpuUsage, setCpuUsage] = useState<number | null>(null);
@@ -63,16 +65,26 @@ export default function Topbar() {
 
   return (
     <header className="flex h-20 items-center justify-between border-b border-white/5 bg-[var(--surface)] px-6">
-      <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 w-[320px]">
-        <Search
-          size={18}
-          className="text-[var(--muted)]"
-        />
+      <div className="flex items-center gap-4">
+        <button
+          onClick={toggleSidebar}
+          className="rounded-lg p-2 text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)] transition lg:hidden"
+          title="Toggle Sidebar"
+        >
+          <Menu size={20} />
+        </button>
 
-        <input
-          placeholder="Search anything..."
-          className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]"
-        />
+        <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 w-[320px]">
+          <Search
+            size={18}
+            className="text-[var(--muted)]"
+          />
+
+          <input
+            placeholder="Search anything..."
+            className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]"
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
