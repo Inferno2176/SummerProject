@@ -1,17 +1,537 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use futures_util::StreamExt;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::process::Command;
+use std::thread;
+use std::time::Duration;
+use sysinfo::System;
+use tauri::Emitter;
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct SetupStep {
+    name: String,
+    status: String,
+    detail: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct OllamaSetupReport {
+    success: bool,
+    os: String,
+    arch: String,
+    ollama_installed: bool,
+    ollama_running: bool,
+    model_ready: bool,
+    model_name: String,
+    steps: Vec<SetupStep>,
+}
+
+#[derive(Clone)]
+struct CmdResult {
+    ok: bool,
+    stdout: String,
+    stderr: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ChatReply {
+    success: bool,
+    model: String,
+    response: String,
+    error: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct ChatInputMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct StreamChunkPayload {
+    chunk: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct OllamaModelInfo {
+    name: String,
+    quality: String,
+    speed: String,
+    cpu_friendliness: String,
+    recommended: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct OllamaModelsResponse {
+    success: bool,
+    models: Vec<OllamaModelInfo>,
+    recommended_model: Option<String>,
+    error: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SetupDiagnostics {
+    os: String,
+    arch: String,
+    ram_gb: u64,
+    performance_tier: String,
+    ollama_installed: bool,
+    ollama_running: bool,
+    installed_models: Vec<String>,
+    recommended_model: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ModelCatalogItem {
+    name: String,
+    size_label: String,
+    estimated_ram_gb: f32,
+    speed: String,
+    quality: String,
+    best_use_case: String,
+    free: bool,
+    installed: bool,
+    recommended: bool,
+    tag: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ModelCatalogResponse {
+    success: bool,
+    models: Vec<ModelCatalogItem>,
+    recommended_model: Option<String>,
+    error: Option<String>,
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct ModelInstallProgressPayload {
+    model: String,
+    status: String,
+    completed: Option<u64>,
+    total: Option<u64>,
+    percent: Option<f32>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ModelInstallResult {
+    success: bool,
+    model: String,
+    error: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct OllamaTagsResponse {
+    models: Vec<OllamaTagModel>,
+}
+
+#[derive(Deserialize)]
+struct OllamaTagModel {
+    name: String,
+}
+
+#[derive(Deserialize)]
+struct OllamaChatStreamChunk {
+    message: Option<OllamaChatMessage>,
+    done: Option<bool>,
+    error: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct OllamaChatMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Serialize)]
+struct OllamaChatRequest {
+    model: String,
+    stream: bool,
+    messages: Vec<OllamaChatMessage>,
+    options: OllamaGenerationOptions,
+}
+
+#[derive(Serialize)]
+struct OllamaGenerationOptions {
+    temperature: f32,
+    top_p: f32,
+    repeat_penalty: f32,
+    num_predict: i32,
+}
+
+#[derive(Serialize)]
+struct OllamaPullRequest {
+    name: String,
+    stream: bool,
+}
+
+#[derive(Deserialize)]
+struct OllamaPullStreamChunk {
+    status: Option<String>,
+    completed: Option<u64>,
+    total: Option<u64>,
+    error: Option<String>,
+}
+
+fn run_cmd(program: &str, args: &[&str]) -> CmdResult {
+    match Command::new(program).args(args).output() {
+        Ok(output) => CmdResult {
+            ok: output.status.success(),
+            stdout: String::from_utf8_lossy(&output.stdout).trim().to_string(),
+            stderr: String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        },
+        Err(err) => CmdResult {
+            ok: false,
+            stdout: String::new(),
+            stderr: err.to_string(),
+        },
+    }
+}
+
+fn preferred_model(installed: &[String]) -> Option<String> {
+    let priorities = ["qwen2.5:3b", "phi3:mini", "mistral:7b"];
+    for preferred in priorities {
+        if installed.iter().any(|name| name == preferred) {
+            return Some(preferred.to_string());
+        }
+    }
+
+    installed
+        .iter()
+        .find(|name| name.contains("llama"))
+        .cloned()
+        .or_else(|| installed.first().cloned())
+}
+
+fn model_catalog_blueprint() -> Vec<(&'static str, &'static str, f32, &'static str, &'static str, &'static str, &'static str)> {
+    vec![
+        ("qwen2.5:3b", "1.9 GB", 4.5, "Fast", "Strong", "Balanced assistant", "mid"),
+        ("phi3:mini", "2.2 GB", 4.0, "Fast", "Good+", "Low-latency structured output", "low"),
+        ("gemma3:4b", "2.7 GB", 5.0, "Medium", "Strong", "Reasoning and clarity", "mid"),
+        ("mistral:7b", "4.1 GB", 8.0, "Medium", "Very Strong", "Deeper interview simulation", "high"),
+        ("llama3.2:1b", "1.3 GB", 3.0, "Very Fast", "Good", "Low RAM devices", "low"),
+        ("qwen2.5-coder:7b", "4.6 GB", 9.0, "Medium", "Very Strong", "Technical coding interviews", "high"),
+    ]
+}
+
+fn performance_tier(ram_gb: u64) -> String {
+    if ram_gb <= 8 {
+        "Low RAM".to_string()
+    } else if ram_gb <= 16 {
+        "Mid Range".to_string()
+    } else {
+        "High End".to_string()
+    }
+}
+
+fn recommended_by_hardware(ram_gb: u64, installed: &[String]) -> Option<String> {
+    let candidates = if ram_gb <= 8 {
+        vec!["phi3:mini", "llama3.2:1b", "qwen2.5:3b"]
+    } else if ram_gb <= 16 {
+        vec!["qwen2.5:3b", "gemma3:4b", "mistral:7b"]
+    } else {
+        vec!["mistral:7b", "qwen2.5-coder:7b", "qwen2.5:3b"]
+    };
+
+    for c in &candidates {
+        if installed.iter().any(|m| m == c) {
+            return Some(c.to_string());
+        }
+    }
+    Some(candidates[0].to_string())
+}
+
+fn estimate_model(name: &str) -> (String, String, String) {
+    let lowered = name.to_lowercase();
+    if lowered.contains("qwen2.5:3b") || lowered.contains("phi3") {
+        return (
+            "Strong".to_string(),
+            "Fast".to_string(),
+            "High".to_string(),
+        );
+    }
+    if lowered.contains("mistral") {
+        return (
+            "Very Strong".to_string(),
+            "Medium".to_string(),
+            "Medium".to_string(),
+        );
+    }
+    if lowered.contains("llama") && lowered.contains("1b") {
+        return (
+            "Good".to_string(),
+            "Very Fast".to_string(),
+            "Very High".to_string(),
+        );
+    }
+    (
+        "Balanced".to_string(),
+        "Medium".to_string(),
+        "Medium".to_string(),
+    )
+}
+
+fn detect_mode(user_text: &str) -> String {
+    let lower = user_text.to_lowercase();
+    if ["sad", "anxious", "struggling", "depressed", "overwhelmed"]
+        .iter()
+        .any(|k| lower.contains(k))
+    {
+        return "emotional".to_string();
+    }
+    if ["bug", "error", "code", "typescript", "rust", "react", "api"]
+        .iter()
+        .any(|k| lower.contains(k))
+    {
+        return "coding".to_string();
+    }
+    if ["job", "resume", "interview", "career", "ats", "apply"]
+        .iter()
+        .any(|k| lower.contains(k))
+    {
+        return "career".to_string();
+    }
+    "casual".to_string()
+}
+
+fn mode_system_prompt(mode: &str) -> String {
+    match mode {
+        "career" => "You are a practical career coach. Give direct, actionable advice. Keep answers concise unless asked for detail. Never continue the conversation on your own.".to_string(),
+        "coding" => "You are a senior coding assistant. Be precise, brief, and solution-first. Prefer concrete steps and short code examples only when needed. Never continue the conversation on your own.".to_string(),
+        "emotional" => "You are a calm, supportive companion. Be warm, grounded, and concise. Validate feelings without being dramatic. Offer one or two practical next steps. Never continue the conversation on your own.".to_string(),
+        "interview_practice" => "You are an interview coach running a mock interview. Ask one question at a time. Wait for the candidate answer before continuing. In practice mode you may give brief hints only after the candidate answers.".to_string(),
+        "interview_realistic" => "You are a professional interviewer. Ask one question at a time, do not give answers or hints, and challenge vague responses with follow-up questions. Keep realism high.".to_string(),
+        "interview_technical" => "You are a strict technical interviewer. Ask focused technical questions based on stack and seniority. Never reveal ideal solutions before candidate answers.".to_string(),
+        "interview_hr" => "You are an HR interviewer. Ask concise behavioral and communication questions one at a time. Do not coach during the interview.".to_string(),
+        "interview_behavioral" => "You are a behavioral interviewer. Ask STAR-style questions one by one. After each answer, ask a deeper follow-up when needed.".to_string(),
+        "interview_rapid_fire" => "You are running a rapid-fire interview round. Ask short, direct questions one at a time and wait for each answer.".to_string(),
+        _ => "You are a friendly assistant. Respond naturally and briefly for simple questions. No over-explaining. No fake section headers. Never continue the conversation on your own.".to_string(),
+    }
+}
+
+fn generation_options_for(model: &str, mode: &str) -> OllamaGenerationOptions {
+    let lowered = model.to_lowercase();
+    if lowered.contains("qwen") {
+        return OllamaGenerationOptions {
+            temperature: if mode == "coding" { 0.45 } else { 0.7 },
+            top_p: 0.9,
+            repeat_penalty: 1.15,
+            num_predict: 450,
+        };
+    }
+    if lowered.contains("phi") {
+        return OllamaGenerationOptions {
+            temperature: 0.45,
+            top_p: 0.85,
+            repeat_penalty: 1.1,
+            num_predict: 350,
+        };
+    }
+    if lowered.contains("mistral") {
+        return OllamaGenerationOptions {
+            temperature: 0.8,
+            top_p: 0.92,
+            repeat_penalty: 1.12,
+            num_predict: 500,
+        };
+    }
+    OllamaGenerationOptions {
+        temperature: 0.6,
+        top_p: 0.9,
+        repeat_penalty: 1.1,
+        num_predict: 380,
+    }
+}
+
+fn command_exists(name: &str) -> bool {
+    if cfg!(target_os = "windows") {
+        run_cmd("where", &[name]).ok
+    } else {
+        run_cmd("which", &[name]).ok
+    }
+}
+
+fn detect_os() -> String {
+    if cfg!(target_os = "windows") {
+        "windows".to_string()
+    } else if cfg!(target_os = "macos") {
+        "macos".to_string()
+    } else if cfg!(target_os = "linux") {
+        "linux".to_string()
+    } else {
+        "unknown".to_string()
+    }
+}
+
+fn detect_arch() -> String {
+    std::env::consts::ARCH.to_string()
+}
+
+fn ensure_ollama_installed(steps: &mut Vec<SetupStep>) -> bool {
+    let version_check = run_cmd("ollama", &["--version"]);
+    if version_check.ok {
+        steps.push(SetupStep {
+            name: "ollama_check".to_string(),
+            status: "ok".to_string(),
+            detail: if version_check.stdout.is_empty() {
+                "Ollama is installed.".to_string()
+            } else {
+                format!("Detected: {}", version_check.stdout)
+            },
+        });
+        return true;
+    }
+
+    steps.push(SetupStep {
+        name: "ollama_check".to_string(),
+        status: "missing".to_string(),
+        detail: "Ollama is not installed. Attempting installation.".to_string(),
+    });
+
+    let install_result = if cfg!(target_os = "windows") {
+        if command_exists("winget") {
+            run_cmd(
+                "winget",
+                &[
+                    "install",
+                    "--id",
+                    "Ollama.Ollama",
+                    "-e",
+                    "--accept-package-agreements",
+                    "--accept-source-agreements",
+                ],
+            )
+        } else if command_exists("choco") {
+            run_cmd("choco", &["install", "ollama", "-y"])
+        } else {
+            CmdResult {
+                ok: false,
+                stdout: String::new(),
+                stderr: "No supported package manager found. Install winget or choco.".to_string(),
+            }
+        }
+    } else if cfg!(target_os = "macos") {
+        if command_exists("brew") {
+            run_cmd("brew", &["install", "--cask", "ollama"])
+        } else {
+            CmdResult {
+                ok: false,
+                stdout: String::new(),
+                stderr: "Homebrew not found. Install Homebrew first.".to_string(),
+            }
+        }
+    } else if cfg!(target_os = "linux") {
+        if command_exists("curl") {
+            run_cmd("sh", &["-c", "curl -fsSL https://ollama.com/install.sh | sh"])
+        } else {
+            CmdResult {
+                ok: false,
+                stdout: String::new(),
+                stderr: "curl not found. Install curl first.".to_string(),
+            }
+        }
+    } else {
+        CmdResult {
+            ok: false,
+            stdout: String::new(),
+            stderr: "Unsupported operating system.".to_string(),
+        }
+    };
+
+    if install_result.ok {
+        steps.push(SetupStep {
+            name: "ollama_install".to_string(),
+            status: "ok".to_string(),
+            detail: "Ollama installation command completed.".to_string(),
+        });
+    } else {
+        steps.push(SetupStep {
+            name: "ollama_install".to_string(),
+            status: "failed".to_string(),
+            detail: if install_result.stderr.is_empty() {
+                "Ollama installation failed.".to_string()
+            } else {
+                install_result.stderr
+            },
+        });
+    }
+
+    run_cmd("ollama", &["--version"]).ok
+}
+
+fn ensure_ollama_running(steps: &mut Vec<SetupStep>) -> bool {
+    let health = run_cmd("ollama", &["list"]);
+    if health.ok {
+        steps.push(SetupStep {
+            name: "ollama_running".to_string(),
+            status: "ok".to_string(),
+            detail: "Ollama service is responding.".to_string(),
+        });
+        return true;
+    }
+
+    steps.push(SetupStep {
+        name: "ollama_running".to_string(),
+        status: "warning".to_string(),
+        detail: "Ollama service may not be running yet. Trying to proceed.".to_string(),
+    });
+
+    false
+}
+
+fn ensure_model_ready(model_name: &str, steps: &mut Vec<SetupStep>) -> bool {
+    let list = run_cmd("ollama", &["list"]);
+    if list.ok && list.stdout.to_lowercase().contains(&model_name.to_lowercase()) {
+        steps.push(SetupStep {
+            name: "model_check".to_string(),
+            status: "ok".to_string(),
+            detail: format!("Model '{}' is already available.", model_name),
+        });
+        return true;
+    }
+
+    steps.push(SetupStep {
+        name: "model_pull".to_string(),
+        status: "running".to_string(),
+        detail: format!("Pulling model '{}'. This can take a few minutes.", model_name),
+    });
+
+    let pull = run_cmd("ollama", &["pull", model_name]);
+    if pull.ok {
+        steps.push(SetupStep {
+            name: "model_pull".to_string(),
+            status: "ok".to_string(),
+            detail: format!("Model '{}' downloaded successfully.", model_name),
+        });
+        true
+    } else {
+        steps.push(SetupStep {
+            name: "model_pull".to_string(),
+            status: "failed".to_string(),
+            detail: if pull.stderr.is_empty() {
+                format!("Failed to pull model '{}'.", model_name)
+            } else {
+                pull.stderr
+            },
+        });
+        false
+    }
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
 }
 
 #[tauri::command]
@@ -20,4 +540,436 @@ async fn debug_updater_info() -> String {
         "Updater configured - Check logs for more details. Version: {}",
         env!("CARGO_PKG_VERSION")
     )
+}
+
+#[tauri::command]
+async fn run_ollama_setup() -> OllamaSetupReport {
+    let mut steps = Vec::new();
+    let model_name = "llama3.2:1b".to_string();
+
+    steps.push(SetupStep {
+        name: "environment".to_string(),
+        status: "ok".to_string(),
+        detail: format!("Detected {} ({})", detect_os(), detect_arch()),
+    });
+
+    let ollama_installed = ensure_ollama_installed(&mut steps);
+    let ollama_running = if ollama_installed {
+        ensure_ollama_running(&mut steps)
+    } else {
+        false
+    };
+    let model_ready = if ollama_installed {
+        ensure_model_ready(&model_name, &mut steps)
+    } else {
+        false
+    };
+
+    let success = ollama_installed && model_ready;
+
+    OllamaSetupReport {
+        success,
+        os: detect_os(),
+        arch: detect_arch(),
+        ollama_installed,
+        ollama_running,
+        model_ready,
+        model_name,
+        steps,
+    }
+}
+
+#[tauri::command]
+async fn get_setup_diagnostics() -> SetupDiagnostics {
+    let mut sys = System::new_all();
+    sys.refresh_memory();
+
+    let ram_gb = (sys.total_memory() / 1024 / 1024).max(1);
+    let ollama_installed = run_cmd("ollama", &["--version"]).ok;
+    let list = run_cmd("ollama", &["list"]);
+    let ollama_running = list.ok;
+    let installed_models = if list.ok {
+        list.stdout
+            .lines()
+            .skip(1)
+            .filter_map(|line| line.split_whitespace().next())
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>()
+    } else {
+        Vec::new()
+    };
+
+    let recommended_model = recommended_by_hardware(ram_gb, &installed_models)
+        .or_else(|| preferred_model(&installed_models));
+
+    SetupDiagnostics {
+        os: detect_os(),
+        arch: detect_arch(),
+        ram_gb,
+        performance_tier: performance_tier(ram_gb),
+        ollama_installed,
+        ollama_running,
+        installed_models,
+        recommended_model,
+    }
+}
+
+#[tauri::command]
+async fn list_model_catalog() -> ModelCatalogResponse {
+    let diagnostics = get_setup_diagnostics().await;
+    let installed = diagnostics.installed_models.clone();
+    let recommended = recommended_by_hardware(diagnostics.ram_gb, &installed);
+
+    let models = model_catalog_blueprint()
+        .into_iter()
+        .map(|(name, size_label, est_ram, speed, quality, use_case, tier)| {
+            let tier_tag = match tier {
+                "low" => "Low RAM",
+                "mid" => "Recommended for your PC",
+                _ => "Best Quality",
+            };
+            ModelCatalogItem {
+                name: name.to_string(),
+                size_label: size_label.to_string(),
+                estimated_ram_gb: est_ram,
+                speed: speed.to_string(),
+                quality: quality.to_string(),
+                best_use_case: use_case.to_string(),
+                free: true,
+                installed: installed.iter().any(|m| m == name),
+                recommended: recommended.as_ref().is_some_and(|m| m == name),
+                tag: tier_tag.to_string(),
+            }
+        })
+        .collect::<Vec<_>>();
+
+    ModelCatalogResponse {
+        success: true,
+        models,
+        recommended_model: recommended,
+        error: None,
+    }
+}
+
+#[tauri::command]
+async fn install_model(window: tauri::Window, model: String) -> ModelInstallResult {
+    let client = Client::new();
+    let req = OllamaPullRequest {
+        name: model.clone(),
+        stream: true,
+    };
+    let response = client
+        .post("http://localhost:11434/api/pull")
+        .json(&req)
+        .send()
+        .await;
+
+    let Ok(http_response) = response else {
+        return ModelInstallResult {
+            success: false,
+            model,
+            error: Some("Could not connect to Ollama pull API.".to_string()),
+        };
+    };
+
+    let mut stream = http_response.bytes_stream();
+    let mut buf = String::new();
+
+    while let Some(item) = stream.next().await {
+        let Ok(bytes) = item else {
+            return ModelInstallResult {
+                success: false,
+                model,
+                error: Some("Model download stream interrupted.".to_string()),
+            };
+        };
+        buf.push_str(&String::from_utf8_lossy(&bytes));
+
+        while let Some(pos) = buf.find('\n') {
+            let line = buf[..pos].trim().to_string();
+            buf = buf[pos + 1..].to_string();
+            if line.is_empty() {
+                continue;
+            }
+            let parsed = serde_json::from_str::<OllamaPullStreamChunk>(&line);
+            let Ok(chunk) = parsed else {
+                continue;
+            };
+
+            if let Some(err) = chunk.error {
+                return ModelInstallResult {
+                    success: false,
+                    model,
+                    error: Some(err),
+                };
+            }
+
+            let percent = match (chunk.completed, chunk.total) {
+                (Some(c), Some(t)) if t > 0 => Some((c as f32 / t as f32) * 100.0),
+                _ => None,
+            };
+            let _ = window.emit(
+                "model-install-progress",
+                ModelInstallProgressPayload {
+                    model: model.clone(),
+                    status: chunk.status.unwrap_or_else(|| "downloading".to_string()),
+                    completed: chunk.completed,
+                    total: chunk.total,
+                    percent,
+                },
+            );
+        }
+    }
+
+    ModelInstallResult {
+        success: true,
+        model,
+        error: None,
+    }
+}
+
+#[tauri::command]
+async fn uninstall_model(model: String) -> ModelInstallResult {
+    let rm = run_cmd("ollama", &["rm", &model]);
+    if rm.ok {
+        return ModelInstallResult {
+            success: true,
+            model,
+            error: None,
+        };
+    }
+    ModelInstallResult {
+        success: false,
+        model,
+        error: Some(if rm.stderr.is_empty() {
+            "Failed to uninstall model.".to_string()
+        } else {
+            rm.stderr
+        }),
+    }
+}
+
+#[tauri::command]
+async fn list_ollama_models() -> OllamaModelsResponse {
+    let client = Client::new();
+    let response = client.get("http://localhost:11434/api/tags").send().await;
+    let Ok(raw) = response else {
+        return OllamaModelsResponse {
+            success: false,
+            models: Vec::new(),
+            recommended_model: None,
+            error: Some("Ollama is not reachable. Start Ollama first.".to_string()),
+        };
+    };
+
+    let parsed = raw.json::<OllamaTagsResponse>().await;
+    let Ok(tags) = parsed else {
+        return OllamaModelsResponse {
+            success: false,
+            models: Vec::new(),
+            recommended_model: None,
+            error: Some("Failed to read installed model list from Ollama.".to_string()),
+        };
+    };
+
+    let installed_names: Vec<String> = tags.models.iter().map(|m| m.name.clone()).collect();
+    let recommended = preferred_model(&installed_names);
+
+    let models = installed_names
+        .iter()
+        .map(|name| {
+            let (quality, speed, cpu_friendliness) = estimate_model(name);
+            OllamaModelInfo {
+                name: name.clone(),
+                quality,
+                speed,
+                cpu_friendliness,
+                recommended: recommended.as_ref().is_some_and(|r| r == name),
+            }
+        })
+        .collect::<Vec<_>>();
+
+    OllamaModelsResponse {
+        success: true,
+        models,
+        recommended_model: recommended,
+        error: None,
+    }
+}
+
+#[tauri::command]
+async fn chat_with_ollama(
+    window: tauri::Window,
+    messages: Vec<ChatInputMessage>,
+    model: Option<String>,
+    mode: Option<String>,
+) -> ChatReply {
+    if messages.is_empty() {
+        return ChatReply {
+            success: false,
+            model: model.unwrap_or_else(|| "unknown".to_string()),
+            response: String::new(),
+            error: Some("No messages provided.".to_string()),
+        };
+    }
+
+    let client = Client::new();
+    let tags_res = client.get("http://localhost:11434/api/tags").send().await;
+    let Ok(tags_http) = tags_res else {
+        return ChatReply {
+            success: false,
+            model: model.unwrap_or_else(|| "unknown".to_string()),
+            response: String::new(),
+            error: Some("Ollama is not available. Please make sure it is running.".to_string()),
+        };
+    };
+    let tags: OllamaTagsResponse = match tags_http.json().await {
+        Ok(v) => v,
+        Err(_) => OllamaTagsResponse { models: Vec::new() },
+    };
+    let installed_names: Vec<String> = tags.models.iter().map(|m| m.name.clone()).collect();
+
+    let latest_user_text = messages
+        .iter()
+        .rev()
+        .find(|m| m.role == "user")
+        .map(|m| m.content.clone())
+        .unwrap_or_default();
+    let detected_mode = mode.unwrap_or_else(|| detect_mode(&latest_user_text));
+    let selected_model = model
+        .filter(|m| installed_names.iter().any(|name| name == m))
+        .or_else(|| preferred_model(&installed_names))
+        .unwrap_or_else(|| "llama3.2:1b".to_string());
+
+    let mut request_messages = vec![OllamaChatMessage {
+        role: "system".to_string(),
+        content: mode_system_prompt(&detected_mode),
+    }];
+
+    request_messages.extend(
+        messages
+            .into_iter()
+            .rev()
+            .take(10)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .map(|m| OllamaChatMessage {
+                role: m.role,
+                content: m.content,
+            }),
+    );
+
+    let req_body = OllamaChatRequest {
+        model: selected_model.clone(),
+        stream: true,
+        messages: request_messages,
+        options: generation_options_for(&selected_model, &detected_mode),
+    };
+
+    let response = client
+        .post("http://localhost:11434/api/chat")
+        .json(&req_body)
+        .send()
+        .await;
+
+    let Ok(http_response) = response else {
+        return ChatReply {
+            success: false,
+            model: selected_model,
+            response: String::new(),
+            error: Some("Failed to call Ollama chat API.".to_string()),
+        };
+    };
+
+    let mut stream = http_response.bytes_stream();
+    let mut buf = String::new();
+    let mut final_text = String::new();
+
+    while let Some(item) = stream.next().await {
+        let Ok(bytes) = item else {
+            return ChatReply {
+                success: false,
+                model: selected_model,
+                response: final_text,
+                error: Some("Streaming response interrupted.".to_string()),
+            };
+        };
+        buf.push_str(&String::from_utf8_lossy(&bytes));
+
+        while let Some(pos) = buf.find('\n') {
+            let line = buf[..pos].trim().to_string();
+            buf = buf[pos + 1..].to_string();
+            if line.is_empty() {
+                continue;
+            }
+
+            let chunk = serde_json::from_str::<OllamaChatStreamChunk>(&line);
+            let Ok(parsed) = chunk else {
+                continue;
+            };
+
+            if let Some(err) = parsed.error {
+                return ChatReply {
+                    success: false,
+                    model: selected_model,
+                    response: final_text,
+                    error: Some(err),
+                };
+            }
+
+            if let Some(message) = parsed.message {
+                if !message.content.is_empty() {
+                    final_text.push_str(&message.content);
+                    let _ = window.emit(
+                        "ollama-chat-chunk",
+                        StreamChunkPayload {
+                            chunk: message.content,
+                        },
+                    );
+                }
+            }
+
+            if parsed.done.unwrap_or(false) {
+                break;
+            }
+        }
+    }
+
+    ChatReply {
+        success: true,
+        model: selected_model,
+        response: final_text.trim().to_string(),
+        error: None,
+    }
+}
+
+#[tauri::command]
+async fn get_cpu_usage() -> f32 {
+    let mut system = System::new();
+    system.refresh_cpu_all();
+    thread::sleep(Duration::from_millis(250));
+    system.refresh_cpu_all();
+    system.global_cpu_usage()
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            debug_updater_info,
+            run_ollama_setup,
+            get_setup_diagnostics,
+            list_ollama_models,
+            list_model_catalog,
+            install_model,
+            uninstall_model,
+            chat_with_ollama,
+            get_cpu_usage
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

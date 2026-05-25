@@ -4,6 +4,7 @@ import {
     Home,
     Settings,
     Sparkles,
+    MessageSquare,
     UserCheck,
     Users,
 } from "lucide-react";
@@ -41,6 +42,11 @@ const items = [
         label: "Community",
         icon: Users,
         path: "/app/community",
+    },
+    {
+        label: "Chat",
+        icon: MessageSquare,
+        path: "/app/chat",
     },
     {
         label: "Settings",

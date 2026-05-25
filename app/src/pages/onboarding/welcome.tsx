@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { Link } from "react-router-dom";
 import LaunchLoader from "../../components/launch-loader";
 
 export default function WelcomePage() {
   const [showSplash, setShowSplash] = useState(true);
+  const handleLearnMore = async () => {
+    try {
+      await openUrl("https://careerforges.app");
+    } catch (error) {
+      console.error("Failed to open Learn More URL:", error);
+    }
+  };
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -64,7 +72,7 @@ export default function WelcomePage() {
                 <ArrowRight size={18} />
               </Link>
 
-              <button className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm transition hover:bg-white/[0.06]">
+              <button className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm transition hover:bg-white/[0.06]" onClick={handleLearnMore}>
                 Learn More
               </button>
             </div>

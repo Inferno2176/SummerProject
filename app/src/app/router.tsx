@@ -13,6 +13,7 @@ import JobsPage from "../pages/jobs";
 import AppliedPage from "../pages/applied";
 import InterviewPage from "../pages/interview";
 import CommunityPage from "../pages/community";
+import ChatPage from "../pages/chat";
 import SettingsPage from "../pages/settings";
 
 export const router = createBrowserRouter([
@@ -66,6 +67,10 @@ export const router = createBrowserRouter([
       {
         path: "community",
         element: <CommunityPage />,
+      },
+      {
+        path: "chat",
+        element: <ChatPage />,
       },
       {
         path: "settings",
