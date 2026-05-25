@@ -248,7 +248,7 @@ export const dbHealthInvoke = {
     }
   },
 
-  async getSize(): Promise<u64> {
+  async getSize(): Promise<number> {
     return invokeWithRetry('db_get_size', {});
   },
 };
