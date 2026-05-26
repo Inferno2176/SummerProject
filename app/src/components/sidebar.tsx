@@ -56,12 +56,7 @@ const items = [
         label: "Settings",
         icon: Settings,
         path: "/app/settings",
-    },
-    {
-        label: "Update Debug",
-        icon: Wrench,
-        path: "/app/debug-update",
-    },
+    }
 ];
 
 export default function Sidebar() {

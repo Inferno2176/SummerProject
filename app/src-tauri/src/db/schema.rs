@@ -201,13 +201,13 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
 
             CREATE INDEX idx_app_state_key ON app_state(key);
 
-            INSERT INTO app_state (id, key, value, data_type, created_at, updated_at) VALUES
-            ('1', 'onboarding_completed', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('2', 'onboarding_step', 'welcome', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('3', 'selected_provider', 'ollama', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('4', 'selected_model', 'qwen2.5:3b', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('5', 'ollama_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('6', 'claude_cli_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO app_state (id, key, value, data_type, created_at, updated_at) VALUES
+('1', 'onboarding_completed', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('2', 'onboarding_step', 'provider_selection', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('3', 'selected_provider', '', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('4', 'selected_model', '', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('5', 'ollama_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('6', 'claude_cli_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
             "
         ),
         migration!(
@@ -267,5 +267,67 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
             ('8', 'ai_response_streaming', 'true', 'boolean', 'Stream AI responses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
             "
         ),
+        migration!(
+    "013_user_profiles_table",
+    "
+    CREATE TABLE user_profiles (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+
+        full_name TEXT,
+        email TEXT,
+        phone TEXT,
+        linkedin_url TEXT,
+        github_url TEXT,
+        portfolio_url TEXT,
+        location TEXT,
+        summary TEXT,
+
+        skills TEXT,
+        experience_json TEXT,
+        education_json TEXT,
+        certifications_json TEXT,
+        projects_json TEXT,
+
+        years_experience REAL,
+
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL,
+
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
+    "
+),
+migration!(
+    "014_app_state_extensions",
+    "
+    INSERT INTO app_state (
+        id,
+        key,
+        value,
+        data_type,
+        created_at,
+        updated_at
+    ) VALUES
+    (
+        '7',
+        'resume_uploaded',
+        'false',
+        'boolean',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        '8',
+        'anonymous_installation_id',
+        '',
+        'string',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
+    "
+),
     ]
 }

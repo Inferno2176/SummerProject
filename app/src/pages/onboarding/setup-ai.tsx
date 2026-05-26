@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import SplashScreen from "../../splashScreen";
 import { getModelCatalog, getSetupDiagnostics, ModelCatalogItem, setAgentByModel, SetupDiagnostics } from "../../lib/ai-preferences";
@@ -64,17 +64,22 @@ export default function SetupAIPage() {
   const [installingModel, setInstallingModel] = useState<string | null>(null);
   const [installProgress, setInstallProgress] = useState<InstallProgress | null>(null);
 
-  const selectedModelData = useMemo(
-    () => catalog.find((m) => m.name === selectedModel),
-    [catalog, selectedModel],
-  );
+  const selectedModelData = useMemo(() => {
+    return catalog.find((m) => m.name === selectedModel) ?? null;
+  }, [catalog, selectedModel]);
 
   const refreshAll = async () => {
     const [diag, models] = await Promise.all([getSetupDiagnostics(), getModelCatalog()]);
     setDiagnostics(diag);
     setCatalog(models);
     const recommended = models.find((m) => m.recommended)?.name || diag?.recommendedModel || models[0]?.name || "";
-    setSelectedModel((prev) => prev || recommended);
+    setSelectedModel((prev) => {
+      if (prev && models.some((m) => m.name === prev)) {
+        return prev;
+      }
+
+      return recommended;
+    });
   };
 
   useEffect(() => {
@@ -135,12 +140,74 @@ export default function SetupAIPage() {
     }
   };
 
-  const continueNext = () => {
-    if (selectedModel) {
-      const found = catalog.find((m) => m.name === selectedModel);
-      setAgentByModel(selectedModel, found?.name || selectedModel);
+  const navigate = useNavigate();
+
+const continueNext = async () => {
+  try {
+    console.log("STEP 1");
+
+    setErrorText(null);
+
+    if (!selectedModel) {
+      setErrorText(
+        "Please select a model.",
+      );
+
+      return;
     }
-  };
+
+    console.log("STEP 2");
+
+    const found = catalog.find(
+      (m) => m.name === selectedModel,
+    );
+
+    localStorage.setItem(
+      "ai_agent_name",
+      found?.name || selectedModel,
+    );
+
+    console.log("STEP 3");
+
+    await invoke(
+      "db_set_selected_provider",
+      {
+        provider: "ollama",
+      },
+    );
+
+    console.log("STEP 4");
+
+    await invoke(
+      "db_set_selected_model",
+      {
+        model: selectedModel,
+      },
+    );
+
+    console.log("STEP 5");
+
+    await invoke(
+      "db_set_onboarding_step",
+      {
+        step: "resume_upload",
+      },
+    );
+
+    console.log("STEP 6");
+
+    navigate("/upload-resume");
+
+    console.log("STEP 7");
+  } catch (e) {
+    console.error(
+      "continueNext failed:",
+      e,
+    );
+
+    setErrorText(String(e));
+  }
+};
 
   const activeCommands =
     diagnostics?.os === "windows"
@@ -231,6 +298,15 @@ export default function SetupAIPage() {
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold">{model.name}</p>
                   {model.recommended ? <span className="rounded-full bg-orange-500/20 px-2 py-1 text-[10px] text-orange-200">Recommended</span> : null}
+                  {model.installed ? (
+                    <span className="rounded-full bg-green-500/20 px-2 py-1 text-[10px] text-green-200">
+                      Installed
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-white/60">
+                      Not Installed
+                    </span>
+                  )}
                 </div>
                 <p className="mt-2 text-xs text-[var(--muted)]">Size: {model.sizeLabel} | RAM: ~{model.estimatedRamGb} GB</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">Speed: {model.speed} | Quality: {model.quality}</p>
@@ -320,9 +396,13 @@ export default function SetupAIPage() {
         </div>
 
         <div className="mt-8 flex justify-end">
-          <Link to="/upload-resume" onClick={continueNext} className="rounded-xl bg-white px-5 py-3 text-black transition hover:opacity-90">
+          <button
+            disabled={!selectedModel}
+            onClick={() => void continueNext()}
+            className="rounded-xl bg-white px-5 py-3 text-black transition hover:opacity-90 disabled:opacity-40"
+          >
             Continue
-          </Link>
+          </button>
         </div>
       </div>
     </section>

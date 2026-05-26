@@ -10,8 +10,8 @@ use std::time::Duration;
 use sysinfo::System;
 use tauri::Emitter;
 use tauri::Manager;
-use crate::commands::*;
 
+use crate::commands::*;
 use crate::types::*;
 use crate::utils::*;
 use crate::db::{init_db, MigrationRunner, get_migrations};
@@ -757,99 +757,220 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            // Initialize database
-            let app_data_dir = app.path().app_data_dir()
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-            let db_path = app_data_dir.join("careerforges.db");
-            
-            log::info!("Initializing database at {:?}", db_path);
-            
-            match init_db(&db_path) {
-                Ok(pool) => {
-                    log::info!("Database initialized successfully");
-                    
-                    // Run migrations
-                    {
-                        let mut conn = db::get_connection(&pool)
-                            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-                        let migrations = get_migrations();
-                        match MigrationRunner::run_migrations(&mut *conn, migrations) {
-                            Ok(_) => log::info!("Migrations completed successfully"),
-                            Err(e) => log::error!("Migration error: {}", e),
-                        }
-                    }
-                    
-                    app.manage(pool);
-                    Ok(())
-                }
-                Err(e) => {
-                    log::error!("Failed to initialize database: {}", e);
-                    Err(Box::new(e) as Box<dyn std::error::Error>)
-                }
-            }
-        })
-        .invoke_handler(tauri::generate_handler![
-            // Legacy commands
-            greet,
-            debug_updater_info,
-            run_ollama_setup,
-            get_setup_diagnostics,
-            list_ollama_models,
-            list_model_catalog,
-            install_model,
-            uninstall_model,
-            chat_with_ollama,
-            get_cpu_usage,
-            
-            // App State Commands
-            db_get_app_state,
-            db_set_app_state,
-            db_get_app_state_bool,
-            db_get_app_state_string,
-            db_list_app_state,
-            db_delete_app_state,
-            db_is_onboarding_completed,
-            db_complete_onboarding,
-            db_reset_onboarding,
-            db_get_onboarding_step,
-            db_set_onboarding_step,
-            db_get_selected_provider,
-            db_set_selected_provider,
-            db_get_selected_model,
-            db_set_selected_model,
-            db_set_ollama_detected,
-            db_set_claude_detected,
-            
-            // AI Agent Commands
-            db_create_ai_agent,
-            db_get_ai_agent,
-            db_list_ai_agents_by_provider,
-            db_list_installed_ai_agents,
-            db_get_default_ai_agent,
-            db_set_default_ai_agent,
-            db_update_ai_agent_install_status,
-            db_update_ai_agent_availability,
-            db_delete_ai_agent,
-            db_list_all_ai_agents,
-            
-            // Settings Commands
-            db_get_setting,
-            db_set_setting,
-            db_get_setting_bool,
-            db_get_setting_string,
-            db_get_setting_number,
-            db_list_settings,
-            db_delete_setting,
-            db_reset_settings_to_defaults,
-            db_get_theme,
-            db_set_theme,
-            db_get_auto_save_sessions,
-            db_set_auto_save_sessions,
-            
-            // Database Health
-            db_ping,
-            db_get_size,
-        ])
+    // Initialize database
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| {
+            Box::new(e)
+                as Box<
+                    dyn std::error::Error
+                >
+        })?;
+
+    let db_path =
+        app_data_dir.join(
+            "careerforges.db",
+        );
+
+    log::info!(
+        "Initializing database at {:?}",
+        db_path
+    );
+
+    let pool = init_db(&db_path)
+        .map_err(|e| {
+            Box::new(e)
+                as Box<
+                    dyn std::error::Error
+                >
+        })?;
+
+    log::info!(
+        "Database initialized successfully"
+    );
+
+    /*
+        RUN MIGRATIONS
+    */
+    {
+        let migrations =
+            get_migrations();
+
+        tauri::async_runtime::block_on(
+            async {
+                MigrationRunner::run_migrations(
+                    &pool,
+                    migrations,
+                )
+                .await
+            },
+        )
+        .map_err(|e| {
+            Box::new(e)
+                as Box<
+                    dyn std::error::Error
+                >
+        })?;
+
+        log::info!(
+            "Migrations completed successfully"
+        );
+    }
+
+    /*
+        SQLITE TEST
+    */
+    {
+        tauri::async_runtime::block_on(
+            async {
+                let conn =
+                    db::get_connection(
+                        &pool,
+                    )
+                    .await?;
+
+                conn.interact(|conn| {
+                    conn.execute(
+                        "
+                        INSERT OR IGNORE INTO app_state (
+                            key,
+                            value,
+                            created_at,
+                            updated_at
+                        )
+                        VALUES (
+                            'db_test',
+                            'working',
+                            datetime('now'),
+                            datetime('now')
+                        )
+                        ",
+                        [],
+                    )
+                })
+                .await??;
+
+                Ok::<(), db::DbError>(
+                    (),
+                )
+            },
+        )
+        .map_err(|e| {
+            Box::new(e)
+                as Box<
+                    dyn std::error::Error
+                >
+        })?;
+
+        println!(
+            "===================="
+        );
+
+        println!(
+            "DB PATH: {:?}",
+            db_path
+        );
+
+        println!(
+            "===================="
+        );
+
+        println!(
+            "SQLITE TEST INSERT SUCCESS"
+        );
+    }
+
+    app.manage(pool.clone());
+
+    Ok(())
+})
+.invoke_handler(tauri::generate_handler![
+    // Legacy commands
+    greet,
+    debug_updater_info,
+    run_ollama_setup,
+    get_setup_diagnostics,
+    list_ollama_models,
+    list_model_catalog,
+    install_model,
+    uninstall_model,
+    chat_with_ollama,
+    get_cpu_usage,
+    
+    // App State Commands
+    db_get_app_state,
+    db_set_app_state,
+    db_get_app_state_bool,
+    db_get_app_state_string,
+    // db_list_app_state,
+    db_delete_app_state,
+    db_is_onboarding_completed,
+    db_complete_onboarding,
+    db_reset_onboarding,
+    db_get_onboarding_step,
+    db_set_onboarding_step,
+    db_get_selected_provider,
+    db_set_selected_provider,
+    db_get_selected_model,
+    db_set_selected_model,
+    db_set_ollama_detected,
+    db_set_claude_detected,
+    
+    // AI Agent Commands
+    db_create_ai_agent,
+    db_get_ai_agent,
+    // db_list_ai_agents_by_provider,
+    // db_list_installed_ai_agents,
+    db_get_default_ai_agent,
+    db_set_default_ai_agent,
+    db_update_ai_agent_install_status,
+    db_update_ai_agent_availability,
+    db_delete_ai_agent,
+    // db_list_all_ai_agents,
+
+    // User Commands
+    db_create_user,
+    db_get_user,
+    db_get_user_by_email,
+    // db_list_users,
+    db_update_user,
+    db_delete_user,
+
+    // Session Commands
+    db_create_session,
+    db_get_session,
+    // db_list_user_sessions,
+    db_update_session_title,
+    db_delete_session,
+    db_count_user_sessions,
+
+    // Message Commands
+    db_create_message,
+    db_get_message,
+    // db_list_session_messages,
+    // db_list_recent_messages,
+    db_delete_message,
+    db_count_session_tokens,
+    
+    // Settings Commands
+    db_get_setting,
+    db_set_setting,
+    db_get_setting_bool,
+    db_get_setting_string,
+    db_get_setting_number,
+    db_list_settings,
+    db_delete_setting,
+    db_reset_settings_to_defaults,
+    db_get_theme,
+    db_set_theme,
+    db_get_auto_save_sessions,
+    db_set_auto_save_sessions,
+    
+    // Database Health
+    db_ping,
+    db_get_size,
+])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

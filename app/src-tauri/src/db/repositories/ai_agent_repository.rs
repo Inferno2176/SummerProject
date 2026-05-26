@@ -1,10 +1,30 @@
-use crate::db::error::DbResult;
-use crate::db::connection::DbPool;
-use serde::{Deserialize, Serialize};
 use chrono::Utc;
+
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+use crate::db::{
+    connection::{
+        execute_with_params,
+        query_row,
+        DbPool,
+    },
+    error::{
+        DbError,
+        DbResult,
+    },
+};
+
+#[derive(
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+)]
 pub struct AIAgent {
     pub id: String,
     pub provider: String,
@@ -29,212 +49,380 @@ pub struct AIAgent {
 pub struct AIAgentRepository;
 
 impl AIAgentRepository {
-    pub fn create(
+    /*
+        CREATE
+    */
+    pub async fn create(
         pool: &DbPool,
         provider: &str,
         name: &str,
         display_name: &str,
         is_installed: bool,
     ) -> DbResult<AIAgent> {
-        let id = Uuid::new_v4().to_string();
-        let now = Utc::now().to_rfc3339();
-        
-        let conn = crate::db::connection::get_connection(pool)?;
-        conn.execute(
-            "INSERT INTO ai_agents (id, provider, name, display_name, is_installed, is_available, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, 1, ?, ?)",
-            [id.as_str(), provider, name, display_name, &is_installed.to_string(), now.as_str(), now.as_str()],
-        )?;
+        let id =
+            Uuid::new_v4().to_string();
 
-        Self::get_by_id(pool, &id)?.ok_or(crate::db::error::DbError::NotFound)
+        let now =
+            Utc::now().to_rfc3339();
+
+        execute_with_params(
+            pool,
+            "
+            INSERT INTO ai_agents (
+                id,
+                provider,
+                name,
+                display_name,
+                is_installed,
+                is_available,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                ?1,
+                ?2,
+                ?3,
+                ?4,
+                ?5,
+                1,
+                ?6,
+                ?7
+            )
+            ",
+            (
+    id.clone(),
+    provider.to_string(),
+    name.to_string(),
+    display_name.to_string(),
+    if is_installed {
+        1
+    } else {
+        0
+    },
+    now.clone(),
+    now.clone(),
+),
+        )
+        .await?;
+
+        Self::get_by_id(pool, &id)
+            .await?
+            .ok_or(DbError::NotFound)
     }
 
-    pub fn get_by_id(pool: &DbPool, id: &str) -> DbResult<Option<AIAgent>> {
-        crate::db::connection::query_row(
+    /*
+        GET BY ID
+    */
+    pub async fn get_by_id(
+        pool: &DbPool,
+        id: &str,
+    ) -> DbResult<Option<AIAgent>>
+    {
+        query_row(
             pool,
-            &format!(
-                "SELECT id, provider, name, model_id, display_name, description, is_installed, is_available, 
-                        is_default, download_url, local_path, version, size_mb, performance_tier, capabilities, 
-                        last_checked, created_at, updated_at 
-                 FROM ai_agents WHERE id = '{}' AND deleted_at IS NULL",
-                id
+            "
+            SELECT
+                id,
+                provider,
+                name,
+                model_id,
+                display_name,
+                description,
+                is_installed,
+                is_available,
+                is_default,
+                download_url,
+                local_path,
+                version,
+                size_mb,
+                performance_tier,
+                capabilities,
+                last_checked,
+                created_at,
+                updated_at
+            FROM ai_agents
+            WHERE id = ?1
+            AND deleted_at IS NULL
+            ",
+            [id.to_string()],
+            |row| {
+                Ok(AIAgent {
+                    id: row.get(0)?,
+                    provider: row.get(1)?,
+                    name: row.get(2)?,
+                    model_id: row.get(3)?,
+                    display_name: row.get(4)?,
+                    description: row.get(5)?,
+                    is_installed:
+                        row.get::<_, i32>(6)?
+                            != 0,
+                    is_available:
+                        row.get::<_, i32>(7)?
+                            != 0,
+                    is_default:
+                        row.get::<_, i32>(8)?
+                            != 0,
+                    download_url:
+                        row.get(9)?,
+                    local_path:
+                        row.get(10)?,
+                    version:
+                        row.get(11)?,
+                    size_mb:
+                        row.get(12)?,
+                    performance_tier:
+                        row.get(13)?,
+                    capabilities:
+                        row.get(14)?,
+                    last_checked:
+                        row.get(15)?,
+                    created_at:
+                        row.get(16)?,
+                    updated_at:
+                        row.get(17)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        GET DEFAULT
+    */
+    pub async fn get_default(
+        pool: &DbPool,
+    ) -> DbResult<Option<AIAgent>>
+    {
+        query_row(
+            pool,
+            "
+            SELECT
+                id,
+                provider,
+                name,
+                model_id,
+                display_name,
+                description,
+                is_installed,
+                is_available,
+                is_default,
+                download_url,
+                local_path,
+                version,
+                size_mb,
+                performance_tier,
+                capabilities,
+                last_checked,
+                created_at,
+                updated_at
+            FROM ai_agents
+            WHERE is_default = 1
+            AND deleted_at IS NULL
+            LIMIT 1
+            ",
+            [],
+            |row| {
+                Ok(AIAgent {
+                    id: row.get(0)?,
+                    provider: row.get(1)?,
+                    name: row.get(2)?,
+                    model_id: row.get(3)?,
+                    display_name: row.get(4)?,
+                    description: row.get(5)?,
+                    is_installed:
+                        row.get::<_, i32>(6)?
+                            != 0,
+                    is_available:
+                        row.get::<_, i32>(7)?
+                            != 0,
+                    is_default:
+                        row.get::<_, i32>(8)?
+                            != 0,
+                    download_url:
+                        row.get(9)?,
+                    local_path:
+                        row.get(10)?,
+                    version:
+                        row.get(11)?,
+                    size_mb:
+                        row.get(12)?,
+                    performance_tier:
+                        row.get(13)?,
+                    capabilities:
+                        row.get(14)?,
+                    last_checked:
+                        row.get(15)?,
+                    created_at:
+                        row.get(16)?,
+                    updated_at:
+                        row.get(17)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        SET DEFAULT
+    */
+    pub async fn set_default(
+        pool: &DbPool,
+        id: &str,
+    ) -> DbResult<AIAgent> {
+        let now =
+            Utc::now().to_rfc3339();
+
+        let agent =
+            Self::get_by_id(pool, id)
+                .await?
+                .ok_or(
+                    DbError::NotFound,
+                )?;
+
+        execute_with_params(
+            pool,
+            "
+            UPDATE ai_agents
+            SET
+                is_default = 0,
+                updated_at = ?1
+            WHERE provider = ?2
+            AND id != ?3
+            ",
+            (
+    now.clone(),
+    agent.provider.clone(),
+    id.to_string(),
+)
+        )
+        .await?;
+
+        execute_with_params(
+            pool,
+            "
+            UPDATE ai_agents
+            SET
+                is_default = 1,
+                updated_at = ?1
+            WHERE id = ?2
+            ",
+            (
+    now.clone(),
+    id.to_string(),
+),
+        )
+        .await?;
+
+        Self::get_by_id(pool, id)
+            .await?
+            .ok_or(DbError::NotFound)
+    }
+
+    /*
+        UPDATE INSTALL STATUS
+    */
+    pub async fn update_installation_status(
+        pool: &DbPool,
+        id: &str,
+        is_installed: bool,
+    ) -> DbResult<AIAgent> {
+        let now =
+            Utc::now().to_rfc3339();
+
+        let value =
+            if is_installed {
+                1
+            } else {
+                0
+            };
+
+        execute_with_params(
+            pool,
+            "
+            UPDATE ai_agents
+            SET
+                is_installed = ?1,
+                is_available = ?2,
+                updated_at = ?3
+            WHERE id = ?4
+            ",
+            (
+                value,
+                value,
+                now.clone(),
+                id.to_string(),
             ),
-            |row| {
-                Ok(AIAgent {
-                    id: row.get(0)?,
-                    provider: row.get(1)?,
-                    name: row.get(2)?,
-                    model_id: row.get(3)?,
-                    display_name: row.get(4)?,
-                    description: row.get(5)?,
-                    is_installed: row.get::<_, i32>(6)? != 0,
-                    is_available: row.get::<_, i32>(7)? != 0,
-                    is_default: row.get::<_, i32>(8)? != 0,
-                    download_url: row.get(9)?,
-                    local_path: row.get(10)?,
-                    version: row.get(11)?,
-                    size_mb: row.get(12)?,
-                    performance_tier: row.get(13)?,
-                    capabilities: row.get(14)?,
-                    last_checked: row.get(15)?,
-                    created_at: row.get(16)?,
-                    updated_at: row.get(17)?,
-                })
-            },
         )
+        .await?;
+
+        Self::get_by_id(pool, id)
+            .await?
+            .ok_or(DbError::NotFound)
     }
 
-    pub fn list_by_provider(pool: &DbPool, provider: &str) -> DbResult<Vec<AIAgent>> {
-        crate::db::connection::query_rows(
+    /*
+        UPDATE AVAILABILITY
+    */
+    pub async fn update_availability(
+        pool: &DbPool,
+        id: &str,
+        is_available: bool,
+    ) -> DbResult<AIAgent> {
+        let now =
+            Utc::now().to_rfc3339();
+
+        execute_with_params(
             pool,
-            &format!(
-                "SELECT id, provider, name, model_id, display_name, description, is_installed, is_available, 
-                        is_default, download_url, local_path, version, size_mb, performance_tier, capabilities, 
-                        last_checked, created_at, updated_at 
-                 FROM ai_agents WHERE provider = '{}' AND deleted_at IS NULL ORDER BY created_at DESC",
-                provider
+            "
+            UPDATE ai_agents
+            SET
+                is_available = ?1,
+                last_checked = ?2,
+                updated_at = ?3
+            WHERE id = ?4
+            ",
+            (
+                if is_available {
+                    1
+                } else {
+                    0
+                },
+                now.clone(),
+                now.clone(),
+                id.to_string(),
             ),
-            |row| {
-                Ok(AIAgent {
-                    id: row.get(0)?,
-                    provider: row.get(1)?,
-                    name: row.get(2)?,
-                    model_id: row.get(3)?,
-                    display_name: row.get(4)?,
-                    description: row.get(5)?,
-                    is_installed: row.get::<_, i32>(6)? != 0,
-                    is_available: row.get::<_, i32>(7)? != 0,
-                    is_default: row.get::<_, i32>(8)? != 0,
-                    download_url: row.get(9)?,
-                    local_path: row.get(10)?,
-                    version: row.get(11)?,
-                    size_mb: row.get(12)?,
-                    performance_tier: row.get(13)?,
-                    capabilities: row.get(14)?,
-                    last_checked: row.get(15)?,
-                    created_at: row.get(16)?,
-                    updated_at: row.get(17)?,
-                })
-            },
         )
+        .await?;
+
+        Self::get_by_id(pool, id)
+            .await?
+            .ok_or(DbError::NotFound)
     }
 
-    pub fn list_installed(pool: &DbPool) -> DbResult<Vec<AIAgent>> {
-        crate::db::connection::query_rows(
+    /*
+        DELETE
+    */
+    pub async fn delete(
+        pool: &DbPool,
+        id: &str,
+    ) -> DbResult<()> {
+        let now =
+            Utc::now().to_rfc3339();
+
+        execute_with_params(
             pool,
-            "SELECT id, provider, name, model_id, display_name, description, is_installed, is_available, 
-                    is_default, download_url, local_path, version, size_mb, performance_tier, capabilities, 
-                    last_checked, created_at, updated_at 
-             FROM ai_agents WHERE is_installed = 1 AND deleted_at IS NULL ORDER BY provider, created_at DESC",
-            |row| {
-                Ok(AIAgent {
-                    id: row.get(0)?,
-                    provider: row.get(1)?,
-                    name: row.get(2)?,
-                    model_id: row.get(3)?,
-                    display_name: row.get(4)?,
-                    description: row.get(5)?,
-                    is_installed: row.get::<_, i32>(6)? != 0,
-                    is_available: row.get::<_, i32>(7)? != 0,
-                    is_default: row.get::<_, i32>(8)? != 0,
-                    download_url: row.get(9)?,
-                    local_path: row.get(10)?,
-                    version: row.get(11)?,
-                    size_mb: row.get(12)?,
-                    performance_tier: row.get(13)?,
-                    capabilities: row.get(14)?,
-                    last_checked: row.get(15)?,
-                    created_at: row.get(16)?,
-                    updated_at: row.get(17)?,
-                })
-            },
+            "
+            UPDATE ai_agents
+            SET deleted_at = ?1
+            WHERE id = ?2
+            ",
+            (
+                now.clone(),
+                id.to_string(),
+            ),
         )
-    }
+        .await?;
 
-    pub fn get_default(pool: &DbPool) -> DbResult<Option<AIAgent>> {
-        crate::db::connection::query_row(
-            pool,
-            "SELECT id, provider, name, model_id, display_name, description, is_installed, is_available, 
-                    is_default, download_url, local_path, version, size_mb, performance_tier, capabilities, 
-                    last_checked, created_at, updated_at 
-             FROM ai_agents WHERE is_default = 1 AND deleted_at IS NULL LIMIT 1",
-            |row| {
-                Ok(AIAgent {
-                    id: row.get(0)?,
-                    provider: row.get(1)?,
-                    name: row.get(2)?,
-                    model_id: row.get(3)?,
-                    display_name: row.get(4)?,
-                    description: row.get(5)?,
-                    is_installed: row.get::<_, i32>(6)? != 0,
-                    is_available: row.get::<_, i32>(7)? != 0,
-                    is_default: row.get::<_, i32>(8)? != 0,
-                    download_url: row.get(9)?,
-                    local_path: row.get(10)?,
-                    version: row.get(11)?,
-                    size_mb: row.get(12)?,
-                    performance_tier: row.get(13)?,
-                    capabilities: row.get(14)?,
-                    last_checked: row.get(15)?,
-                    created_at: row.get(16)?,
-                    updated_at: row.get(17)?,
-                })
-            },
-        )
-    }
-
-    pub fn set_default(pool: &DbPool, id: &str) -> DbResult<AIAgent> {
-        let now = Utc::now().to_rfc3339();
-        let conn = crate::db::connection::get_connection(pool)?;
-        
-        // Clear other defaults for this provider
-        let agent = Self::get_by_id(pool, id)?.ok_or(crate::db::error::DbError::NotFound)?;
-        conn.execute(
-            "UPDATE ai_agents SET is_default = 0, updated_at = ? WHERE provider = ? AND id != ?",
-            [now.as_str(), agent.provider.as_str(), id],
-        )?;
-        
-        // Set this as default
-        conn.execute(
-            "UPDATE ai_agents SET is_default = 1, updated_at = ? WHERE id = ?",
-            [now.as_str(), id],
-        )?;
-
-        Self::get_by_id(pool, id)?.ok_or(crate::db::error::DbError::NotFound)
-    }
-
-    pub fn update_installation_status(pool: &DbPool, id: &str, is_installed: bool) -> DbResult<AIAgent> {
-        let now = Utc::now().to_rfc3339();
-        let conn = crate::db::connection::get_connection(pool)?;
-        
-        conn.execute(
-            "UPDATE ai_agents SET is_installed = ?, is_available = ?, updated_at = ? WHERE id = ?",
-            [&is_installed.to_string(), &is_installed.to_string(), now.as_str(), id],
-        )?;
-
-        Self::get_by_id(pool, id)?.ok_or(crate::db::error::DbError::NotFound)
-    }
-
-    pub fn update_availability(pool: &DbPool, id: &str, is_available: bool) -> DbResult<AIAgent> {
-        let now = Utc::now().to_rfc3339();
-        let conn = crate::db::connection::get_connection(pool)?;
-        
-        conn.execute(
-            "UPDATE ai_agents SET is_available = ?, last_checked = ?, updated_at = ? WHERE id = ?",
-            [&is_available.to_string(), now.as_str(), now.as_str(), id],
-        )?;
-
-        Self::get_by_id(pool, id)?.ok_or(crate::db::error::DbError::NotFound)
-    }
-
-    pub fn delete(pool: &DbPool, id: &str) -> DbResult<()> {
-        let now = Utc::now().to_rfc3339();
-        let conn = crate::db::connection::get_connection(pool)?;
-        
-        conn.execute(
-            "UPDATE ai_agents SET deleted_at = ? WHERE id = ?",
-            [now.as_str(), id],
-        )?;
         Ok(())
     }
 }

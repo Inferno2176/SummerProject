@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Link } from "react-router-dom";
 import LaunchLoader from "../../components/launch-loader";
+import { invoke } from "@tauri-apps/api/core";
+import { useNavigate } from "react-router-dom";
 
 export default function WelcomePage() {
   const [showSplash, setShowSplash] = useState(true);
+  const navigate = useNavigate();
   const handleLearnMore = async () => {
     try {
       await openUrl("https://careerforges.app");
@@ -64,13 +66,29 @@ export default function WelcomePage() {
             </p>
 
             <div className="mt-10 flex items-center justify-center gap-4">
-              <Link
-                to="/setup-ai"
+              <button
+                onClick={async () => {
+                  try {
+                    await invoke(
+                      "db_set_onboarding_step",
+                      {
+                        step: "setup_ai",
+                      },
+                    );
+
+                    navigate("/setup-ai");
+                  } catch (err) {
+                    console.error(
+                      "Failed to start onboarding",
+                      err,
+                    );
+                  }
+                }}
                 className="flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-6 py-4 font-medium text-white transition hover:scale-[1.02]"
               >
                 Get Started
                 <ArrowRight size={18} />
-              </Link>
+              </button>
 
               <button className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm transition hover:bg-white/[0.06]" onClick={handleLearnMore}>
                 Learn More

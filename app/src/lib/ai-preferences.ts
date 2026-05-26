@@ -147,17 +147,40 @@ export async function getModelCatalog(): Promise<ModelCatalogItem[]> {
   }
 }
 
-export function getCurrentModel() {
-  return localStorage.getItem("ai_model") || FALLBACK_AGENTS[0].model;
+export async function getCurrentModel() {
+  try {
+    return await invoke<string>("db_get_selected_model");
+  } catch {
+    return FALLBACK_AGENTS[0].model;
+  }
 }
 
-export function getCurrentProvider() {
-  return localStorage.getItem("ai_provider") || "ollama";
+export async function getCurrentProvider() {
+  try {
+    return await invoke<string>("db_get_selected_provider");
+  } catch {
+    return "ollama";
+  }
 }
 
-export function setAgentByModel(model: string, name?: string) {
-  localStorage.setItem("ai_provider", "ollama");
-  localStorage.setItem("ai_model", model);
-  localStorage.setItem("ai_agent_name", name || prettyName(model));
-  window.dispatchEvent(new Event("ai-preferences-updated"));
+export async function setAgentByModel(
+  model: string,
+  name?: string,
+) {
+  await invoke("db_set_selected_provider", {
+    provider: "ollama",
+  });
+
+  await invoke("db_set_selected_model", {
+    model,
+  });
+
+  localStorage.setItem(
+    "ai_agent_name",
+    name || prettyName(model),
+  );
+
+  window.dispatchEvent(
+    new Event("ai-preferences-updated"),
+  );
 }

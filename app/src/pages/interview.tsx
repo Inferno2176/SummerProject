@@ -1,8 +1,26 @@
-import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import { invoke } from "@tauri-apps/api/core";
+
 import { listen } from "@tauri-apps/api/event";
-import { AnimatePresence, motion } from "framer-motion";
-import { getCurrentModel } from "../lib/ai-preferences";
+
+import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
+
+import {
+  getCurrentModel,
+  getCurrentProvider,
+} from "../lib/ai-preferences";
 
 type InterviewMessage = {
   id: string;
@@ -17,15 +35,39 @@ type ChatReply = {
   error?: string | null;
 };
 
-const KEY = "cf_interview_session_v1";
+const KEY =
+  "cf_interview_session_v1";
 
 const INTERVIEW_MODES = [
-  { id: "interview_practice", label: "Practice Mode" },
-  { id: "interview_realistic", label: "Realistic Interview Mode" },
-  { id: "interview_technical", label: "Technical Interview" },
-  { id: "interview_hr", label: "HR Interview" },
-  { id: "interview_behavioral", label: "Behavioral Interview" },
-  { id: "interview_rapid_fire", label: "Rapid Fire Round" },
+  {
+    id: "interview_practice",
+    label: "Practice Mode",
+  },
+  {
+    id: "interview_realistic",
+    label:
+      "Realistic Interview Mode",
+  },
+  {
+    id: "interview_technical",
+    label:
+      "Technical Interview",
+  },
+  {
+    id: "interview_hr",
+    label: "HR Interview",
+  },
+  {
+    id:
+      "interview_behavioral",
+    label:
+      "Behavioral Interview",
+  },
+  {
+    id:
+      "interview_rapid_fire",
+    label: "Rapid Fire Round",
+  },
 ];
 
 const PERSONALITIES = [
@@ -36,196 +78,776 @@ const PERSONALITIES = [
   "HR Manager",
 ];
 
-type SpeechRecognitionCtor = new () => {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
+type SpeechRecognitionCtor =
+  new () => {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
 
-function loadMessages() {
+    onresult:
+    | ((
+      event: {
+        results: ArrayLike<
+          ArrayLike<{
+            transcript: string;
+          }>
+        >;
+      }
+    ) => void)
+    | null;
+
+    onend:
+    | (() => void)
+    | null;
+
+    start: () => void;
+
+    stop: () => void;
+  };
+
+function loadMessages(): InterviewMessage[] {
   try {
-    const raw = sessionStorage.getItem(KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as InterviewMessage[];
+    const raw =
+      sessionStorage.getItem(
+        KEY
+      );
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed =
+      JSON.parse(raw);
+
+    if (
+      !Array.isArray(parsed)
+    ) {
+      return [];
+    }
+
+    return parsed;
   } catch {
     return [];
   }
 }
 
 export default function InterviewPage() {
-  const [messages, setMessages] = useState<InterviewMessage[]>(loadMessages);
-  const [prompt, setPrompt] = useState("");
-  const [mode, setMode] = useState(INTERVIEW_MODES[0].id);
-  const [personality, setPersonality] = useState(PERSONALITIES[0]);
-  const [inputSource, setInputSource] = useState("custom_jd");
-  const [jobContext, setJobContext] = useState("");
-  const [resumeContext, setResumeContext] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [elapsedSec, setElapsedSec] = useState(0);
-  const [round, setRound] = useState(1);
-  const model = getCurrentModel();
-  const listRef = useRef<HTMLDivElement>(null);
-  const activeAssistantId = useRef<string | null>(null);
-  const recognitionRef = useRef<{ start: () => void; stop: () => void } | null>(null);
+  const [messages, setMessages] =
+    useState<
+      InterviewMessage[]
+    >(loadMessages);
 
-  useEffect(() => {
-    sessionStorage.setItem(KEY, JSON.stringify(messages));
-    if (listRef.current) {
-      listRef.current.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-    }
-  }, [messages]);
+  const [prompt, setPrompt] =
+    useState("");
 
-  useEffect(() => {
-    if (!isLoading) return;
-    const t = window.setInterval(() => setElapsedSec((v) => v + 1), 1000);
-    return () => window.clearInterval(t);
-  }, [isLoading]);
+  const [mode, setMode] =
+    useState(
+      INTERVIEW_MODES[0].id
+    );
 
+  const [
+    personality,
+    setPersonality,
+  ] = useState(
+    PERSONALITIES[0]
+  );
+
+  const [
+    inputSource,
+    setInputSource,
+  ] = useState(
+    "custom_jd"
+  );
+
+  const [
+    jobContext,
+    setJobContext,
+  ] = useState("");
+
+  const [
+    resumeContext,
+    setResumeContext,
+  ] = useState("");
+
+  const [isLoading, setIsLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    isListening,
+    setIsListening,
+  ] = useState(false);
+
+  const [isSpeaking, setIsSpeaking] =
+    useState(false);
+
+  const [elapsedSec, setElapsedSec] =
+    useState(0);
+
+  const [round, setRound] =
+    useState(1);
+
+  const [model, setModel] =
+    useState("");
+
+  const [provider, setProvider] =
+    useState("");
+
+  const listRef =
+    useRef<HTMLDivElement>(
+      null
+    );
+
+  const activeAssistantId =
+    useRef<string | null>(
+      null
+    );
+
+  const recognitionRef =
+    useRef<{
+      start: () => void;
+      stop: () => void;
+    } | null>(null);
+
+  /*
+    LOAD AI PREFS
+  */
   useEffect(() => {
-    const unlistenPromise = listen<{ chunk: string }>("ollama-chat-chunk", (event) => {
-      const id = activeAssistantId.current;
-      if (!id) return;
-      const chunk = event.payload?.chunk || "";
-      if (!chunk) return;
-      setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content: `${m.content}${chunk}` } : m)));
-    });
+    let mounted = true;
+
+    const sync =
+      async () => {
+        const currentModel =
+          await getCurrentModel();
+
+        const currentProvider =
+          await getCurrentProvider();
+
+        if (!mounted) {
+          return;
+        }
+
+        setModel(
+          currentModel
+        );
+
+        setProvider(
+          currentProvider
+        );
+      };
+
+    void sync();
+
+    window.addEventListener(
+      "ai-preferences-updated",
+      sync
+    );
+
     return () => {
-      void unlistenPromise.then((u) => u());
+      mounted = false;
+
+      window.removeEventListener(
+        "ai-preferences-updated",
+        sync
+      );
     };
   }, []);
 
-  const contextIntro = useMemo(() => {
-    return [
-      `Interview mode: ${mode}`,
-      `Interviewer personality: ${personality}`,
-      `Input source: ${inputSource}`,
-      `Job context: ${jobContext || "Not provided"}`,
-      `Resume context: ${resumeContext || "Not provided"}`,
-      "Rules: Ask only one question at a time. Wait for candidate answer. Do not reveal ideal answers before candidate responds.",
-    ].join("\n");
-  }, [jobContext, mode, personality, inputSource, resumeContext]);
+  /*
+    PERSIST + SCROLL
+  */
+  useEffect(() => {
+    sessionStorage.setItem(
+      KEY,
+      JSON.stringify(
+        messages
+      )
+    );
 
-  const startSpeechRecognition = () => {
-    const ctor = ((window as unknown as { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor }).SpeechRecognition
-      || (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionCtor }).webkitSpeechRecognition);
-    if (!ctor) {
-      setError("Speech recognition is not available on this system.");
+    if (
+      listRef.current
+    ) {
+      requestAnimationFrame(
+        () => {
+          if (
+            listRef.current
+          ) {
+            listRef.current.scrollTo(
+              {
+                top: listRef
+                  .current
+                  .scrollHeight,
+                behavior:
+                  "smooth",
+              }
+            );
+          }
+        }
+      );
+    }
+  }, [messages]);
+
+  /*
+    TIMER
+  */
+  useEffect(() => {
+    if (!isLoading) {
       return;
     }
-    const recognition = new ctor();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setPrompt((prev) => (prev ? `${prev} ${transcript}` : transcript));
-    };
-    recognition.onend = () => setIsListening(false);
-    recognitionRef.current = recognition;
-    setIsListening(true);
-    recognition.start();
-  };
 
-  const stopSpeechRecognition = () => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
-  };
+    const t =
+      window.setInterval(
+        () => {
+          setElapsedSec(
+            (
+              v
+            ) => v + 1
+          );
+        },
+        1000
+      );
 
-  const speak = (text: string) => {
-    if (!window.speechSynthesis || !text.trim()) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1;
-    utter.pitch = 1;
-    utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utter);
-  };
+    return () =>
+      window.clearInterval(
+        t
+      );
+  }, [isLoading]);
 
-  const sendTurn = async (event?: FormEvent, forcedText?: string) => {
-    event?.preventDefault();
-    const outgoing = (forcedText ?? prompt).trim();
-    if (isLoading || !outgoing) return;
+  /*
+    STREAMING
+  */
+  useEffect(() => {
+    const unlistenPromise =
+      listen<{
+        chunk: string;
+      }>(
+        "ollama-chat-chunk",
+        (
+          event
+        ) => {
+          const id =
+            activeAssistantId.current;
 
-    const userMsg: InterviewMessage = { id: `${Date.now()}-u`, role: "user", content: outgoing };
-    const assistantId = `${Date.now()}-a`;
-    activeAssistantId.current = assistantId;
-    setError(null);
-    setIsLoading(true);
-    setElapsedSec(0);
-    setPrompt("");
-    setMessages((prev) => [...prev, userMsg, { id: assistantId, role: "assistant", content: "" }]);
+          if (!id) {
+            return;
+          }
 
-    const payloadMessages = [
-      { role: "user", content: contextIntro },
-      ...messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
-      { role: "user", content: userMsg.content },
-    ];
+          const chunk =
+            event.payload
+              ?.chunk || "";
 
-    try {
-      const result = await invoke<ChatReply>("chat_with_ollama", {
-        messages: payloadMessages,
-        model,
-        mode,
-      });
-      if (!result.success) {
-        setError(result.error || "Failed to run interview turn.");
-        setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-      } else {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantId ? { ...m, content: (m.content || result.response || "").trim() } : m,
-          ),
-        );
-        if (mode !== "interview_practice") {
-          setRound((r) => r + 1);
+          if (!chunk) {
+            return;
+          }
+
+          setMessages(
+            (
+              prev
+            ) => {
+              const copy =
+                [...prev];
+
+              const idx =
+                copy.findIndex(
+                  (
+                    m
+                  ) =>
+                    m.id ===
+                    id
+                );
+
+              if (
+                idx === -1
+              ) {
+                return prev;
+              }
+
+              copy[idx] =
+              {
+                ...copy[
+                idx
+                ],
+                content:
+                  copy[
+                    idx
+                  ]
+                    .content +
+                  chunk,
+              };
+
+              return copy;
+            }
+          );
         }
-        speak(result.response);
+      );
+
+    return () => {
+      void unlistenPromise.then(
+        (
+          u
+        ) => u()
+      );
+    };
+  }, []);
+
+  /*
+    CLEANUP SPEECH
+  */
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
+  const contextIntro =
+    useMemo(() => {
+      return [
+        `Interview mode: ${mode}`,
+        `Interviewer personality: ${personality}`,
+        `Input source: ${inputSource}`,
+        `Job context: ${jobContext ||
+        "Not provided"
+        }`,
+        `Resume context: ${resumeContext ||
+        "Not provided"
+        }`,
+        "Rules: Ask only one question at a time. Wait for candidate answer.",
+      ].join("\n");
+    }, [
+      jobContext,
+      mode,
+      personality,
+      inputSource,
+      resumeContext,
+    ]);
+
+  const startSpeechRecognition =
+    useCallback(() => {
+      const ctor =
+        (
+          window as unknown as {
+            SpeechRecognition?: SpeechRecognitionCtor;
+            webkitSpeechRecognition?: SpeechRecognitionCtor;
+          }
+        )
+          .SpeechRecognition ||
+        (
+          window as unknown as {
+            webkitSpeechRecognition?: SpeechRecognitionCtor;
+          }
+        )
+          .webkitSpeechRecognition;
+
+      if (!ctor) {
+        setError(
+          "Speech recognition unavailable."
+        );
+
+        return;
       }
-    } catch (e) {
-      setError(String(e));
-      setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-    } finally {
-      activeAssistantId.current = null;
-      setIsLoading(false);
-    }
-  };
 
-  const startInterview = async () => {
-    if (messages.length > 0) return;
-    await sendTurn(undefined, "Start the interview with the first question.");
-  };
+      const recognition =
+        new ctor();
 
-  const finishInterview = async () => {
-    const summaryRequest = [
-      ...messages.slice(-14).map((m) => ({ role: m.role, content: m.content })),
-      {
-        role: "user",
-        content:
-          "Interview ended. Give: overall score/10, communication rating, technical rating, confidence rating, strengths, missed concepts, and top 5 improvements.",
+      recognition.continuous =
+        false;
+
+      recognition.interimResults =
+        false;
+
+      recognition.lang =
+        "en-US";
+
+      recognition.onresult =
+        (
+          event
+        ) => {
+          const transcript =
+            event
+              .results[0][0]
+              .transcript;
+
+          setPrompt(
+            (
+              prev
+            ) =>
+              prev
+                ? `${prev} ${transcript}`
+                : transcript
+          );
+        };
+
+      recognition.onend =
+        () =>
+          setIsListening(
+            false
+          );
+
+      recognitionRef.current =
+        recognition;
+
+      setIsListening(
+        true
+      );
+
+      recognition.start();
+    }, []);
+
+  const stopSpeechRecognition =
+    useCallback(() => {
+      recognitionRef.current?.stop();
+
+      setIsListening(
+        false
+      );
+    }, []);
+
+  const speak =
+    useCallback(
+      (
+        text: string
+      ) => {
+        if (
+          !window.speechSynthesis ||
+          !text.trim()
+        ) {
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+
+        const utter =
+          new SpeechSynthesisUtterance(
+            text
+          );
+
+        utter.rate = 1;
+
+        utter.pitch = 1;
+
+        utter.onstart =
+          () =>
+            setIsSpeaking(
+              true
+            );
+
+        utter.onend =
+          () =>
+            setIsSpeaking(
+              false
+            );
+
+        window.speechSynthesis.speak(
+          utter
+        );
       },
-    ];
-    setIsLoading(true);
-    try {
-      const result = await invoke<ChatReply>("chat_with_ollama", {
-        messages: summaryRequest,
+      []
+    );
+
+  const sendTurn =
+    useCallback(
+      async (
+        event?: FormEvent,
+        forcedText?: string
+      ) => {
+        event?.preventDefault();
+
+        if (!model) {
+          setError(
+            "No AI model selected."
+          );
+
+          return;
+        }
+
+        const outgoing =
+          (
+            forcedText ??
+            prompt
+          ).trim();
+
+        if (
+          isLoading ||
+          !outgoing
+        ) {
+          return;
+        }
+
+        const userMsg: InterviewMessage =
+        {
+          id: `${Date.now()}-u`,
+          role: "user",
+          content:
+            outgoing,
+        };
+
+        const assistantId =
+          `${Date.now()}-a`;
+
+        activeAssistantId.current =
+          assistantId;
+
+        setError(null);
+
+        setIsLoading(true);
+
+        setElapsedSec(0);
+
+        setPrompt("");
+
+        setMessages(
+          (
+            prev
+          ) => [
+              ...prev,
+              userMsg,
+              {
+                id: assistantId,
+                role:
+                  "assistant",
+                content: "",
+              },
+            ]
+        );
+
+        const payloadMessages =
+          [
+            {
+              role: "user",
+              content:
+                contextIntro,
+            },
+            ...messages
+              .slice(-10)
+              .map(
+                (
+                  m
+                ) => ({
+                  role:
+                    m.role,
+                  content:
+                    m.content,
+                })
+              ),
+            {
+              role: "user",
+              content:
+                userMsg.content,
+            },
+          ];
+
+        try {
+          const result =
+            await invoke<ChatReply>(
+              "chat_with_ollama",
+              {
+                messages:
+                  payloadMessages,
+                model,
+                mode,
+              }
+            );
+
+          if (
+            !result.success
+          ) {
+            setError(
+              result.error ||
+              "Interview failed."
+            );
+
+            setMessages(
+              (
+                prev
+              ) =>
+                prev.filter(
+                  (
+                    m
+                  ) =>
+                    m.id !==
+                    assistantId
+                )
+            );
+          } else {
+            setMessages(
+              (
+                prev
+              ) =>
+                prev.map(
+                  (
+                    m
+                  ) =>
+                    m.id ===
+                      assistantId
+                      ? {
+                        ...m,
+                        content:
+                          (
+                            m.content ||
+                            result.response ||
+                            ""
+                          ).trim(),
+                      }
+                      : m
+                )
+            );
+
+            if (
+              mode !==
+              "interview_practice"
+            ) {
+              setRound(
+                (
+                  r
+                ) => r + 1
+              );
+            }
+
+            speak(
+              result.response
+            );
+          }
+        } catch (
+        e
+        ) {
+          setError(
+            String(e)
+          );
+
+          setMessages(
+            (
+              prev
+            ) =>
+              prev.filter(
+                (
+                  m
+                ) =>
+                  m.id !==
+                  assistantId
+              )
+          );
+        } finally {
+          activeAssistantId.current =
+            null;
+
+          setIsLoading(
+            false
+          );
+        }
+      },
+      [
+        contextIntro,
+        isLoading,
+        messages,
+        mode,
         model,
-        mode: "interview_technical",
-      });
-      if (result.success) {
-        setMessages((prev) => [...prev, { id: `${Date.now()}-summary`, role: "assistant", content: result.response }]);
-      } else {
-        setError(result.error || "Failed to generate interview report.");
+        prompt,
+        speak,
+      ]
+    );
+
+  const startInterview =
+    async () => {
+      if (
+        messages.length >
+        0
+      ) {
+        return;
       }
+
+      await sendTurn(
+        undefined,
+        "Start the interview with the first question."
+      );
+    };
+
+    const finishInterview =
+  async () => {
+    if (
+      !model
+    ) {
+      setError(
+        "No AI model selected."
+      );
+
+      return;
+    }
+
+    const summaryRequest =
+      [
+        ...messages
+          .slice(-14)
+          .map(
+            (
+              m
+            ) => ({
+              role:
+                m.role,
+              content:
+                m.content,
+            })
+          ),
+        {
+          role: "user",
+          content:
+            "Interview ended. Give: overall score/10, communication rating, technical rating, confidence rating, strengths, missed concepts, and top 5 improvements.",
+        },
+      ];
+
+    setIsLoading(
+      true
+    );
+
+    try {
+      const result =
+        await invoke<ChatReply>(
+          "chat_with_ollama",
+          {
+            messages:
+              summaryRequest,
+            model,
+            mode:
+              "interview_technical",
+          }
+        );
+
+      if (
+        result.success
+      ) {
+        setMessages(
+          (
+            prev
+          ) => [
+            ...prev,
+            {
+              id: `${Date.now()}-summary`,
+              role:
+                "assistant",
+              content:
+                result.response,
+            },
+          ]
+        );
+      } else {
+        setError(
+          result.error ||
+            "Failed to generate interview report."
+        );
+      }
+    } catch (
+      e
+    ) {
+      setError(
+        String(e)
+      );
     } finally {
-      setIsLoading(false);
+      setIsLoading(
+        false
+      );
     }
   };
 
@@ -320,10 +942,19 @@ export default function InterviewPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <label className="block">
-      <p className="mb-1 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">{label}</p>
+      <p className="mb-1 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
+        {label}
+      </p>
+
       {children}
     </label>
   );

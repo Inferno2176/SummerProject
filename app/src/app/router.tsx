@@ -15,13 +15,17 @@ import InterviewPage from "../pages/interview";
 import CommunityPage from "../pages/community";
 import ChatPage from "../pages/chat";
 import SettingsPage from "../pages/settings";
-import DebugUpdatePage from "../pages/debug-update";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <OnboardingLayout />,
+    errorElement: <ErrorBoundary />,
     children: [
+      /*
+        ONBOARDING
+      */
       {
         index: true,
         element: <WelcomePage />,
@@ -34,52 +38,57 @@ export const router = createBrowserRouter([
         path: "upload-resume",
         element: <UploadResumePage />,
       },
-    ],
-  },
 
-  {
-    path: "/app",
-    element: <AppLayout />,
-    children: [
+      /*
+        APP
+      */
       {
-        index: true,
-        element: <Navigate to="/app/dashboard" replace />,
-      },
-      {
-        path: "dashboard",
-        element: <DashboardPage />,
-      },
-      {
-        path: "ats",
-        element: <ATSPage />,
-      },
-      {
-        path: "jobs",
-        element: <JobsPage />,
-      },
-      {
-        path: "applied",
-        element: <AppliedPage />,
-      },
-      {
-        path: "interview",
-        element: <InterviewPage />,
-      },
-      {
-        path: "community",
-        element: <CommunityPage />,
-      },
-      {
-        path: "chat",
-        element: <ChatPage />,
-      },
-      {
-        path: "settings",
-        element: <SettingsPage />,
-      },
-      {
-        path: "debug-update",
-        element: <DebugUpdatePage />,
+        path: "app",
+        element: <AppLayout />,
+        errorElement: <ErrorBoundary/>,
+        children: [
+          {
+            index: true,
+            element: (
+              <Navigate
+                to="/app/dashboard"
+                replace
+              />
+            ),
+          },
+          {
+            path: "dashboard",
+            element: <DashboardPage />,
+          },
+          {
+            path: "ats",
+            element: <ATSPage />,
+          },
+          {
+            path: "jobs",
+            element: <JobsPage />,
+          },
+          {
+            path: "applied",
+            element: <AppliedPage />,
+          },
+          {
+            path: "interview",
+            element: <InterviewPage />,
+          },
+          {
+            path: "community",
+            element: <CommunityPage />,
+          },
+          {
+            path: "chat",
+            element: <ChatPage />,
+          },
+          {
+            path: "settings",
+            element: <SettingsPage />,
+          },
+        ],
       },
     ],
   },

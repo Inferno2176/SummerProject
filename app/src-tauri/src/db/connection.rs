@@ -1,124 +1,236 @@
-use rusqlite::{Connection, OptionalExtension};
-use std::sync::{Arc, Mutex};
+use rusqlite::{
+    OptionalExtension,
+    Params,
+};
+
 use std::path::Path;
-use crate::db::error::{DbError, DbResult};
 
-pub type DbPool = Arc<Mutex<Connection>>;
+use deadpool_sqlite::{
+    Config,
+    Pool,
+    Runtime,
+};
 
-/// Initialize database connection and create pool
-pub fn init_db(db_path: &Path) -> DbResult<DbPool> {
-    log::info!("Initializing database at: {:?}", db_path);
-    
-    // Ensure parent directory exists
-    if let Some(parent) = db_path.parent() {
-        std::fs::create_dir_all(parent)?;
+use crate::db::error::{
+    DbError,
+    DbResult,
+};
+
+pub type DbPool = Pool;
+
+/*
+    INIT DATABASE
+*/
+pub fn init_db(
+    db_path: &Path,
+) -> DbResult<DbPool> {
+    log::info!(
+        "Initializing database at: {:?}",
+        db_path
+    );
+
+    /*
+        Ensure parent directory exists
+    */
+    if let Some(parent) =
+        db_path.parent()
+    {
+        std::fs::create_dir_all(
+            parent,
+        )?;
     }
 
-    let conn = Connection::open(db_path)
-        .map_err(|e| DbError::ConnectionError(format!("Failed to open database: {}", e)))?;
+    /*
+        Create pool config
+    */
+    let cfg = Config::new(
+        db_path.to_path_buf(),
+    );
 
-    // Enable foreign keys
-    conn.execute_batch("PRAGMA foreign_keys = ON;")
-        .map_err(|e| DbError::ConnectionError(format!("Failed to enable foreign keys: {}", e)))?;
+    /*
+        Create pool
+    */
+    let pool = cfg
+        .create_pool(Runtime::Tokio1)
+        .map_err(|e| {
+            DbError::ConnectionError(
+                format!(
+                    "Failed to create pool: {}",
+                    e
+                ),
+            )
+        })?;
 
-    // Performance optimizations
-    conn.execute_batch(
-        "PRAGMA journal_mode = WAL;
-         PRAGMA synchronous = NORMAL;
-         PRAGMA cache_size = -64000;
-         PRAGMA temp_store = MEMORY;",
-    ).map_err(|e| DbError::ConnectionError(format!("Failed to set pragmas: {}", e)))?;
+    /*
+        Initialize SQLite pragmas
+    */
+    {
+        let pool_clone = pool.clone();
 
-    log::info!("Database connected successfully");
-    Ok(Arc::new(Mutex::new(conn)))
+        tauri::async_runtime::block_on(
+            async {
+                let conn = pool_clone
+                    .get()
+                    .await
+                    .map_err(|e| {
+                        DbError::ConnectionError(
+                            e.to_string(),
+                        )
+                    })?;
+
+                conn.interact(|conn| {
+                    conn.execute_batch(
+                        "
+                        PRAGMA journal_mode = WAL;
+                        PRAGMA synchronous = NORMAL;
+                        PRAGMA foreign_keys = ON;
+                        ",
+                    )
+                })
+                .await
+                .map_err(|e| {
+                    DbError::QueryError(
+                        format!(
+                            "Pragma interact failed: {}",
+                            e
+                        ),
+                    )
+                })?
+                .map_err(
+                    DbError::SqliteError,
+                )?;
+
+                Ok::<(), DbError>(())
+            },
+        )?;
+    }
+
+    log::info!(
+        "Database pool initialized"
+    );
+
+    Ok(pool)
 }
 
-/// Get a connection from the pool
-pub fn get_connection(pool: &DbPool) -> DbResult<std::sync::MutexGuard<Connection>> {
-    pool.lock().map_err(|e| DbError::ConnectionError(format!("Failed to lock database: {}", e)))
+/*
+    GET CONNECTION
+*/
+pub async fn get_connection(
+    pool: &DbPool,
+) -> DbResult<
+    deadpool_sqlite::Object,
+> {
+    pool.get().await.map_err(|e| {
+        DbError::ConnectionError(
+            format!(
+                "Failed to get DB connection: {}",
+                e
+            ),
+        )
+    })
 }
 
-/// Execute a query that returns a single row
-pub fn query_row<T, F>(
+/*
+    QUERY SINGLE ROW
+*/
+pub async fn query_row<T, P, F>(
     pool: &DbPool,
     query: &str,
+    params: P,
     mapper: F,
 ) -> DbResult<Option<T>>
 where
-    F: Fn(&rusqlite::Row) -> rusqlite::Result<T>,
+    P: Params + Send + 'static,
+    T: Send + 'static,
+    F: FnOnce(
+            &rusqlite::Row,
+        ) -> rusqlite::Result<T>
+        + Send
+        + 'static,
 {
-    let conn = get_connection(pool)?;
-    conn.query_row(query, [], mapper)
-        .optional()
-        .map_err(DbError::SqliteError)
-}
+    let conn =
+        get_connection(pool).await?;
 
-/// Execute a query that returns multiple rows
-pub fn query_rows<T, F>(
-    pool: &DbPool,
-    query: &str,
-    mapper: F,
-) -> DbResult<Vec<T>>
-where
-    F: Fn(&rusqlite::Row) -> rusqlite::Result<T>,
-{
-    let conn = get_connection(pool)?;
-    let mut stmt = conn.prepare(query)?;
-    let rows = stmt
-        .query_map([], mapper)?
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(rows)
-}
+    let query =
+        query.to_string();
 
-/// Execute without returning rows (INSERT, UPDATE, DELETE)
-pub fn execute(pool: &DbPool, query: &str) -> DbResult<usize> {
-    let conn = get_connection(pool)?;
-    conn.execute(query, []).map_err(DbError::SqliteError)
-}
+    conn.interact(move |conn| {
+        let mut stmt =
+            conn.prepare(&query)?;
 
-/// Execute with parameters
-pub fn execute_with_params(
-    pool: &DbPool,
-    query: &str,
-    params: &[&dyn rusqlite::ToSql],
-) -> DbResult<usize> {
-    let conn = get_connection(pool)?;
-    conn.execute(query, params).map_err(DbError::SqliteError)
-}
+        let result = stmt
+            .query_row(params, mapper)
+            .optional()?;
 
-/// Get last inserted row ID
-pub fn last_insert_rowid(pool: &DbPool) -> DbResult<i64> {
-    let conn = get_connection(pool)?;
-    Ok(conn.last_insert_rowid())
-}
-
-/// Execute a transaction
-pub fn transaction<F, T>(pool: &DbPool, f: F) -> DbResult<T>
-where
-    F: FnOnce(&rusqlite::Connection) -> DbResult<T>,
-{
-    let mut conn = get_connection(pool)?;
-    let tx = conn
-        .transaction()
-        .map_err(|e| DbError::TransactionError(format!("Failed to start transaction: {}", e)))?;
-    
-    match f(&tx) {
-        Ok(result) => {
-            tx.commit()
-                .map_err(|e| DbError::TransactionError(format!("Failed to commit transaction: {}", e)))?;
-            Ok(result)
-        }
-        Err(e) => {
-            let _ = tx.rollback();
-            Err(e)
-        }
-    }
-}
-
-/// Get database size
-pub fn get_db_size(pool: &DbPool) -> DbResult<i64> {
-    query_row(pool, "SELECT page_count * page_size FROM pragma_page_count(), pragma_page_size();", |row| {
-        row.get(0)
+        Ok(result)
+    })
+    .await
+    .map_err(|e| {
+        DbError::QueryError(
+            format!(
+                "Query interact failed: {}",
+                e
+            ),
+        )
     })?
-    .ok_or(DbError::QueryError("Failed to get database size".into()))
+}
+
+/*
+    EXECUTE
+*/
+pub async fn execute(
+    pool: &DbPool,
+    query: &str,
+) -> DbResult<usize> {
+    let conn =
+        get_connection(pool).await?;
+
+    let query =
+        query.to_string();
+
+    conn.interact(move |conn| {
+        conn.execute(&query, [])
+    })
+    .await
+    .map_err(|e| {
+        DbError::QueryError(
+            format!(
+                "Execute interact failed: {}",
+                e
+            ),
+        )
+    })?
+    .map_err(DbError::SqliteError)
+}
+
+/*
+    EXECUTE WITH PARAMS
+*/
+pub async fn execute_with_params<P>(
+    pool: &DbPool,
+    query: &str,
+    params: P,
+) -> DbResult<usize>
+where
+    P: Params + Send + 'static,
+{
+    let conn =
+        get_connection(pool).await?;
+
+    let query =
+        query.to_string();
+
+    conn.interact(move |conn| {
+        conn.execute(&query, params)
+    })
+    .await
+    .map_err(|e| {
+        DbError::QueryError(
+            format!(
+                "Execute interact failed: {}",
+                e
+            ),
+        )
+    })?
+    .map_err(DbError::SqliteError)
 }
