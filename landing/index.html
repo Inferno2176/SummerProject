@@ -730,6 +730,165 @@
       opacity: 0.5;
     }
 
+    /* ── INSTALL SECTION ── */
+
+    .install-section {
+
+      padding: 80px 60px;
+
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+
+      background: var(--surface);
+    }
+
+    .install-container {
+      max-width: 1250px;
+      margin: 0 auto;
+    }
+
+    .install-heading {
+      margin-bottom: 42px;
+    }
+
+    .install-grid {
+
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+
+      gap: 24px;
+    }
+
+    .install-card {
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: space-between;
+
+      background:
+        linear-gradient(180deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.015));
+
+      border:
+        1px solid rgba(255, 255, 255, 0.06);
+
+      border-radius: 24px;
+
+      overflow: hidden;
+    }
+
+    .install-card-header {
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 18px 22px;
+
+      border-bottom:
+        1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .install-os {
+
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .install-chip {
+
+      padding: 5px 12px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(249, 115, 22, 0.12);
+
+      border:
+        1px solid rgba(249, 115, 22, 0.24);
+
+      color: var(--accent2);
+
+      font-size: 0.72rem;
+    }
+
+    .install-terminal {
+
+      flex: 1;
+
+      background: #050505;
+
+      padding: 24px;
+
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        monospace;
+
+      font-size: 0.9rem;
+
+      line-height: 1.7;
+
+      color: #6ee7b7;
+
+      min-height: 220px;
+    }
+
+    .install-terminal code {
+      white-space: pre-wrap;
+    }
+
+    .prompt-user {
+      color: #f97316;
+    }
+
+    .copy-btn {
+
+      margin: 20px;
+
+      margin-top: 18px;
+
+      border: none;
+
+      padding: 14px;
+
+      border-radius: 14px;
+
+      background:
+        linear-gradient(135deg,
+          var(--accent),
+          var(--accent2));
+
+      color: white;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition: 0.25s;
+    }
+
+    .copy-btn:hover {
+
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 12px 30px rgba(249, 115, 22, 0.28);
+    }
+
+    @media (max-width: 980px) {
+
+      .install-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .install-section {
+        padding: 72px 24px;
+      }
+    }
+
     /* ── FOOTER ── */
     footer {
       padding: 36px 60px;
@@ -1001,51 +1160,46 @@
       font-size: 1.3rem;
     }
 
-.top {
-  top: -30px;
-  right: 10px;
+    .top {
+      top: -30px;
+      right: 10px;
 
-  opacity: 0.92;
+      opacity: 0.92;
 
-  transform:
-    rotate(-8deg)
-    scale(1.02);
-}
+      transform:
+        rotate(-8deg) scale(1.02);
+    }
 
-.middle {
-  z-index: 3;
+    .middle {
+      z-index: 3;
 
-  background:
-    linear-gradient(
-      145deg,
-      rgba(249,115,22,1),
-      rgba(251,146,60,0.92)
-    );
+      background:
+        linear-gradient(145deg,
+          rgba(249, 115, 22, 1),
+          rgba(251, 146, 60, 0.92));
 
-  color: white;
+      color: white;
 
-  transform:
-    scale(0.96)
-    translateY(40px);
+      transform:
+        scale(0.96) translateY(40px);
 
-  box-shadow:
-    0 20px 60px rgba(249,115,22,0.25);
-}
+      box-shadow:
+        0 20px 60px rgba(249, 115, 22, 0.25);
+    }
 
     .middle p {
       color: rgba(255, 255, 255, 0.88);
     }
 
-.bottom {
-  top: 120px;
-  left: 0;
+    .bottom {
+      top: 120px;
+      left: 0;
 
-  opacity: 0.9;
+      opacity: 0.9;
 
-  transform:
-    rotate(8deg)
-    scale(0.94);
-}
+      transform:
+        rotate(8deg) scale(0.94);
+    }
 
     /* MOBILE */
 
@@ -1244,7 +1398,7 @@
     </p>
 
     <div class="hero-buttons">
-      <a id="downloadPrereleaseBtn" class="btn-primary" href="https://github.com/JoshiNaidu/career-forges/releases" target="_blank" rel="noopener noreferrer">
+      <a id="downloadPrereleaseBtn" class="btn-primary" href="https://github.com/JoshiNaidu/career-forges/releases">
         📥 Get Pre-release
       </a>
       <a class="btn-secondary" href="https://github.com/JoshiNaidu/career-forges" target="_blank">
@@ -1317,10 +1471,19 @@
   <section>
     <div id="vision">
       <div class="reveal">
-        <span class="section-label">Why CareerForges</span>
-        <h2 class="section-title">Privacy isn't<br>a feature. It's<br>the foundation.</h2>
-        <p class="section-sub">Most AI career tools rely on cloud infrastructure and harvest your data. CareerForges
-          takes a radically different approach.</p>
+        <span class="section-label">Why CareerForges?</span>
+
+        <h2 class="section-title">
+          Built for your career.<br>
+          Not for harvesting<br>
+          your personal data.
+        </h2>
+
+        <p class="section-sub">
+          CareerForges stores only the essential information required
+          to help improve your resumes, applications, and job workflows —
+          while keeping your AI processing local and under your control.
+        </p>
       </div>
 
       <div class="vision-visual reveal">
@@ -1428,6 +1591,137 @@
 
     </div>
   </section>
+  <section id="install" class="install-section">
+
+    <div class="install-container">
+
+      <div class="install-heading reveal">
+
+        <span class="section-label">
+          Installation Guide
+        </span>
+
+        <h2 class="section-title">
+          Install CareerForges
+        </h2>
+
+        <p class="section-sub">
+          Native installers for macOS, Windows and Linux.
+        </p>
+
+      </div>
+
+      <div class="install-grid reveal">
+
+        <!-- mac -->
+
+        <div class="install-card">
+
+          <div class="install-card-header">
+
+            <div class="install-os">
+              🍎 macOS
+            </div>
+
+            <span class="install-chip">
+              Recommended
+            </span>
+
+          </div>
+
+          <div class="install-terminal">
+
+            <code>
+<span class="prompt-user">akash@careerforges</span>:~ %
+
+<span id="macCommand">curl -fsSL https://careerforges.app/install-mac.sh | bash</span>
+</code>
+
+          </div>
+
+          <button class="copy-btn" data-copy="macCommand">
+            Copy Install Command
+          </button>
+
+        </div>
+
+        <!-- windows -->
+
+        <div class="install-card">
+
+          <div class="install-card-header">
+
+            <div class="install-os">
+              🪟 Windows
+            </div>
+
+            <span class="install-chip">
+              Setup.exe
+            </span>
+
+          </div>
+
+          <div class="install-terminal">
+
+            <code>C:\Users\Akash>
+
+1. Download setup.exe
+
+2. Run installer
+
+3. Launch CareerForges
+</code>
+
+          </div>
+
+          <button class="copy-btn" id="windowsDownloadBtn">
+
+            Download Windows Build
+
+          </button>
+
+        </div>
+
+        <!-- linux -->
+
+        <div class="install-card">
+
+          <div class="install-card-header">
+
+            <div class="install-os">
+              🐧 Linux
+            </div>
+
+            <span class="install-chip">
+              AppImage
+            </span>
+
+          </div>
+
+          <div class="install-terminal">
+
+            <code>akash@linux:~$
+
+chmod +x CareerForges.AppImage
+
+./CareerForges.AppImage
+</code>
+
+          </div>
+
+          <button class="copy-btn" id="linuxDownloadBtn">
+
+            Download Linux Build
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
 
   <!-- CREATOR -->
   <section id="creator">
@@ -1453,8 +1747,10 @@
       <img src="./assets/logo.png" alt="CareerForges Logo" class="footer-logo-icon" />
       CareerForges
     </div>
-    <p>© 2026 CareerForges • <span id="footerReleaseVersion">Loading latest release...</span> • Built by <a href="https://mattajoshi.in" target="_blank">Matta
-        Joshi</a> • <a id="releaseNotesLink" href="https://github.com/JoshiNaidu/career-forges/releases" target="_blank" rel="noopener noreferrer">Release Notes</a></p>
+    <p>© 2026 CareerForges • <span id="footerReleaseVersion">Loading latest release...</span> • Built by <a
+        href="https://mattajoshi.in" target="_blank">Matta
+        Joshi</a> • <a id="releaseNotesLink" href="https://github.com/JoshiNaidu/career-forges/releases" target="_blank"
+        rel="noopener noreferrer">Release Notes</a></p>
   </footer>
 
   <script>
@@ -1530,6 +1826,30 @@
       });
     });
 
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+
+      btn.addEventListener('click', () => {
+
+        const target = btn.dataset.copy;
+
+        if (!target) return;
+
+        const text =
+          document.getElementById(target).innerText;
+
+        navigator.clipboard.writeText(text);
+
+        btn.textContent = 'Copied!';
+
+        setTimeout(() => {
+          btn.textContent =
+            'Copy Install Command';
+        }, 2000);
+
+      });
+
+    });
+
     async function setupReleaseDownload() {
       const owner = 'JoshiNaidu';
       const repo = 'career-forges';
@@ -1537,6 +1857,11 @@
       const fallbackReleasesUrl = `https://github.com/${owner}/${repo}/releases`;
 
       const downloadBtn = document.getElementById('downloadPrereleaseBtn');
+      const windowsDownloadBtn =
+        document.getElementById('windowsDownloadBtn');
+
+      const linuxDownloadBtn =
+        document.getElementById('linuxDownloadBtn');
       const latestVersionBadge = document.getElementById('latestVersionBadge');
       const footerReleaseVersion = document.getElementById('footerReleaseVersion');
       const releaseNotesLink = document.getElementById('releaseNotesLink');
@@ -1546,6 +1871,7 @@
       const platform = navigator.platform || '';
       const isWindows = /windows/i.test(ua) || /win/i.test(platform);
       const isMac = /macintosh|mac os x/i.test(ua) || /mac/i.test(platform);
+
       const isLinux = /linux/i.test(ua);
 
       function pickAssetForCurrentOS(assets) {
@@ -1575,6 +1901,22 @@
         return byName[0]?.asset || null;
       }
 
+      function pickWindowsAsset(assets) {
+
+        return assets.find(asset =>
+          asset.name.endsWith('.exe')
+        );
+
+      }
+
+      function pickLinuxAsset(assets) {
+
+        return assets.find(asset =>
+          asset.name.endsWith('.AppImage')
+        );
+
+      }
+
       try {
         const response = await fetch(releaseApiUrl, { headers: { Accept: 'application/vnd.github+json' } });
         if (!response.ok) {
@@ -1599,11 +1941,99 @@
         const preferredAsset = pickAssetForCurrentOS(targetRelease.assets);
 
         if (preferredAsset?.browser_download_url) {
-          downloadBtn.href = preferredAsset.browser_download_url;
-          downloadBtn.textContent = `📥 Download ${targetRelease.tag_name}`;
-        } else {
-          downloadBtn.href = targetRelease.html_url || fallbackReleasesUrl;
-          downloadBtn.textContent = `📥 View ${targetRelease.tag_name}`;
+
+          // macOS
+
+          if (isMac) {
+
+            downloadBtn.href = '#install';
+
+            downloadBtn.textContent =
+              '🍎 Install for macOS';
+
+            downloadBtn.addEventListener('click', (e) => {
+
+              e.preventDefault();
+
+              document
+                .getElementById('install')
+                .scrollIntoView({
+                  behavior: 'smooth'
+                });
+
+            });
+
+          }
+
+          // windows/linux direct download
+
+          else {
+
+            downloadBtn.href = '#';
+
+            downloadBtn.textContent =
+              `📥 Download ${targetRelease.tag_name}`;
+
+            downloadBtn.addEventListener('click', (e) => {
+
+              e.preventDefault();
+
+              const link =
+                document.createElement('a');
+
+              link.href =
+                preferredAsset.browser_download_url;
+
+              link.download = '';
+
+              document.body.appendChild(link);
+
+              link.click();
+
+              document.body.removeChild(link);
+
+            });
+
+          }
+
+          // bottom windows button
+
+          const windowsAsset =
+            pickWindowsAsset(targetRelease.assets);
+
+          if (
+            windowsAsset &&
+            windowsDownloadBtn
+          ) {
+
+            windowsDownloadBtn.addEventListener('click', () => {
+
+              window.location.href =
+                windowsAsset.browser_download_url;
+
+            });
+
+          }
+
+          // bottom linux button
+
+          const linuxAsset =
+            pickLinuxAsset(targetRelease.assets);
+
+          if (
+            linuxAsset &&
+            linuxDownloadBtn
+          ) {
+
+            linuxDownloadBtn.addEventListener('click', () => {
+
+              window.location.href =
+                linuxAsset.browser_download_url;
+
+            });
+
+          }
+
         }
       } catch (error) {
         latestVersionBadge.textContent = 'Latest';
@@ -1620,4 +2050,3 @@
 </body>
 
 </html>
-
