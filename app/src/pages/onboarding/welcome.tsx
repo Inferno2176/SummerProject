@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import LaunchLoader from "../../components/launch-loader";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 
 export default function WelcomePage() {
-  const [showSplash, setShowSplash] = useState(true);
   const navigate = useNavigate();
   const handleLearnMore = async () => {
     try {
@@ -17,29 +15,8 @@ export default function WelcomePage() {
     }
   };
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setShowSplash(false);
-    }, 3400);
-
-    return () => window.clearTimeout(timer);
-  }, []);
-
   return (
     <AnimatePresence mode="wait">
-      {showSplash ? (
-        <motion.div
-          key="welcome-splash"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.45, ease: "easeInOut" }}
-        >
-          <section className="min-h-screen bg-[var(--bg)]">
-            <LaunchLoader />
-          </section>
-        </motion.div>
-      ) : (
         <motion.section
           key="welcome-content"
           className="flex min-h-screen items-center justify-center px-6"
@@ -96,7 +73,6 @@ export default function WelcomePage() {
             </div>
           </div>
         </motion.section>
-      )}
     </AnimatePresence>
   );
 }
