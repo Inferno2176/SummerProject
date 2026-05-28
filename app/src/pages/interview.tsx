@@ -1,6 +1,5 @@
 import {
   FormEvent,
-  ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -13,14 +12,17 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 import {
-  AnimatePresence,
-  motion,
-} from "framer-motion";
-
-import {
   getCurrentModel,
   getCurrentProvider,
 } from "../lib/ai-preferences";
+
+import InterviewHeader from "../components/interview/InterviewHeader";
+
+import InterviewSetupPanel from "../components/interview/InterviewSetupPanel";
+
+import InterviewTabs from "../components/interview/InterviewTabs";
+
+import VoiceDock from "../components/interview/VoiceDock";
 
 type InterviewMessage = {
   id: string;
@@ -197,10 +199,13 @@ export default function InterviewPage() {
   const [provider, setProvider] =
     useState("");
 
-  const listRef =
-    useRef<HTMLDivElement>(
-      null
-    );
+  const [aiState, setAiState] =
+    useState<
+      | "idle"
+      | "thinking"
+      | "speaking"
+      | "listening"
+    >("idle");
 
   const activeAssistantId =
     useRef<string | null>(
@@ -258,7 +263,7 @@ export default function InterviewPage() {
   }, []);
 
   /*
-    PERSIST + SCROLL
+    PERSIST
   */
   useEffect(() => {
     sessionStorage.setItem(
@@ -267,28 +272,6 @@ export default function InterviewPage() {
         messages
       )
     );
-
-    if (
-      listRef.current
-    ) {
-      requestAnimationFrame(
-        () => {
-          if (
-            listRef.current
-          ) {
-            listRef.current.scrollTo(
-              {
-                top: listRef
-                  .current
-                  .scrollHeight,
-                behavior:
-                  "smooth",
-              }
-            );
-          }
-        }
-      );
-    }
   }, [messages]);
 
   /*
@@ -453,11 +436,8 @@ export default function InterviewPage() {
       const recognition =
         new ctor();
 
-      recognition.continuous =
-        false;
-
-      recognition.interimResults =
-        false;
+      recognition.continuous = false;
+      recognition.interimResults = false;
 
       recognition.lang =
         "en-US";
@@ -482,16 +462,25 @@ export default function InterviewPage() {
         };
 
       recognition.onend =
-        () =>
+        () => {
           setIsListening(
             false
           );
+
+          setAiState(
+            "idle"
+          );
+        };
 
       recognitionRef.current =
         recognition;
 
       setIsListening(
         true
+      );
+
+      setAiState(
+        "listening"
       );
 
       recognition.start();
@@ -503,6 +492,10 @@ export default function InterviewPage() {
 
       setIsListening(
         false
+      );
+
+      setAiState(
+        "idle"
       );
     }, []);
 
@@ -530,16 +523,26 @@ export default function InterviewPage() {
         utter.pitch = 1;
 
         utter.onstart =
-          () =>
+          () => {
             setIsSpeaking(
               true
             );
 
+            setAiState(
+              "speaking"
+            );
+          };
+
         utter.onend =
-          () =>
+          () => {
             setIsSpeaking(
               false
             );
+
+            setAiState(
+              "idle"
+            );
+          };
 
         window.speechSynthesis.speak(
           utter
@@ -594,6 +597,10 @@ export default function InterviewPage() {
         setError(null);
 
         setIsLoading(true);
+
+        setAiState(
+          "thinking"
+        );
 
         setElapsedSec(0);
 
@@ -752,12 +759,11 @@ export default function InterviewPage() {
 
   const startInterview =
     async () => {
-      if (
-        messages.length >
-        0
-      ) {
-        return;
-      }
+      setMessages([]);
+
+      setRound(1);
+
+      setElapsedSec(0);
 
       await sendTurn(
         undefined,
@@ -765,197 +771,185 @@ export default function InterviewPage() {
       );
     };
 
-    const finishInterview =
-  async () => {
-    if (
-      !model
-    ) {
-      setError(
-        "No AI model selected."
+  const finishInterview =
+    async () => {
+      if (
+        !model
+      ) {
+        setError(
+          "No AI model selected."
+        );
+
+        return;
+      }
+
+      const summaryRequest =
+        [
+          ...messages
+            .slice(-14)
+            .map(
+              (
+                m
+              ) => ({
+                role:
+                  m.role,
+                content:
+                  m.content,
+              })
+            ),
+          {
+            role: "user",
+            content:
+              "Interview ended. Give: overall score/10, communication rating, technical rating, confidence rating, strengths, missed concepts, and top 5 improvements.",
+          },
+        ];
+
+      setIsLoading(
+        true
       );
 
-      return;
-    }
-
-    const summaryRequest =
-      [
-        ...messages
-          .slice(-14)
-          .map(
-            (
-              m
-            ) => ({
-              role:
-                m.role,
-              content:
-                m.content,
-            })
-          ),
-        {
-          role: "user",
-          content:
-            "Interview ended. Give: overall score/10, communication rating, technical rating, confidence rating, strengths, missed concepts, and top 5 improvements.",
-        },
-      ];
-
-    setIsLoading(
-      true
-    );
-
-    try {
-      const result =
-        await invoke<ChatReply>(
-          "chat_with_ollama",
-          {
-            messages:
-              summaryRequest,
-            model,
-            mode:
-              "interview_technical",
-          }
-        );
-
-      if (
-        result.success
-      ) {
-        setMessages(
-          (
-            prev
-          ) => [
-            ...prev,
+      try {
+        const result =
+          await invoke<ChatReply>(
+            "chat_with_ollama",
             {
-              id: `${Date.now()}-summary`,
-              role:
-                "assistant",
-              content:
-                result.response,
-            },
-          ]
-        );
-      } else {
-        setError(
-          result.error ||
+              messages:
+                summaryRequest,
+              model,
+              mode:
+                "interview_technical",
+            }
+          );
+
+        if (
+          result.success
+        ) {
+          setMessages(
+            (
+              prev
+            ) => [
+                ...prev,
+                {
+                  id: `${Date.now()}-summary`,
+                  role:
+                    "assistant",
+                  content:
+                    result.response,
+                },
+              ]
+          );
+        } else {
+          setError(
+            result.error ||
             "Failed to generate interview report."
+          );
+        }
+      } catch (
+      e
+      ) {
+        setError(
+          String(e)
+        );
+      } finally {
+        setIsLoading(
+          false
         );
       }
-    } catch (
-      e
-    ) {
-      setError(
-        String(e)
-      );
-    } finally {
-      setIsLoading(
-        false
-      );
-    }
-  };
+    };
+
+  const latestAssistantMessage =
+    [...messages]
+      .reverse()
+      .find(
+        (m) =>
+          m.role ===
+          "assistant"
+      )?.content || "";
 
   return (
-    <section className="mx-auto flex h-[calc(100vh-9rem)] w-full max-w-6xl gap-4">
-      <aside className="w-[320px] rounded-2xl border border-white/10 bg-[var(--surface)] p-4">
-        <h2 className="text-lg font-semibold">Interview Setup</h2>
-        <div className="mt-3 space-y-3">
-          <Field label="Mode">
-            <select value={mode} onChange={(e) => setMode(e.target.value)} className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
-              {INTERVIEW_MODES.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-            </select>
-          </Field>
-          <Field label="Personality">
-            <select value={personality} onChange={(e) => setPersonality(e.target.value)} className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
-              {PERSONALITIES.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </Field>
-          <Field label="Input Source">
-            <select value={inputSource} onChange={(e) => setInputSource(e.target.value)} className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
-              <option value="selected_job">Selected Job</option>
-              <option value="custom_jd">Custom Job Description</option>
-              <option value="resume_jd_combo">Resume + JD</option>
-            </select>
-          </Field>
-          <Field label="Job Description / Role">
-            <textarea value={jobContext} onChange={(e) => setJobContext(e.target.value)} className="min-h-24 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm" />
-          </Field>
-          <Field label="Resume Highlights">
-            <textarea value={resumeContext} onChange={(e) => setResumeContext(e.target.value)} className="min-h-24 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm" />
-          </Field>
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => void startInterview()} className="rounded-lg bg-[var(--accent)] px-3 py-2 text-sm text-white">Start</button>
-            <button onClick={() => void finishInterview()} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">Finish</button>
-          </div>
-        </div>
-      </aside>
+    <section className="flex h-[calc(100vh-4.5rem)] gap-5 overflow-hidden">
 
-      <div className="flex flex-1 flex-col rounded-2xl border border-white/10 bg-[var(--surface)]">
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <div>
-            <h1 className="text-lg font-semibold">Interview Agent</h1>
-            <p className="text-xs text-[var(--muted)]">Round {round} | Timer {elapsedSec}s | Model {model}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`h-3 w-3 rounded-full ${isListening ? "bg-green-400 animate-pulse" : "bg-white/20"}`} />
-            <span className="text-xs text-[var(--muted)]">{isListening ? "Listening" : "Mic Off"}</span>
-            <div className={`h-3 w-3 rounded-full ${isSpeaking ? "bg-orange-400 animate-pulse" : "bg-white/20"}`} />
-            <span className="text-xs text-[var(--muted)]">{isSpeaking ? "Speaking" : "Silent"}</span>
-          </div>
-        </div>
+      {/* LEFT */}
+      <InterviewSetupPanel
+        role={jobContext}
+        setRole={setJobContext}
 
-        <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-          <AnimatePresence initial={false}>
-            {messages.map((m) => (
-              <motion.div
-                key={m.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${m.role === "assistant" ? "bg-white/[0.05]" : "ml-auto bg-[var(--accent)] text-white"}`}
-              >
-                {m.content}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {isLoading ? <p className="text-xs text-[var(--muted)]">Interviewer is thinking...</p> : null}
-        </div>
+        level={inputSource}
+        setLevel={setInputSource}
 
-        <form onSubmit={(e) => void sendTurn(e)} className="border-t border-white/10 p-3">
-          <div className="flex gap-2">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              disabled={isLoading}
-              className="min-h-[56px] flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm"
-              placeholder="Type your interview answer..."
-            />
-            <div className="flex flex-col gap-2">
-              <button type="submit" disabled={isLoading} className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm text-white disabled:opacity-40">Send</button>
-              {!isListening ? (
-                <button type="button" onClick={startSpeechRecognition} className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm">Voice</button>
-              ) : (
-                <button type="button" onClick={stopSpeechRecognition} className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300">Stop</button>
-              )}
-            </div>
+        type={mode}
+        setType={setMode}
+
+        jobDescription={jobContext}
+        setJobDescription={setJobContext}
+
+        resumeContext={resumeContext}
+        setResumeContext={setResumeContext}
+
+        personality={personality}
+        setPersonality={setPersonality}
+
+        startInterview={() => {
+          void startInterview();
+        }}
+
+        finishInterview={() => {
+          void finishInterview();
+        }}
+      />
+
+      {/* RIGHT */}
+      <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-hidden">
+
+        {/* HEADER */}
+        <InterviewHeader
+          aiState={aiState}
+        />
+
+        {/* TABS */}
+        <InterviewTabs
+          messages={messages}
+          latestMessage={
+            latestAssistantMessage
+          }
+          speaking={isSpeaking}
+          listening={isListening}
+          thinking={isLoading}
+          aiState={aiState}
+        />
+
+        {/* DOCK */}
+        <VoiceDock
+          listening={
+            isListening
+          }
+          input={prompt}
+          setInput={
+            setPrompt
+          }
+          onSend={() =>
+            void sendTurn()
+          }
+          toggleListening={() => {
+            if (
+              isListening
+            ) {
+              stopSpeechRecognition();
+            } else {
+              startSpeechRecognition();
+            }
+          }}
+        />
+
+        {/* ERROR */}
+        {error ? (
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
           </div>
-          {error ? <p className="mt-2 text-xs text-red-300">{error}</p> : null}
-        </form>
+        ) : null}
+
       </div>
+
     </section>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <p className="mb-1 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
-        {label}
-      </p>
-
-      {children}
-    </label>
   );
 }

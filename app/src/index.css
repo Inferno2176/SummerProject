@@ -52,7 +52,7 @@
   --accent-hover: #ea580c;
 
   --text: #111827;
-  --muted: #6b7280;
+  --muted: #525866;
 
   --success: #16a34a;
   --danger: #dc2626;
@@ -212,6 +212,10 @@ svg {
   background: rgba(15, 23, 42, 0.2);
 }
 
+[data-theme="light"] body::before {
+  opacity: 0.12;
+}
+
 /* ─────────────────────────────────────────────
    TEXT SELECTION
 ───────────────────────────────────────────── */
@@ -235,11 +239,17 @@ svg {
 ───────────────────────────────────────────── */
 
 .glass {
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(
+    in srgb,
+    var(--surface) 82%,
+    transparent
+  );
 
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
 
   border: 1px solid var(--border);
+
+  box-shadow: var(--shadow-md);
 }
 
 /* ─────────────────────────────────────────────
@@ -256,6 +266,96 @@ svg {
   box-shadow: var(--shadow-md);
 }
 
+.chat-surface {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(
+        in srgb,
+        var(--surface) 92%,
+        transparent
+      ),
+      color-mix(
+        in srgb,
+        var(--surface-2) 96%,
+        transparent
+      )
+    );
+
+  border: 1px solid var(--border);
+
+  backdrop-filter: blur(24px);
+
+  box-shadow: var(--shadow-lg);
+}
+
+.message-assistant {
+  background:
+    color-mix(
+      in srgb,
+      var(--surface-2) 94%,
+      transparent
+    );
+
+  border: 1px solid var(--border);
+
+  color: var(--text);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.message-user {
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      var(--accent-hover)
+    );
+
+  color: white;
+
+  box-shadow:
+    0 10px 30px var(--glow);
+}
+
+.input-surface {
+  background:
+    color-mix(
+      in srgb,
+      var(--surface) 96%,
+      transparent
+    );
+
+  border: 1px solid var(--border);
+
+  color: var(--text);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-transition,
+.theme-transition * {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.topbar-chip {
+  background:
+    color-mix(
+      in srgb,
+      var(--surface-2) 88%,
+      transparent
+    );
+
+  border: 1px solid var(--border);
+
+  backdrop-filter: blur(18px);
+
+  box-shadow: var(--shadow-sm);
+}
 /* ─────────────────────────────────────────────
    GLOW
 ───────────────────────────────────────────── */

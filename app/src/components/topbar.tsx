@@ -5,6 +5,7 @@ import {
   Moon,
   Sun,
   Menu,
+  Cpu,
 } from "lucide-react";
 
 import {
@@ -172,134 +173,136 @@ export default function Topbar() {
   }, []);
 
   return (
-    <header className="flex h-20 items-center justify-between border-b border-white/5 bg-[var(--surface)] px-6">
+    <header className="flex h-[72px] items-center justify-between bg-[var(--surface)] px-6">
+
       {/* LEFT */}
       <div className="flex min-w-0 flex-1 items-center gap-4">
+
         <button
-          onClick={
-            toggleSidebar
-          }
-          className="rounded-lg p-2 text-[var(--muted)] transition hover:bg-white/5 hover:text-[var(--text)] lg:hidden"
-          title="Toggle Sidebar"
+          onClick={toggleSidebar}
+          className="rounded-xl p-2 text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)] lg:hidden"
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
 
-        <div className="hidden min-w-0 flex-1 lg:flex">
-          <div className="flex w-full items-center justify-between rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Active AI Agent
-              </p>
+        <div className="topbar-chip flex h-12 flex-1 items-center justify-between rounded-2xl px-5">
 
-              <p className="mt-1 text-sm font-medium text-[var(--text)]">
-                {
-                  agents.find(
-                    (x) =>
-                      x.model ===
-                      model
-                  )?.name ||
-                  "No Agent Selected"
-                }
-              </p>
-            </div>
+          {/* LABEL */}
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-[var(--accent)]" />
 
-            <div className="w-[300px]">
-              <select
-                value={model}
-                onChange={async (
-                  event
-                ) => {
-                  const selected =
-                    agents.find(
-                      (
-                        item
-                      ) =>
-                        item.model ===
-                        event
-                          .target
-                          .value
-                    );
-
-                  await setAgentByModel(
-                    event
-                      .target
-                      .value,
-                    selected?.name
-                  );
-
-                  setModel(
-                    event
-                      .target
-                      .value
-                  );
-                }}
-                className="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm outline-none transition hover:border-white/10"
-              >
-                {agents.map(
-                  (
-                    agent
-                  ) => (
-                    <option
-                      key={
-                        agent.id
-                      }
-                      value={
-                        agent.model
-                      }
-                      className="bg-[var(--surface)]"
-                    >
-                      {
-                        agent.name
-                      }{" "}
-                      (
-                      {
-                        agent.model
-                      }
-                      )
-                    </option>
-                  )
-                )}
-              </select>
-            </div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
+              Local AI
+            </p>
           </div>
+
+          {/* MODEL SELECT */}
+          <div className="w-[360px]">
+            <select
+              value={model}
+              onChange={async (
+                event
+              ) => {
+                const selected =
+                  agents.find(
+                    (
+                      item
+                    ) =>
+                      item.model ===
+                      event
+                        .target
+                        .value
+                  );
+
+                await setAgentByModel(
+                  event
+                    .target
+                    .value,
+                  selected?.name
+                );
+
+                setModel(
+                  event
+                    .target
+                    .value
+                );
+              }}
+              className="h-11 w-full rounded-xl bg-[var(--surface-2)] px-4 text-sm text-[var(--text)] outline-none transition"
+            >
+              {agents.map(
+                (
+                  agent
+                ) => (
+                  <option
+                    key={
+                      agent.id
+                    }
+                    value={
+                      agent.model
+                    }
+                    className="bg-[var(--surface)]"
+                  >
+                    {
+                      agent.name
+                    }{" "}
+                    (
+                    {
+                      agent.model
+                    }
+                    )
+                  </option>
+                )
+              )}
+            </select>
+          </div>
+
         </div>
       </div>
 
       {/* RIGHT */}
-      <div className="ml-6 flex items-center gap-4">
-        {/* CPU */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--muted)]">
-            CPU
-          </p>
+      <div className="ml-5 flex items-center gap-3">
 
-          <p className="mt-1 text-sm font-semibold">
-            {cpuUsage ===
-            null
-              ? "--"
-              : `${Math.round(
-                  cpuUsage
-                )}%`}
-          </p>
+        {/* CPU */}
+        <div className="topbar-chip flex h-12 items-center gap-3 rounded-2xl px-4">
+
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--surface-2)] text-[var(--muted)]">
+            <Cpu size={15} />
+          </div>
+
+          <div className="flex flex-col leading-none">
+            <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+              CPU
+            </span>
+
+            <span className="mt-1 text-sm font-semibold text-[var(--text)]">
+              {cpuUsage ===
+              null
+                ? "--"
+                : `${Math.round(
+                    cpuUsage
+                  )}%`}
+            </span>
+          </div>
+
         </div>
 
         {/* THEME */}
-        <div className="flex items-center rounded-2xl border border-white/5 bg-white/[0.03] p-1">
+        <div className="topbar-chip flex h-12 items-center gap-1 rounded-2xl px-1">
+
           <button
             onClick={() =>
               setTheme(
                 "light"
               )
             }
-            className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
               theme ===
               "light"
-                ? "bg-[var(--accent)] text-white"
-                : "text-[var(--muted)]"
+                ? "bg-[var(--accent)] text-white shadow-lg shadow-orange-500/20"
+                : "text-[var(--muted)] hover:bg-[var(--surface-2)]"
             }`}
           >
-            <Sun size={18} />
+            <Sun size={17} />
           </button>
 
           <button
@@ -308,34 +311,33 @@ export default function Topbar() {
                 "dark"
               )
             }
-            className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
               theme ===
               "dark"
-                ? "bg-[var(--accent)] text-white"
-                : "text-[var(--muted)]"
+                ? "bg-[var(--accent)] text-white shadow-lg shadow-orange-500/20"
+                : "text-[var(--muted)] hover:bg-[var(--surface-2)]"
             }`}
           >
-            <Moon size={18} />
+            <Moon size={17} />
           </button>
+
         </div>
 
         {/* PROFILE */}
-        <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--accent)] font-semibold text-black">
+        <div className="topbar-chip flex h-12 items-center gap-3 rounded-2xl px-3">
+
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-black">
             MJ
           </div>
 
-          <div className="hidden sm:block">
-            <p className="text-sm font-medium">
-              Matta Joshi
-            </p>
+          <p className="text-sm font-medium text-[var(--text)]">
+            Joshi
+          </p>
 
-            <p className="text-xs text-[var(--muted)]">
-              Local Profile
-            </p>
-          </div>
         </div>
+
       </div>
+
     </header>
   );
 }

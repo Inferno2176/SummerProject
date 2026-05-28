@@ -10,6 +10,16 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { listen } from "@tauri-apps/api/event";
 
+import ReactMarkdown from "react-markdown";
+
+import remarkGfm from "remark-gfm";
+
+import rehypeSanitize from "rehype-sanitize";
+
+import rehypeHighlight from "rehype-highlight";
+
+import "highlight.js/styles/github-dark.css";
+
 import {
   AnimatePresence,
   motion,
@@ -69,13 +79,13 @@ function loadSessionMessages(): ChatMessage[] {
       (item) =>
         item &&
         typeof item.id ===
-          "string" &&
+        "string" &&
         (item.role ===
           "user" ||
           item.role ===
-            "assistant") &&
+          "assistant") &&
         typeof item.content ===
-          "string"
+        "string"
     );
   } catch {
     return [];
@@ -85,30 +95,8 @@ function loadSessionMessages(): ChatMessage[] {
 function formatAssistantText(
   input: string
 ): string {
-  const deDoubled =
-    input
-      .replace(
-        /\b([A-Za-z]{2,})\s+\1\b/g,
-        "$1"
-      )
-      .replace(
-        /\b([A-Za-z]{2,})\s+\1\b/g,
-        "$1"
-      );
-
-  return deDoubled
-    .replace(
-      /\s+(?=\d+\.\s)/g,
-      "\n"
-    )
-    .replace(
-      /\s+(?=\*\s)/g,
-      "\n"
-    )
-    .replace(
-      /\n{3,}/g,
-      "\n\n"
-    )
+  return input
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -278,11 +266,11 @@ export default function ChatPage() {
                   msg
                 ) =>
                   msg.id ===
-                  activeAssistantId.current
+                    activeAssistantId.current
                     ? {
-                        ...msg,
-                        content: `${msg.content}${chunk}`,
-                      }
+                      ...msg,
+                      content: `${msg.content}${chunk}`,
+                    }
                     : msg
               )
           );
@@ -316,12 +304,12 @@ export default function ChatPage() {
       }
 
       const userMessage: ChatMessage =
-        {
-          id: `${Date.now()}-user`,
-          role: "user",
-          content:
-            prompt.trim(),
-        };
+      {
+        id: `${Date.now()}-user`,
+        role: "user",
+        content:
+          prompt.trim(),
+      };
 
       setMessages(
         (prev) => [
@@ -385,23 +373,23 @@ export default function ChatPage() {
                   msg
                 ) =>
                   msg.id ===
-                  assistantId
+                    assistantId
                     ? {
-                        ...msg,
-                        content:
-                          formatAssistantText(
-                            msg.content ||
-                              result.response ||
-                              "(No response text returned)"
-                          ),
-                      }
+                      ...msg,
+                      content:
+                        formatAssistantText(
+                          msg.content ||
+                          result.response ||
+                          "(No response text returned)"
+                        ),
+                    }
                     : msg
               )
           );
         } else {
           setError(
             result.error ||
-              "Unknown error from Ollama."
+            "Unknown error from Ollama."
           );
 
           setMessages(
@@ -418,7 +406,7 @@ export default function ChatPage() {
           );
         }
       } catch (
-        invokeError
+      invokeError
       ) {
         setError(
           String(
@@ -468,35 +456,47 @@ export default function ChatPage() {
     };
 
   return (
-    <section className="mx-auto flex h-[82vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/5 bg-[var(--surface)]/50 shadow-lg">
-      <div className="border-b border-white/5 px-5 py-3">
-        <h1 className="text-sm font-semibold tracking-tight">
-          CareerForges Chat
-        </h1>
+    <section className="mx-auto flex h-[calc(100vh-140px)] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] chat-surface shadow-2xl backdrop-blur-xl">
+      {/* HEADER */}
+      <div className="border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4 backdrop-blur-xl">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-[var(--text)]">
+              CareerForges Chat
+            </h1>
 
-        <p className="mt-0.5 text-xs text-[var(--muted)]/70">
-          {String(
-            provider ||
-              ""
-          ).toUpperCase()}{" "}
-          •{" "}
-          {agentName}
-        </p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {String(
+                provider || ""
+              ).toUpperCase()}{" "}
+              • {agentName}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.8)]" />
+
+            <span className="text-xs text-[var(--muted)]">
+              Local AI Running
+            </span>
+          </div>
+        </div>
       </div>
 
+      {/* MESSAGES */}
       <div
         ref={listRef}
-        className="flex-1 space-y-3 overflow-y-auto px-5 py-4"
+        className="flex-1 overflow-y-auto px-6 py-6 space-y-3"
       >
         {messages.length ===
-        0 ? (
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 text-xs text-[var(--muted)]/60">
+          0 ? (
+          <div className="glass rounded-2xl p-5 text-sm text-[var(--muted)] backdrop-blur-xl">
             Ask me anything
             about resumes,
-            job
-            descriptions,
-            or interview
-            prep.
+            interviews,
+            ATS optimization,
+            applications,
+            or career growth.
           </div>
         ) : null}
 
@@ -511,7 +511,7 @@ export default function ChatPage() {
                 }
                 initial={{
                   opacity: 0,
-                  y: 8,
+                  y: 10,
                 }}
                 animate={{
                   opacity: 1,
@@ -521,7 +521,7 @@ export default function ChatPage() {
                   opacity: 0,
                 }}
                 transition={{
-                  duration: 0.15,
+                  duration: 0.2,
                   ease: "easeOut",
                 }}
                 className={`flex w-full ${
@@ -532,18 +532,220 @@ export default function ChatPage() {
                 }`}
               >
                 <div
-                  className={`max-w-[78%] rounded-xl px-3.5 py-2.5 text-sm leading-5 ${
+                  className={`
+                  max-w-[78%]
+                  rounded-3xl
+                  px-5
+                  py-2
+                  text-[15px]
+                  leading-6
+                  tracking-[0.01em]
+                  shadow-xl
+                  transition-all
+                  duration-200
+                  ${
                     message.role ===
                     "user"
-                      ? "bg-orange-500/80 text-white"
-                      : "bg-white/[0.04] text-[var(--text)]"
-                  }`}
+                      ? `
+                      message-user
+                    `
+                      : `
+                      message-assistant
+                    `
+                  }
+                  `}
                 >
-                  <div className="whitespace-pre-wrap break-words">
-                    {
-                      message.content
-                    }
-                  </div>
+                  <ReactMarkdown
+                    remarkPlugins={[
+                      remarkGfm,
+                    ]}
+                    rehypePlugins={[
+                      rehypeHighlight,
+                      rehypeSanitize,
+                    ]}
+                    components={{
+                      h1: ({
+                        children,
+                      }) => (
+                        <h1 className="mb-4 mt-6 text-2xl font-bold tracking-tight text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </h1>
+                      ),
+
+                      h2: ({
+                        children,
+                      }) => (
+                        <h2 className="mb-3 mt-5 text-xl font-semibold text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </h2>
+                      ),
+
+                      h3: ({
+                        children,
+                      }) => (
+                        <h3 className="mb-3 mt-4 text-lg font-semibold text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </h3>
+                      ),
+
+                      p: ({
+                        children,
+                      }) => (
+                        <p className="mb-1.5 leading-6 text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </p>
+                      ),
+
+                      ul: ({
+                        children,
+                      }) => (
+                        <ul className="mb-5 list-disc space-y-1 pl-6 text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </ul>
+                      ),
+
+                      ol: ({
+                        children,
+                      }) => (
+                        <ol className="mb-5 list-decimal space-y-1 pl-6 text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </ol>
+                      ),
+
+                      li: ({
+                        children,
+                      }) => (
+                        <li className="leading-6 marker:text-orange-400">
+                          {
+                            children
+                          }
+                        </li>
+                      ),
+
+                      strong: ({
+                        children,
+                      }) => (
+                        <strong className="font-semibold text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </strong>
+                      ),
+
+                      em: ({
+                        children,
+                      }) => (
+                        <em className="italic text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </em>
+                      ),
+
+                      code: ({
+                        children,
+                      }) => (
+                        <code className="rounded-lg bg-[var(--surface)] px-1.5 py-1 font-mono text-[13px] text-orange-300">
+                          {
+                            children
+                          }
+                        </code>
+                      ),
+
+                      pre: ({
+                        children,
+                      }) => (
+                        <pre className="mb-5 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm shadow-inner">
+                          {
+                            children
+                          }
+                        </pre>
+                      ),
+
+                      blockquote:
+                        ({
+                          children,
+                        }) => (
+                          <blockquote className="mb-5 border-l-2 border-orange-500/40 pl-4 italic text-[var(--muted)]">
+                            {
+                              children
+                            }
+                          </blockquote>
+                        ),
+
+                      a: ({
+                        href,
+                        children,
+                      }) => (
+                        <a
+                          href={
+                            href
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-orange-400 underline underline-offset-4 transition hover:text-orange-300"
+                        >
+                          {
+                            children
+                          }
+                        </a>
+                      ),
+
+                      table: ({
+                        children,
+                      }) => (
+                        <div className="mb-5 overflow-x-auto">
+                          <table className="w-full border-collapse text-left">
+                            {
+                              children
+                            }
+                          </table>
+                        </div>
+                      ),
+
+                      th: ({
+                        children,
+                      }) => (
+                        <th className="border-b border-[var(--border)] px-3 py-2 text-[var(--muted)]">
+                          {
+                            children
+                          }
+                        </th>
+                      ),
+
+                      td: ({
+                        children,
+                      }) => (
+                        <td className="border-b border-[var(--border)] px-3 py-2 text-[var(--text)]">
+                          {
+                            children
+                          }
+                        </td>
+                      ),
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+
+                  {isLoading &&
+                  activeAssistantId.current ===
+                    message.id ? (
+                    <span className="ml-1 inline-block animate-pulse text-orange-400">
+                      ▋
+                    </span>
+                  ) : null}
                 </div>
               </motion.div>
             )
@@ -558,20 +760,33 @@ export default function ChatPage() {
             animate={{
               opacity: 1,
             }}
-            className="w-fit rounded-xl bg-white/[0.04] px-3.5 py-2.5 text-sm text-[var(--muted)]/70"
+            className="w-fit glass rounded-2xl px-4 py-3 backdrop-blur-xl"
           >
-            Thinking...
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-orange-400" />
+
+                <span className="h-2 w-2 animate-bounce rounded-full bg-orange-400 [animation-delay:120ms]" />
+
+                <span className="h-2 w-2 animate-bounce rounded-full bg-orange-400 [animation-delay:240ms]" />
+              </div>
+
+              <span className="text-sm text-[var(--muted)]">
+                Thinking...
+              </span>
+            </div>
           </motion.div>
         ) : null}
       </div>
 
+      {/* INPUT */}
       <form
         onSubmit={
           handleSubmit
         }
-        className="border-t border-white/5 px-5 py-3"
+        className="border-t border-[var(--border)] bg-[var(--surface)] px-6 py-5 backdrop-blur-xl"
       >
-        <div className="flex items-end gap-2.5">
+        <div className="flex items-end gap-3">
           <textarea
             value={prompt}
             onChange={(
@@ -585,8 +800,28 @@ export default function ChatPage() {
             disabled={
               isLoading
             }
-            className="min-h-[40px] max-h-32 flex-1 resize-none rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm placeholder-[var(--muted)]/40 outline-none transition focus:border-orange-500/40 focus:bg-white/[0.06]"
-            placeholder="Message..."
+            rows={1}
+            className="
+            min-h-[52px]
+            max-h-40
+            flex-1
+            resize-none
+            rounded-2xl
+            border
+            border-[var(--border)]
+            bg-[var(--surface-2)]
+            px-4
+            py-3
+            text-[15px]
+            text-[var(--text)]
+            placeholder:text-[var(--muted)]
+            outline-none
+            transition-all
+            focus:border-orange-500/40
+            focus:bg-white/[0.06]
+            focus:shadow-[0_0_0_4px_rgba(249,115,22,0.08)]
+            "
+            placeholder="Message CareerForges..."
           />
 
           <button
@@ -594,15 +829,37 @@ export default function ChatPage() {
             disabled={
               isLoading
             }
-            className="h-10 rounded-xl bg-orange-500 px-4 text-xs font-medium text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="
+            flex
+            h-[52px]
+            items-center
+            justify-center
+            rounded-2xl
+            bg-gradient-to-br
+            from-orange-500
+            to-orange-600
+            px-5
+            text-sm
+            font-medium
+            text-[var(--text)]
+            shadow-lg
+            shadow-orange-500/20
+            transition-all
+            hover:scale-[1.02]
+            hover:from-orange-400
+            hover:to-orange-500
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+            "
           >
             Send
           </button>
         </div>
       </form>
 
+      {/* ERROR */}
       {error ? (
-        <div className="mx-5 mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3.5 py-2.5 text-xs text-red-200/80">
+        <div className="mx-5 mb-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-500">
           {error}
         </div>
       ) : null}
