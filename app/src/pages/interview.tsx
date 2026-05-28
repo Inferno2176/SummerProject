@@ -80,32 +80,34 @@ const PERSONALITIES = [
   "HR Manager",
 ];
 
+
+type SpeechRecognitionInstance = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+
+  onresult:
+  | ((
+    event: SpeechRecognitionEvent
+  ) => void)
+  | null;
+
+  onend:
+  | (() => void)
+  | null;
+
+  onerror:
+  | (() => void)
+  | null;
+
+  start: () => void;
+
+  stop: () => void;
+};
+
 type SpeechRecognitionCtor =
-  new () => {
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
+  new () => SpeechRecognitionInstance;
 
-    onresult:
-    | ((
-      event: {
-        results: ArrayLike<
-          ArrayLike<{
-            transcript: string;
-          }>
-        >;
-      }
-    ) => void)
-    | null;
-
-    onend:
-    | (() => void)
-    | null;
-
-    start: () => void;
-
-    stop: () => void;
-  };
 
 function loadMessages(): InterviewMessage[] {
   try {
@@ -141,6 +143,11 @@ export default function InterviewPage() {
 
   const [prompt, setPrompt] =
     useState("");
+
+  const silenceTimeoutRef =
+    useRef<number | null>(
+      null
+    );
 
   const [mode, setMode] =
     useState(
@@ -408,97 +415,6 @@ export default function InterviewPage() {
       resumeContext,
     ]);
 
-  const startSpeechRecognition =
-    useCallback(() => {
-      const ctor =
-        (
-          window as unknown as {
-            SpeechRecognition?: SpeechRecognitionCtor;
-            webkitSpeechRecognition?: SpeechRecognitionCtor;
-          }
-        )
-          .SpeechRecognition ||
-        (
-          window as unknown as {
-            webkitSpeechRecognition?: SpeechRecognitionCtor;
-          }
-        )
-          .webkitSpeechRecognition;
-
-      if (!ctor) {
-        setError(
-          "Speech recognition unavailable."
-        );
-
-        return;
-      }
-
-      const recognition =
-        new ctor();
-
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.lang =
-        "en-US";
-
-      recognition.onresult =
-        (
-          event
-        ) => {
-          const transcript =
-            event
-              .results[0][0]
-              .transcript;
-
-          setPrompt(
-            (
-              prev
-            ) =>
-              prev
-                ? `${prev} ${transcript}`
-                : transcript
-          );
-        };
-
-      recognition.onend =
-        () => {
-          setIsListening(
-            false
-          );
-
-          setAiState(
-            "idle"
-          );
-        };
-
-      recognitionRef.current =
-        recognition;
-
-      setIsListening(
-        true
-      );
-
-      setAiState(
-        "listening"
-      );
-
-      recognition.start();
-    }, []);
-
-  const stopSpeechRecognition =
-    useCallback(() => {
-      recognitionRef.current?.stop();
-
-      setIsListening(
-        false
-      );
-
-      setAiState(
-        "idle"
-      );
-    }, []);
-
   const speak =
     useCallback(
       (
@@ -681,23 +597,16 @@ export default function InterviewPage() {
             );
           } else {
             setMessages(
-              (
-                prev
-              ) =>
+              (prev) =>
                 prev.map(
-                  (
-                    m
-                  ) =>
+                  (m) =>
                     m.id ===
                       assistantId
                       ? {
                         ...m,
                         content:
-                          (
-                            m.content ||
-                            result.response ||
-                            ""
-                          ).trim(),
+                          m.content.trim() ||
+                          result.response.trim(),
                       }
                       : m
                 )
@@ -756,6 +665,168 @@ export default function InterviewPage() {
         speak,
       ]
     );
+
+  const startSpeechRecognition =
+    useCallback(() => {
+      const ctor =
+        (
+          window as unknown as {
+            SpeechRecognition?: SpeechRecognitionCtor;
+            webkitSpeechRecognition?: SpeechRecognitionCtor;
+          }
+        )
+          .SpeechRecognition ||
+        (
+          window as unknown as {
+            webkitSpeechRecognition?: SpeechRecognitionCtor;
+          }
+        )
+          .webkitSpeechRecognition;
+
+      if (!ctor) {
+        setError(
+          "Speech recognition unavailable."
+        );
+
+        return;
+      }
+
+      if (
+        recognitionRef.current
+      ) {
+        recognitionRef.current.stop();
+      }
+
+      const recognition =
+        new ctor();
+
+      recognition.continuous =
+        true;
+
+      recognition.interimResults =
+        true;
+
+      recognition.lang =
+        "en-US";
+
+      recognition.onresult =
+        (event) => {
+          let transcript =
+            "";
+
+          for (
+            let i = 0;
+            i <
+            event.results.length;
+            i++
+          ) {
+            transcript +=
+              event.results[i][0]
+                .transcript + " ";
+          }
+
+          const cleaned =
+            transcript.trim();
+
+          setPrompt(
+            cleaned
+          );
+
+          if (
+            silenceTimeoutRef.current
+          ) {
+            clearTimeout(
+              silenceTimeoutRef.current
+            );
+          }
+
+          silenceTimeoutRef.current =
+            window.setTimeout(
+              () => {
+                if (
+                  cleaned &&
+                  !isLoading
+                ) {
+                  void sendTurn(
+                    undefined,
+                    cleaned
+                  );
+                }
+              },
+              1600
+            );
+        };
+
+      recognition.onerror =
+        () => {
+          setIsListening(
+            false
+          );
+
+          setAiState(
+            "idle"
+          );
+        };
+
+      recognition.onend =
+        () => {
+          if (
+            recognitionRef.current &&
+            isListening
+          ) {
+            try {
+              recognition.start();
+            } catch {
+              //
+            }
+          }
+        };
+
+      recognitionRef.current =
+        recognition;
+
+      setIsListening(
+        true
+      );
+
+      setAiState(
+        "listening"
+      );
+
+      recognition.start();
+    }, [
+      isListening,
+      isLoading,
+      sendTurn,
+    ]);
+
+
+
+  const stopSpeechRecognition =
+    useCallback(() => {
+      if (
+        silenceTimeoutRef.current
+      ) {
+        clearTimeout(
+          silenceTimeoutRef.current
+        );
+      }
+
+      recognitionRef.current?.stop();
+
+      recognitionRef.current =
+        null;
+
+      setIsListening(
+        false
+      );
+
+      setAiState(
+        "idle"
+      );
+
+      setPrompt("");
+    }, []);
 
   const startInterview =
     async () => {
