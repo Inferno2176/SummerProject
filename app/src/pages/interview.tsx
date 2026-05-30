@@ -194,6 +194,12 @@ export default function InterviewPage() {
   const [isSpeaking, setIsSpeaking] =
     useState(false);
 
+  const [
+    liveAssistantText,
+    setLiveAssistantText,
+  ] = useState("");
+
+
   const [elapsedSec, setElapsedSec] =
     useState(0);
 
@@ -330,6 +336,12 @@ export default function InterviewPage() {
             event.payload
               ?.chunk || "";
 
+          setLiveAssistantText(
+            (prev) =>
+              prev + chunk
+          );
+
+
           if (!chunk) {
             return;
           }
@@ -458,7 +470,12 @@ export default function InterviewPage() {
             setAiState(
               "idle"
             );
+
+            setLiveAssistantText(
+              ""
+            );
           };
+
 
         window.speechSynthesis.speak(
           utter
@@ -521,6 +538,8 @@ export default function InterviewPage() {
         setElapsedSec(0);
 
         setPrompt("");
+
+        setLiveAssistantText("");
 
         setMessages(
           (
@@ -929,13 +948,16 @@ export default function InterviewPage() {
     };
 
   const latestAssistantMessage =
+    liveAssistantText ||
     [...messages]
       .reverse()
       .find(
         (m) =>
           m.role ===
           "assistant"
-      )?.content || "";
+      )?.content ||
+    "";
+
 
   return (
     <section className="flex h-[calc(100vh-4.5rem)] gap-5 overflow-hidden">
