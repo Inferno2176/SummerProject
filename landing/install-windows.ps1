@@ -42,27 +42,54 @@ try {
 
     }
 
-    Write-Host "Starting Ollama..."
-
-    Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
-
-    Write-Host "Waiting for Ollama..."
+    Write-Host "Checking Ollama service..."
 
     $Ready = $false
 
-    for ($i = 0; $i -lt 20; $i++) {
+    try {
 
-        try {
+        Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 2 | Out-Null
 
-            Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 2 | Out-Null
+        $Ready = $true
 
-            $Ready = $true
-            break
+        Write-Host "Ollama already running."
+
+    }
+    catch {
+
+        Write-Host "Starting Ollama..."
+
+        $OllamaExe = Join-Path $env:LOCALAPPDATA "Programs\Ollama\Ollama.exe"
+
+        if (Test-Path $OllamaExe) {
+
+            Start-Process -FilePath $OllamaExe
 
         }
-        catch {
+        else {
 
-            Start-Sleep -Seconds 1
+            Start-Process -FilePath "ollama" -ErrorAction SilentlyContinue
+
+        }
+
+        Write-Host "Waiting for Ollama..."
+
+        for ($i = 0; $i -lt 60; $i++) {
+
+            try {
+
+                Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 2 | Out-Null
+
+                $Ready = $true
+
+                break
+
+            }
+            catch {
+
+                Start-Sleep -Seconds 1
+
+            }
 
         }
 
@@ -76,7 +103,7 @@ try {
 
     Write-Host "Checking model..."
 
-    $ModelExists = ollama list | Select-String $ModelName
+    $ModelExists = ollama list | Select-String "^$ModelName"
 
     if (-not $ModelExists) {
 

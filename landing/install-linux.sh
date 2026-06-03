@@ -19,24 +19,38 @@ else
     echo "Ollama already installed."
 fi
 
-echo "Starting Ollama..."
-
-if ! pgrep -x "ollama" >/dev/null 2>&1; then
-    ollama serve >/dev/null 2>&1 &
-fi
-
-echo "Waiting for Ollama..."
+echo "Checking Ollama service..."
 
 READY=false
 
-for i in $(seq 1 20); do
-    if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
-        READY=true
-        break
-    fi
+if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
 
-    sleep 1
-done
+    READY=true
+
+    echo "Ollama already running."
+
+else
+
+    echo "Starting Ollama..."
+
+    ollama serve >/dev/null 2>&1 &
+
+    echo "Waiting for Ollama..."
+
+    for i in $(seq 1 60); do
+
+        if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+
+            READY=true
+            break
+
+        fi
+
+        sleep 1
+
+    done
+
+fi
 
 if [ "$READY" = false ]; then
     echo "❌ Ollama failed to start."
@@ -45,7 +59,7 @@ fi
 
 echo "Checking model..."
 
-if ! ollama list | grep -q "$MODEL_NAME"; then
+if ! ollama list | grep -q "^$MODEL_NAME"; then
     echo "Downloading $MODEL_NAME..."
     ollama pull "$MODEL_NAME"
 else

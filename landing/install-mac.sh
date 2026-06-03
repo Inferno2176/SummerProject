@@ -9,31 +9,66 @@ DOWNLOAD_URL="https://github.com/JoshiNaidu/career-forges/releases/latest/downlo
 
 TMP_DIR=$(mktemp -d)
 
-trap "rm -rf $TMP_DIR" EXIT
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+echo ""
+echo "=== CareerForges Installer ==="
+echo ""
 
 echo "Checking Ollama..."
 
 if ! command -v ollama >/dev/null 2>&1; then
-echo "Installing Ollama..."
-curl -fsSL https://ollama.com/install.sh | sh
+    echo "Installing Ollama..."
+    curl -fsSL https://ollama.com/install.sh | sh
 else
-echo "Ollama already installed"
+    echo "Ollama already installed."
 fi
 
-echo "Starting Ollama..."
+echo "Checking Ollama service..."
 
-if ! pgrep -x "ollama" > /dev/null; then
-ollama serve >/dev/null 2>&1 &
-sleep 5
+READY=false
+
+if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+
+    READY=true
+
+    echo "Ollama already running."
+
+else
+
+    echo "Starting Ollama..."
+
+    ollama serve >/dev/null 2>&1 &
+
+    echo "Waiting for Ollama..."
+
+    for i in $(seq 1 60); do
+
+        if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+
+            READY=true
+            break
+
+        fi
+
+        sleep 1
+
+    done
+
+fi
+
+if [ "$READY" = false ]; then
+    echo "❌ Ollama failed to start."
+    exit 1
 fi
 
 echo "Checking model..."
 
-if ! ollama list | grep -q "$MODEL_NAME"; then
-echo "Downloading $MODEL_NAME..."
-ollama pull "$MODEL_NAME"
+if ! ollama list | grep -q "^$MODEL_NAME"; then
+    echo "Downloading $MODEL_NAME..."
+    ollama pull "$MODEL_NAME"
 else
-echo "$MODEL_NAME already installed"
+    echo "$MODEL_NAME already installed."
 fi
 
 echo "Downloading $APP_NAME..."
