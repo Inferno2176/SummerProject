@@ -1,8 +1,17 @@
 $ErrorActionPreference = "Stop"
 
 $ModelName = "qwen3:8b"
-
 $TempDir = Join-Path $env:TEMP "CareerForgesInstall"
+
+function Test-OllamaApi {
+    try {
+        Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 3 | Out-Null
+        return $true
+    }
+    catch {
+        return $false
+    }
+}
 
 if (Test-Path $TempDir) {
     Remove-Item $TempDir -Recurse -Force
@@ -11,7 +20,6 @@ if (Test-Path $TempDir) {
 New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
 
 $CareerForgesInstaller = Join-Path $TempDir "CareerForgesSetup.exe"
-$OllamaInstaller = Join-Path $TempDir "OllamaSetup.exe"
 
 try {
 
@@ -25,16 +33,22 @@ try {
 
     if (-not $OllamaInstalled) {
 
-        Write-Host "Downloading Ollama..."
-
-        Invoke-WebRequest -Uri "https://ollama.com/download/OllamaSetup.exe" -OutFile $OllamaInstaller
-
+        Write-Host "Ollama not found."
         Write-Host "Installing Ollama..."
 
-        Start-Process -FilePath $OllamaInstaller -ArgumentList "/S" -Wait
+        Invoke-Expression (Invoke-RestMethod "https://ollama.com/install.ps1")
 
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 10
 
+        $env:PATH += ";$env:LOCALAPPDATA\Programs\Ollama"
+
+        $OllamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
+
+        if (-not $OllamaInstalled) {
+            throw "Ollama installation failed."
+        }
+
+        Write-Host "Ollama installed successfully."
     }
     else {
 
@@ -42,62 +56,56 @@ try {
 
     }
 
-    Write-Host "Checking Ollama service..."
-
-    $Ready = $false
+    Write-Host "Verifying Ollama CLI..."
 
     try {
+        $Version = ollama -v
 
-        Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 2 | Out-Null
-
-        $Ready = $true
-
-        Write-Host "Ollama already running."
-
+        if ($Version) {
+            Write-Host $Version
+        }
     }
     catch {
+        throw "Ollama CLI is installed but not working."
+    }
+
+    Write-Host "Checking Ollama API..."
+
+    if (-not (Test-OllamaApi)) {
 
         Write-Host "Starting Ollama..."
 
         $OllamaExe = Join-Path $env:LOCALAPPDATA "Programs\Ollama\Ollama.exe"
 
-        if (Test-Path $OllamaExe) {
-
-            Start-Process -FilePath $OllamaExe
-
-        }
-        else {
-
-            Start-Process -FilePath "ollama" -ErrorAction SilentlyContinue
-
+        if (-not (Test-Path $OllamaExe)) {
+            throw "Unable to locate Ollama.exe"
         }
 
-        Write-Host "Waiting for Ollama..."
+        Start-Process -FilePath $OllamaExe
 
-        for ($i = 0; $i -lt 60; $i++) {
+        Write-Host "Waiting for Ollama API..."
 
-            try {
+        $Ready = $false
 
-                Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 2 | Out-Null
+        for ($i = 0; $i -lt 300; $i++) {
 
+            if (Test-OllamaApi) {
                 $Ready = $true
-
                 break
-
-            }
-            catch {
-
-                Start-Sleep -Seconds 1
-
             }
 
+            Start-Sleep -Seconds 1
         }
 
+        if (-not $Ready) {
+            throw "Ollama API did not become available. Please launch Ollama manually once and rerun the installer."
+        }
+
+        Write-Host "Ollama API is ready."
     }
+    else {
 
-    if (-not $Ready) {
-
-        throw "Ollama failed to start."
+        Write-Host "Ollama API already running."
 
     }
 
@@ -108,7 +116,6 @@ try {
     if (-not $ModelExists) {
 
         Write-Host "Downloading $ModelName..."
-
         ollama pull $ModelName
 
     }
@@ -127,9 +134,7 @@ try {
         Select-Object -First 1
 
     if (-not $Asset) {
-
         throw "Unable to locate CareerForges Windows installer."
-
     }
 
     Write-Host "Downloading CareerForges..."
@@ -142,14 +147,13 @@ try {
 
     Write-Host ""
     Write-Host "✅ CareerForges installed successfully!"
+    Write-Host ""
 
 }
 finally {
 
     if (Test-Path $TempDir) {
-
         Remove-Item $TempDir -Recurse -Force
-
     }
 
 }
