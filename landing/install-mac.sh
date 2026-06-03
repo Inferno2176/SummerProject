@@ -3,10 +3,38 @@
 set -e
 
 APP_NAME="CareerForges"
+MODEL_NAME="qwen3:8b"
 
 DOWNLOAD_URL="https://github.com/JoshiNaidu/career-forges/releases/latest/download/CareerForges.app.tar.gz"
 
 TMP_DIR=$(mktemp -d)
+
+trap "rm -rf $TMP_DIR" EXIT
+
+echo "Checking Ollama..."
+
+if ! command -v ollama >/dev/null 2>&1; then
+echo "Installing Ollama..."
+curl -fsSL https://ollama.com/install.sh | sh
+else
+echo "Ollama already installed"
+fi
+
+echo "Starting Ollama..."
+
+if ! pgrep -x "ollama" > /dev/null; then
+ollama serve >/dev/null 2>&1 &
+sleep 5
+fi
+
+echo "Checking model..."
+
+if ! ollama list | grep -q "$MODEL_NAME"; then
+echo "Downloading $MODEL_NAME..."
+ollama pull "$MODEL_NAME"
+else
+echo "$MODEL_NAME already installed"
+fi
 
 echo "Downloading $APP_NAME..."
 
@@ -41,4 +69,4 @@ echo "Launching app..."
 open "/Applications/$APP_NAME.app"
 
 echo ""
-echo "✅ $APP_NAME installed successfully!"
+echo "✅ CareerForges installed successfully!"

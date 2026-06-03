@@ -889,6 +889,80 @@
       }
     }
 
+    .installed-section {
+      padding: 90px 60px;
+    }
+
+    .installed-wrapper {
+      max-width: 1250px;
+      margin: 0 auto;
+    }
+
+    .installed-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .installed-header .section-sub {
+      margin: 0 auto;
+    }
+
+    .installed-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .installed-item {
+      background: linear-gradient(180deg,
+          rgba(255, 255, 255, .04),
+          rgba(255, 255, 255, .02));
+
+      border: 1px solid rgba(255, 255, 255, .06);
+
+      border-radius: 24px;
+
+      padding: 32px;
+
+      transition: .3s;
+    }
+
+    .installed-item:hover {
+      transform: translateY(-6px);
+
+      border-color: rgba(249, 115, 22, .4);
+
+      box-shadow:
+        0 20px 50px rgba(249, 115, 22, .12);
+    }
+
+    .installed-icon {
+      font-size: 2rem;
+      margin-bottom: 18px;
+    }
+
+    .installed-item h3 {
+      margin-bottom: 10px;
+      font-size: 1.15rem;
+    }
+
+    .installed-item p {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    @media(max-width:980px) {
+
+      .installed-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .installed-section {
+        padding: 72px 24px;
+      }
+
+    }
+
     /* ── FOOTER ── */
     footer {
       padding: 36px 60px;
@@ -1399,7 +1473,7 @@
 
     <div class="hero-buttons">
       <a id="downloadPrereleaseBtn" class="btn-primary" href="https://github.com/JoshiNaidu/career-forges/releases">
-        📥 Get Pre-release
+        🚀 Install CareerForges
       </a>
       <a class="btn-secondary" href="https://github.com/JoshiNaidu/career-forges" target="_blank">
         ⭐ Star on GitHub
@@ -1412,15 +1486,69 @@
         <span class="stat-label">Local AI</span>
       </div>
       <div class="stat">
-        <span class="stat-num">0</span>
-        <span class="stat-label">Data Collected</span>
+        <span id="installCount" class="stat-num">...</span>
+        <span class="stat-label">Installations</span>
       </div>
       <div class="stat prerelease-stat">
         <span id="latestVersionBadge" class="stat-num">Loading...</span>
-        <span class="stat-label">Early Access</span>
+        <span class="stat-label">Latest release</span>
       </div>
     </div>
   </header>
+
+  <section id="workflow">
+
+    <div class="features-inner">
+
+      <div class="features-header reveal">
+
+        <span class="section-label">
+          How It Works
+        </span>
+
+        <h2 class="section-title">
+          One Upload.<br>
+          Everything Else Automated.
+        </h2>
+
+        <p class="section-sub">
+          CareerForges learns your profile once and helps throughout your entire job search journey.
+        </p>
+
+      </div>
+
+      <div class="features-grid reveal">
+
+        <div class="feature-card">
+          <div class="feature-icon">📄</div>
+          <h3>Upload Resume</h3>
+          <p>Import your existing resume and let CareerForges understand your experience.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <h3>Build Career Profile</h3>
+          <p>AI extracts skills, experience, education and career strengths automatically.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Find Matching Jobs</h3>
+          <p>Receive job recommendations based on your profile and preferences.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Generate ATS Resumes</h3>
+          <p>Create tailored resumes for each opportunity with one click.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
 
   <!-- FEATURES -->
   <section id="features">
@@ -1456,12 +1584,24 @@
           <span class="feature-tag">By design</span>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
+        <!-- <div class="feature-card">
+          <div class="feature-icon">🤖</div>
           <h3>Future Automation</h3>
           <p>Planned support for end-to-end automated workflows and smarter AI-assisted application pipelines. The
             roadmap is ambitious.</p>
           <span class="feature-tag">Coming soon</span>
+        </div> -->
+
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>One-Click AI Setup</h3>
+          <p>
+            Automatically installs Ollama,
+            downloads AI models,
+            and configures everything for you.
+            No terminal required.
+          </p>
+          <span class="feature-tag">New</span>
         </div>
       </div>
     </div>
@@ -1495,7 +1635,7 @@
             </li>
             <li>
               <span class="check">✓</span>
-              Your resume data never leaves your device. Zero cloud storage, zero vendor lock-in.
+              AI processing happens locally while CareerForges uses limited analytics to improve the platform.
             </li>
             <li>
               <span class="check">✓</span>
@@ -1606,7 +1746,9 @@
         </h2>
 
         <p class="section-sub">
-          Native installers for macOS, Windows and Linux.
+          One command installs CareerForges,
+          Ollama,
+          and your local AI model automatically.
         </p>
 
       </div>
@@ -1663,21 +1805,21 @@
 
           <div class="install-terminal">
 
-            <code>C:\Users\Akash>
+            <code id="windowsCommand"
+              data-command='powershell -ExecutionPolicy Bypass -c "irm https://careerforges.app/install-windows.ps1 | iex"'>
+<span class="prompt-user">PS C:\Users\Akash</span><span class="prompt-path">&gt;</span>
 
-1. Download setup.exe
+powershell -ExecutionPolicy Bypass -c
 
-2. Run installer
+"irm https://careerforges.app/install-windows.ps1
 
-3. Launch CareerForges
+| iex"
 </code>
 
           </div>
 
-          <button class="copy-btn" id="windowsDownloadBtn">
-
-            Download Windows Build
-
+          <button class="copy-btn" data-copy="windowsCommand">
+            Copy Install Command
           </button>
 
         </div>
@@ -1700,21 +1842,76 @@
 
           <div class="install-terminal">
 
-            <code>akash@linux:~$
 
-chmod +x CareerForges.AppImage
+            <code id="linuxCommand" data-command="curl -fsSL https://careerforges.app/install-linux.sh | bash">
+<span class="prompt-user">akash@careerforges</span><span class="prompt-path">:~$</span>
 
-./CareerForges.AppImage
+curl -fsSL
+
+https://careerforges.app/install-linux.sh
+
+| bash
 </code>
 
           </div>
 
-          <button class="copy-btn" id="linuxDownloadBtn">
-
-            Download Linux Build
-
+          <button class="copy-btn" data-copy="linuxCommand">
+            Copy Install Command
           </button>
 
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <section class="installed-section">
+
+    <div class="installed-wrapper">
+
+      <div class="installed-header">
+
+        <span class="section-label">
+          Included Automatically
+        </span>
+
+        <h2 class="section-title">
+          Everything You Need.<br>
+          Nothing You Don't.
+        </h2>
+
+        <p class="section-sub">
+          CareerForges installs and configures your complete AI career stack automatically.
+        </p>
+
+      </div>
+
+      <div class="installed-grid">
+
+        <div class="installed-item">
+          <div class="installed-icon">💼</div>
+          <h3>CareerForges</h3>
+          <p>Desktop application for resumes, jobs and interview preparation.</p>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-icon">🧠</div>
+          <h3>Ollama</h3>
+          <p>Local AI runtime that powers CareerForges completely offline.</p>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-icon">⚡</div>
+          <h3>qwen3:8b</h3>
+          <p>AI model optimized for resume generation and career assistance.</p>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-icon">🔄</div>
+          <h3>Auto Updates</h3>
+          <p>Receive new CareerForges releases automatically.</p>
         </div>
 
       </div>
@@ -1731,8 +1928,8 @@ chmod +x CareerForges.AppImage
       </div>
       <span class="section-label">The Creator</span>
       <h2 class="section-title">Matta Joshi</h2>
-      <p class="section-sub">Developer, builder, and creator passionate about AI-powered tools that solve real-world
-        problems and empower people globally.</p>
+      <p class="section-sub">Building AI-powered products that solve real-world problems, automate career growth, and
+        make advanced technology accessible to everyone.</p>
       <div class="hero-buttons">
         <a class="btn-primary" href="https://mattajoshi.in" target="_blank">Personal Website</a>
         <a class="btn-secondary" href="https://www.linkedin.com/in/matta-joshi-mani-pavan-akash-44b2b512a/"
@@ -1828,22 +2025,28 @@ chmod +x CareerForges.AppImage
 
     document.querySelectorAll('.copy-btn').forEach(btn => {
 
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
 
-        const target = btn.dataset.copy;
+        const targetId = btn.dataset.copy;
 
-        if (!target) return;
+        if (!targetId) return;
+
+        const target =
+          document.getElementById(targetId);
 
         const text =
-          document.getElementById(target).innerText;
+          target.dataset.command ||
+          target.innerText.trim();
 
-        navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(text);
 
-        btn.textContent = 'Copied!';
+        btn.textContent = '✓ Command Copied';
 
         setTimeout(() => {
+
           btn.textContent =
             'Copy Install Command';
+
         }, 2000);
 
       });
@@ -1851,200 +2054,134 @@ chmod +x CareerForges.AppImage
     });
 
     async function setupReleaseDownload() {
+
       const owner = 'JoshiNaidu';
       const repo = 'career-forges';
-      const releaseApiUrl = `https://api.github.com/repos/${owner}/${repo}/releases?per_page=20`;
-      const fallbackReleasesUrl = `https://github.com/${owner}/${repo}/releases`;
 
-      const downloadBtn = document.getElementById('downloadPrereleaseBtn');
-      const windowsDownloadBtn =
-        document.getElementById('windowsDownloadBtn');
+      const releaseApiUrl =
+        `https://api.github.com/repos/${owner}/${repo}/releases?per_page=20`;
 
-      const linuxDownloadBtn =
-        document.getElementById('linuxDownloadBtn');
-      const latestVersionBadge = document.getElementById('latestVersionBadge');
-      const footerReleaseVersion = document.getElementById('footerReleaseVersion');
-      const releaseNotesLink = document.getElementById('releaseNotesLink');
+      const fallbackReleasesUrl =
+        `https://github.com/${owner}/${repo}/releases`;
 
-      const normalize = (value) => (value || '').toLowerCase();
-      const ua = navigator.userAgent;
-      const platform = navigator.platform || '';
-      const isWindows = /windows/i.test(ua) || /win/i.test(platform);
-      const isMac = /macintosh|mac os x/i.test(ua) || /mac/i.test(platform);
+      const downloadBtn =
+        document.getElementById('downloadPrereleaseBtn');
 
-      const isLinux = /linux/i.test(ua);
+      const latestVersionBadge =
+        document.getElementById('latestVersionBadge');
 
-      function pickAssetForCurrentOS(assets) {
-        if (!Array.isArray(assets) || assets.length === 0) {
-          return null;
-        }
+      const footerReleaseVersion =
+        document.getElementById('footerReleaseVersion');
 
-        const patterns = isWindows
-          ? ['.exe', '.msi.zip', '.msi', '.zip']
-          : isMac
-            ? ['.dmg', '.app.tar.gz', '.tar.gz']
-            : isLinux
-              ? ['.appimage.tar.gz', '.appimage', '.deb', '.rpm', '.tar.gz']
-              : ['.zip', '.tar.gz'];
-
-        const byName = assets
-          .map((asset) => ({ asset, name: normalize(asset.name) }))
-          .filter((item) => item.name && item.asset.browser_download_url);
-
-        for (const ext of patterns) {
-          const match = byName.find((item) => item.name.endsWith(ext));
-          if (match) {
-            return match.asset;
-          }
-        }
-
-        return byName[0]?.asset || null;
-      }
-
-      function pickWindowsAsset(assets) {
-
-        return assets.find(asset =>
-          asset.name.endsWith('.exe')
-        );
-
-      }
-
-      function pickLinuxAsset(assets) {
-
-        return assets.find(asset =>
-          asset.name.endsWith('.AppImage')
-        );
-
-      }
+      const releaseNotesLink =
+        document.getElementById('releaseNotesLink');
 
       try {
-        const response = await fetch(releaseApiUrl, { headers: { Accept: 'application/vnd.github+json' } });
+
+        const response = await fetch(
+          releaseApiUrl,
+          {
+            headers: {
+              Accept: 'application/vnd.github+json'
+            }
+          }
+        );
+
         if (!response.ok) {
-          throw new Error(`GitHub API responded with ${response.status}`);
+          throw new Error(
+            `GitHub API responded with ${response.status}`
+          );
         }
 
         const releases = await response.json();
-        const targetRelease = releases.find((r) => r && r.prerelease) || releases[0];
+
+        const targetRelease =
+          releases.find(
+            (r) => r && r.prerelease
+          ) || releases[0];
 
         if (!targetRelease) {
           throw new Error('No releases found');
         }
 
-        const versionLabel = `${targetRelease.tag_name}${targetRelease.prerelease ? ' Prerelease' : ''}`;
-        latestVersionBadge.textContent = targetRelease.tag_name;
-        footerReleaseVersion.textContent = versionLabel;
+        const versionLabel =
+          `${targetRelease.tag_name}${targetRelease.prerelease
+            ? ' Prerelease'
+            : ''
+          }`;
+
+        latestVersionBadge.textContent =
+          targetRelease.tag_name;
+
+        footerReleaseVersion.textContent =
+          versionLabel;
 
         if (targetRelease.html_url) {
-          releaseNotesLink.href = targetRelease.html_url;
-        }
 
-        const preferredAsset = pickAssetForCurrentOS(targetRelease.assets);
-
-        if (preferredAsset?.browser_download_url) {
-
-          // macOS
-
-          if (isMac) {
-
-            downloadBtn.href = '#install';
-
-            downloadBtn.textContent =
-              '🍎 Install for macOS';
-
-            downloadBtn.addEventListener('click', (e) => {
-
-              e.preventDefault();
-
-              document
-                .getElementById('install')
-                .scrollIntoView({
-                  behavior: 'smooth'
-                });
-
-            });
-
-          }
-
-          // windows/linux direct download
-
-          else {
-
-            downloadBtn.href = '#';
-
-            downloadBtn.textContent =
-              `📥 Download ${targetRelease.tag_name}`;
-
-            downloadBtn.addEventListener('click', (e) => {
-
-              e.preventDefault();
-
-              const link =
-                document.createElement('a');
-
-              link.href =
-                preferredAsset.browser_download_url;
-
-              link.download = '';
-
-              document.body.appendChild(link);
-
-              link.click();
-
-              document.body.removeChild(link);
-
-            });
-
-          }
-
-          // bottom windows button
-
-          const windowsAsset =
-            pickWindowsAsset(targetRelease.assets);
-
-          if (
-            windowsAsset &&
-            windowsDownloadBtn
-          ) {
-
-            windowsDownloadBtn.addEventListener('click', () => {
-
-              window.location.href =
-                windowsAsset.browser_download_url;
-
-            });
-
-          }
-
-          // bottom linux button
-
-          const linuxAsset =
-            pickLinuxAsset(targetRelease.assets);
-
-          if (
-            linuxAsset &&
-            linuxDownloadBtn
-          ) {
-
-            linuxDownloadBtn.addEventListener('click', () => {
-
-              window.location.href =
-                linuxAsset.browser_download_url;
-
-            });
-
-          }
+          releaseNotesLink.href =
+            targetRelease.html_url;
 
         }
+
+        downloadBtn.href = '#install';
+
+        downloadBtn.textContent =
+          '🚀 Install CareerForges';
+
+        downloadBtn.addEventListener(
+          'click',
+          (e) => {
+
+            e.preventDefault();
+
+            document
+              .getElementById('install')
+              .scrollIntoView({
+                behavior: 'smooth'
+              });
+
+          }
+        );
+
       } catch (error) {
-        latestVersionBadge.textContent = 'Latest';
-        footerReleaseVersion.textContent = 'Latest release';
-        releaseNotesLink.href = fallbackReleasesUrl;
-        downloadBtn.href = fallbackReleasesUrl;
-        downloadBtn.textContent = '📥 Get Pre-release';
+
+        console.error(error);
+
+        latestVersionBadge.textContent =
+          'Latest';
+
+        footerReleaseVersion.textContent =
+          'Latest Release';
+
+        releaseNotesLink.href =
+          fallbackReleasesUrl;
+
+        downloadBtn.href = '#install';
+
+        downloadBtn.textContent =
+          '🚀 Install CareerForges';
+
+        downloadBtn.addEventListener(
+          'click',
+          (e) => {
+
+            e.preventDefault();
+
+            document
+              .getElementById('install')
+              .scrollIntoView({
+                behavior: 'smooth'
+              });
+
+          }
+        );
+
       }
+
     }
 
     setupReleaseDownload();
+
   </script>
 
 </body>
