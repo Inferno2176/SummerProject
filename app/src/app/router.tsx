@@ -4,7 +4,6 @@ import AppLayout from "./layouts/app-layout";
 import OnboardingLayout from "./layouts/onboarding-layout";
 
 import WelcomePage from "../pages/onboarding/welcome";
-import SetupAIPage from "../pages/onboarding/setup-ai";
 import UploadResumePage from "../pages/onboarding/upload-resume";
 
 import DashboardPage from "../pages/dashboard";
@@ -29,10 +28,6 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <WelcomePage />,
-      },
-      {
-        path: "setup-ai",
-        element: <SetupAIPage />,
       },
       {
         path: "upload-resume",

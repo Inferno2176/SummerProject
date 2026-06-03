@@ -2,6 +2,7 @@ pub mod types;
 pub mod utils;
 pub mod db;
 pub mod commands;
+pub mod services;
 
 use futures_util::StreamExt;
 use reqwest::Client;
@@ -16,29 +17,40 @@ use crate::types::*;
 use crate::utils::*;
 use crate::db::{init_db, MigrationRunner, get_migrations};
 
+// ==========================================
+// UPDATED CAREERFORGES MODEL LIFECYCLE
+// ==========================================
+
 fn preferred_model(installed: &[String]) -> Option<String> {
-    let priorities = ["qwen2.5:3b", "phi3:mini", "mistral:7b"];
+    // ⚡ AGGRESSIVE PRIORITIZATION: Put the fastest parsing engine first
+    let priorities = [
+        "llama3.2:1b",
+        "gemma3:4b", 
+        "qwen3:8b",
+        "deepseek-r1:8b", 
+        "qwen3.5:latest", 
+    ];
+    
     for preferred in priorities {
         if installed.iter().any(|name| name == preferred) {
             return Some(preferred.to_string());
         }
     }
 
-    installed
-        .iter()
-        .find(|name| name.contains("llama"))
-        .cloned()
-        .or_else(|| installed.first().cloned())
+    // Fallback safely to anything installed, or the 1B default string
+    installed.first().cloned()
 }
 
 fn model_catalog_blueprint() -> Vec<(&'static str, &'static str, f32, &'static str, &'static str, &'static str, &'static str)> {
+    // Exact structural map of the PowerShell script selection array
     vec![
-        ("qwen2.5:3b", "1.9 GB", 4.5, "Fast", "Strong", "Balanced assistant", "mid"),
-        ("phi3:mini", "2.2 GB", 4.0, "Fast", "Good+", "Low-latency structured output", "low"),
-        ("gemma3:4b", "2.7 GB", 5.0, "Medium", "Strong", "Reasoning and clarity", "mid"),
-        ("mistral:7b", "4.1 GB", 8.0, "Medium", "Very Strong", "Deeper interview simulation", "high"),
-        ("llama3.2:1b", "1.3 GB", 3.0, "Very Fast", "Good", "Low RAM devices", "low"),
-        ("qwen2.5-coder:7b", "4.6 GB", 9.0, "Medium", "Very Strong", "Technical coding interviews", "high"),
+        ("llama3.2:1b", "1.3 GB", 2.0, "Fastest", "Good", "Fastest low-RAM option", "low"),
+        ("gemma3:4b", "3.0 GB", 4.0, "Fast", "Good+", "Lightweight and fast assistant", "low"),
+        ("deepseek-r1:8b", "5.0 GB", 8.0, "Slow-Medium", "Exceptional", "Strong chain-of-thought reasoning", "mid"),
+        ("qwen3:8b", "5.2 GB", 8.0, "Medium", "Strong", "Recommended for CareerForges", "mid"),
+        ("qwen3.5:latest", "6.6 GB", 12.0, "Medium", "Excellent", "Better reasoning capability", "high"),
+        ("gemma3:12b", "8.0 GB", 16.0, "Medium", "Very Strong", "Higher quality responses", "high"),
+        ("qwen3:14b", "10.0 GB", 24.0, "Slow", "Best Local", "Maximum local execution quality", "high"),
     ]
 }
 
@@ -53,12 +65,13 @@ fn performance_tier(ram_gb: u64) -> String {
 }
 
 fn recommended_by_hardware(ram_gb: u64, installed: &[String]) -> Option<String> {
+    // Hardware targets matching the footprints of your new models
     let candidates = if ram_gb <= 8 {
-        vec!["phi3:mini", "llama3.2:1b", "qwen2.5:3b"]
+        vec!["gemma3:4b", "llama3.2:1b"]
     } else if ram_gb <= 16 {
-        vec!["qwen2.5:3b", "gemma3:4b", "mistral:7b"]
+        vec!["llama3.2:1b", "qwen3:8b", "deepseek-r1:8b", "gemma3:4b"]
     } else {
-        vec!["mistral:7b", "qwen2.5-coder:7b", "qwen2.5:3b"]
+        vec!["llama3.2:1b", "deepseek-r1:8b", "gemma3:4b", "qwen3:14b", "qwen3.5:latest", "gemma3:12b", "qwen3:8b"]
     };
 
     for c in &candidates {
@@ -71,27 +84,40 @@ fn recommended_by_hardware(ram_gb: u64, installed: &[String]) -> Option<String> 
 
 fn estimate_model(name: &str) -> (String, String, String) {
     let lowered = name.to_lowercase();
-    if lowered.contains("qwen2.5:3b") || lowered.contains("phi3") {
+    
+    // DeepSeek R1 reasoning parameters
+    if lowered.contains("deepseek") {
+        return (
+            "Exceptional (Reasoning)".to_string(),
+            "Moderate".to_string(),
+            "Medium".to_string(),
+        );
+    }
+    // High-parameter targets
+    if lowered.contains("14b") || lowered.contains("12b") || lowered.contains("3.5") {
+        return (
+            "Very High".to_string(),
+            "Slow".to_string(),
+            "Low".to_string(),
+        );
+    }
+    // Standard flagship tiers (8B)
+    if lowered.contains("8b") || lowered.contains("qwen3") {
         return (
             "Strong".to_string(),
-            "Fast".to_string(),
+            "Medium".to_string(),
             "High".to_string(),
         );
     }
-    if lowered.contains("mistral") {
-        return (
-            "Very Strong".to_string(),
-            "Medium".to_string(),
-            "Medium".to_string(),
-        );
-    }
+    // Ultra-lightweight alternatives
     if lowered.contains("llama") && lowered.contains("1b") {
         return (
             "Good".to_string(),
             "Very Fast".to_string(),
-            "Very High".to_string(),
+            "Excellent".to_string(),
         );
     }
+    
     (
         "Balanced".to_string(),
         "Medium".to_string(),
@@ -970,6 +996,10 @@ pub fn run() {
     // Database Health
     db_ping,
     db_get_size,
+
+    // Resume Commands
+    upload_resume,
+    parse_and_store_resume,
 ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

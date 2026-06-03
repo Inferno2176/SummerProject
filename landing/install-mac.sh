@@ -31,25 +31,36 @@ warn()    { echo -e "${YELLOW}$1${RESET}"; }
 err()     { echo -e "${RED}$1${RESET}"; }
 
 # ==========================================
-# Available Preset Models
+# Available Preset Models (Reordered for Speed)
 # ==========================================
-PRESET_IDS=(    1               2                3            4              5                  6             7           )
-PRESET_MODELS=( "qwen3:8b"      "qwen3.5:latest" "gemma3:4b"  "gemma3:12b"   "deepseek-r1:8b"   "qwen3:14b"   "llama3.2:1b" )
-PRESET_LABELS=( "[Recommended] Qwen 3 8B"
-                "[Reasoning]   Qwen 3.5"
-                "[Fast]        Gemma 3 4B"
-                "[Quality]     Gemma 3 12B"
-                "[Reasoning]   DeepSeek R1 8B"
-                "[Best]        Qwen 3 14B"
-                "[Fastest]     Llama 3.2 1B" )
-PRESET_SIZES=(  "5.2 GB"  "6.6 GB"  "3 GB"  "8 GB"  "5 GB"  "10 GB"  "1.3 GB" )
-PRESET_DESCS=(  "Recommended for CareerForges"
-                "Better reasoning"
-                "Lightweight and fast"
-                "Higher quality responses"
-                "Strong reasoning"
-                "Best local quality"
-                "Fastest option" )
+PRESET_MODELS=(
+    "llama3.2:1b"
+    "gemma3:4b"
+    "qwen3:8b"
+    "qwen3.5:latest"
+    "gemma3:12b"
+    "deepseek-r1:8b"
+    "qwen3:14b"
+)
+PRESET_LABELS=(
+    "[Fastest][Recommended] Llama 3.2 1B"
+    "[Fast]        Gemma 3 4B"
+    "[Recommended] Qwen 3 8B"
+    "[Reasoning]   Qwen 3.5"
+    "[Quality]     Gemma 3 12B"
+    "[Reasoning]   DeepSeek R1 8B"
+    "[Best]        Qwen 3 14B"
+)
+PRESET_SIZES=( "1.3 GB" "3 GB" "5.2 GB" "6.6 GB" "8 GB" "5 GB" "10 GB" )
+PRESET_DESCS=(
+    "Recommended for CareerForges (Instant Onboarding)"
+    "Lightweight and fast"
+    "Faster Option"
+    "Better reasoning"
+    "Higher quality responses"
+    "Strong reasoning"
+    "Best local quality"
+)
 
 # ==========================================
 # Helper: get installed models
@@ -66,11 +77,11 @@ get_installed_models() {
 # Helper: read a custom model name
 # ==========================================
 read_custom_model() {
-    echo ""
-    info "Enter any model name available on Ollama Hub."
-    info "Examples: mistral:7b  |  phi3:mini  |  llava:13b  |  codellama:7b"
-    info "Browse all models at: https://ollama.com/library"
-    echo ""
+    echo "" >&2
+    info "Enter any model name available on Ollama Hub." >&2
+    info "Examples: mistral:7b  |  phi3:mini  |  llava:13b  |  codellama:7b" >&2
+    info "Browse all models at: https://ollama.com/library" >&2
+    echo "" >&2
     while true; do
         read -rp "Custom model name: " custom_name
         custom_name="$(echo "$custom_name" | xargs)"   # trim whitespace
@@ -78,7 +89,7 @@ read_custom_model() {
             echo "$custom_name"
             return
         fi
-        warn "Model name cannot be empty. Please try again."
+        warn "Model name cannot be empty. Please try again." >&2
     done
 }
 
@@ -142,10 +153,10 @@ select_model() {
     echo "" >&2
     echo -e "${BOLD}Available Preset Models${RESET}" >&2
     echo "" >&2
-    printf "  %-4s %-32s %-8s %s\n" "No." "Model" "Size" "Description" >&2
-    echo "  $(printf '%0.s-' {1..70})" >&2
+    printf "  %-4s %-36s %-8s %s\n" "No." "Model" "Size" "Description" >&2
+    echo "  $(printf '%0.s-' {1..75})" >&2
     for i in "${!PRESET_MODELS[@]}"; do
-        printf "  [%s]  %-30s %-8s %s\n" \
+        printf "  [%s]  %-34s %-8s %s\n" \
             "$((i+1))" \
             "${PRESET_LABELS[$i]}" \
             "${PRESET_SIZES[$i]}" \
@@ -157,7 +168,10 @@ select_model() {
 
     count="${#PRESET_MODELS[@]}"
     while true; do
-        read -rp "Select a model (1-${count} or C): " choice
+        read -rp "Select a model (1-${count} or C) [Default: 1]: " choice
+        if [ -z "$choice" ]; then
+            choice="1"
+        fi
         if [[ "$choice" =~ ^[Cc]$ ]]; then
             read_custom_model
             return

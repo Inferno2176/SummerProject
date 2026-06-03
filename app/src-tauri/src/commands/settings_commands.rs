@@ -115,9 +115,9 @@ pub async fn db_get_setting_number(
  */
 #[tauri::command]
 pub async fn db_list_settings(
-    app: AppHandle,
+    _app: AppHandle,
 ) -> Result<Vec<Setting>, String> {
-    let pool = app.state::<DbPool>();
+    // let pool = _app.state::<DbPool>();
     
     log::debug!("Listing all settings");
     

@@ -31,35 +31,35 @@ warn()    { echo -e "${YELLOW}$1${RESET}"; }
 err()     { echo -e "${RED}$1${RESET}"; }
 
 # ==========================================
-# Available Preset Models
+# Available Preset Models (Reordered for Speed)
 # ==========================================
 PRESET_MODELS=(
+    "llama3.2:1b"
+    "gemma3:4b"
     "qwen3:8b"
     "qwen3.5:latest"
-    "gemma3:4b"
     "gemma3:12b"
     "deepseek-r1:8b"
     "qwen3:14b"
-    "llama3.2:1b"
 )
 PRESET_LABELS=(
+    "[Fastest][Recommended] Llama 3.2 1B"
+    "[Fast]        Gemma 3 4B"
     "[Recommended] Qwen 3 8B"
     "[Reasoning]   Qwen 3.5"
-    "[Fast]        Gemma 3 4B"
     "[Quality]     Gemma 3 12B"
     "[Reasoning]   DeepSeek R1 8B"
     "[Best]        Qwen 3 14B"
-    "[Fastest]     Llama 3.2 1B"
 )
-PRESET_SIZES=( "5.2 GB" "6.6 GB" "3 GB" "8 GB" "5 GB" "10 GB" "1.3 GB" )
+PRESET_SIZES=( "1.3 GB" "3 GB" "5.2 GB" "6.6 GB" "8 GB" "5 GB" "10 GB" )
 PRESET_DESCS=(
-    "Recommended for CareerForges"
-    "Better reasoning"
+    "Recommended for CareerForges (Instant Onboarding)"
     "Lightweight and fast"
+    "Faster Option"
+    "Better reasoning"
     "Higher quality responses"
     "Strong reasoning"
     "Best local quality"
-    "Fastest option"
 )
 
 # ==========================================
@@ -153,10 +153,10 @@ select_model() {
     echo "" >&2
     echo -e "${BOLD}Available Preset Models${RESET}" >&2
     echo "" >&2
-    printf "  %-4s %-32s %-8s %s\n" "No." "Model" "Size" "Description" >&2
-    echo "  $(printf '%0.s-' {1..70})" >&2
+    printf "  %-4s %-36s %-8s %s\n" "No." "Model" "Size" "Description" >&2
+    echo "  $(printf '%0.s-' {1..75})" >&2
     for i in "${!PRESET_MODELS[@]}"; do
-        printf "  [%s]  %-30s %-8s %s\n" \
+        printf "  [%s]  %-34s %-8s %s\n" \
             "$((i+1))" \
             "${PRESET_LABELS[$i]}" \
             "${PRESET_SIZES[$i]}" \
@@ -167,7 +167,10 @@ select_model() {
     echo "" >&2
 
     while true; do
-        read -rp "Select a model (1-${count} or C): " choice
+        read -rp "Select a model (1-${count} or C) [Default: 1]: " choice
+        if [ -z "$choice" ]; then
+            choice="1"
+        fi
         if [[ "$choice" =~ ^[Cc]$ ]]; then
             read_custom_model
             return

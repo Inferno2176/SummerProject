@@ -9,9 +9,17 @@ use uuid::Uuid;
 pub struct Resume {
     pub id: String,
     pub user_id: String,
+
     pub filename: String,
     pub file_path: String,
+    pub raw_text: Option<String>,
+
+    pub parsed_json: Option<String>,
+
+    pub status: String,
+
     pub file_size: Option<i64>,
+
     pub created_at: String,
     pub updated_at: String,
 }

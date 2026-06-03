@@ -49,11 +49,11 @@ export default function WelcomePage() {
                     await invoke(
                       "db_set_onboarding_step",
                       {
-                        step: "setup_ai",
+                        step: "resume_upload",
                       },
                     );
 
-                    navigate("/setup-ai");
+                    navigate("/upload-resume");
                   } catch (err) {
                     console.error(
                       "Failed to start onboarding",

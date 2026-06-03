@@ -16,13 +16,13 @@ $CareerForgesConfigFile = Join-Path $CareerForgesConfigDir "config.json"
 # Available Models (no emojis - plain ASCII)
 # ==========================================
 $AvailableModels = @(
-    @{ Id = 1; Model = "qwen3:8b";        Label = "[Recommended] Qwen 3 8B";    Size = "5.2 GB"; Description = "Recommended for CareerForges" },
-    @{ Id = 2; Model = "qwen3.5:latest";  Label = "[Reasoning]   Qwen 3.5";     Size = "6.6 GB"; Description = "Better reasoning" },
-    @{ Id = 3; Model = "gemma3:4b";       Label = "[Fast]        Gemma 3 4B";   Size = "3 GB";   Description = "Lightweight and fast" },
-    @{ Id = 4; Model = "gemma3:12b";      Label = "[Quality]     Gemma 3 12B";  Size = "8 GB";   Description = "Higher quality responses" },
-    @{ Id = 5; Model = "deepseek-r1:8b";  Label = "[Reasoning]   DeepSeek R1 8B"; Size = "5 GB"; Description = "Strong reasoning" },
-    @{ Id = 6; Model = "qwen3:14b";       Label = "[Best]        Qwen 3 14B";   Size = "10 GB";  Description = "Best local quality" },
-    @{ Id = 7; Model = "llama3.2:1b";     Label = "[Fastest]     Llama 3.2 1B"; Size = "1.3 GB"; Description = "Fastest option" }
+    @{ Id = 1; Model = "llama3.2:1b";     Label = "[Fastest][Recommended]     Llama 3.2 1B"; Size = "1.3 GB"; Description = "Recommended for CareerForges" }
+    @{ Id = 2; Model = "gemma3:4b";       Label = "[Fast]        Gemma 3 4B";   Size = "3 GB";   Description = "Lightweight and fast" },
+    @{ Id = 3; Model = "qwen3:8b";        Label = "[Recommended] Qwen 3 8B";    Size = "5.2 GB"; Description = "Faster Option" },
+    @{ Id = 4; Model = "qwen3.5:latest";  Label = "[Reasoning]   Qwen 3.5";     Size = "6.6 GB"; Description = "Better reasoning" },
+    @{ Id = 5; Model = "gemma3:12b";      Label = "[Quality]     Gemma 3 12B";  Size = "8 GB";   Description = "Higher quality responses" },
+    @{ Id = 6; Model = "deepseek-r1:8b";  Label = "[Reasoning]   DeepSeek R1 8B"; Size = "5 GB"; Description = "Strong reasoning" },
+    @{ Id = 7; Model = "qwen3:14b";       Label = "[Best]        Qwen 3 14B";   Size = "10 GB";  Description = "Best local quality" },
 )
 
 # ==========================================

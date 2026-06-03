@@ -1,58 +1,52 @@
 import { useState } from "react";
-
 import { useNavigate } from "react-router-dom";
-
 import { invoke } from "@tauri-apps/api/core";
+
+type ParseStatus = "idle" | "parsing" | "done" | "error";
 
 export default function UploadResumePage() {
   const navigate = useNavigate();
 
-  const [
-    uploading,
-    setUploading,
-  ] = useState(false);
-
-  const [
-    resumeUploaded,
-    setResumeUploaded,
-  ] = useState(false);
-
-  const [
-    fileName,
-    setFileName,
-  ] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [parsing, setParsing] = useState(false);
+  const [resumeUploaded, setResumeUploaded] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [parseStatus, setParseStatus] = useState<ParseStatus>("idle");
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file =
-      event.target.files?.[0];
-
+    const file = event.target.files?.[0];
     if (!file) return;
 
+    setError(null);
     setUploading(true);
+    setParseStatus("idle");
 
     try {
-      /*
-        TODO:
-        Real upload/parser logic later
-      */
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1200),
-      );
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = Array.from(new Uint8Array(arrayBuffer));
 
       setFileName(file.name);
+      setUploading(false);
+      setParsing(true);
+      setParseStatus("parsing");
 
+      await invoke("parse_and_store_resume", {
+        fileName: file.name,
+        fileBytes: bytes,
+      });
+
+      setParseStatus("done");
       setResumeUploaded(true);
-
-      console.log(
-        "[Resume] Upload complete",
-      );
     } catch (err) {
-      console.error(err);
+      console.error("[Resume] Parse failed", err);
+      setError(String(err));
+      setParseStatus("error");
     } finally {
       setUploading(false);
+      setParsing(false);
     }
   };
 
@@ -60,65 +54,36 @@ export default function UploadResumePage() {
     if (!resumeUploaded) return;
 
     try {
-      const selectedProvider =
-        await invoke<string>(
-          "db_get_selected_provider",
-        );
+      const selectedProvider = await invoke<string>("db_get_selected_provider").catch(() => "ollama");
+      const selectedModel = await invoke<string>("db_get_selected_model").catch(() => "llama3.2:1b");
 
-      const selectedModel =
-        await invoke<string>(
-          "db_get_selected_model",
-        );
+      await invoke("db_set_app_state", {
+        key: "resume_uploaded",
+        value: "true",
+        dataType: "boolean",
+      });
 
-      /*
-        Persist resume uploaded
-      */
-      await invoke(
-        "db_set_app_state",
-        {
-          key: "resume_uploaded",
-          value: "true",
-          dataType: "boolean",
-        },
-      );
+      await invoke("db_set_onboarding_step", { step: "completed" });
 
-      /*
-        Mark onboarding step completed
-      */
-      await invoke(
-        "db_set_onboarding_step",
-        {
-          step: "completed",
-        },
-      );
+      await invoke("db_complete_onboarding", {
+        provider: selectedProvider,
+        model: selectedModel,
+      });
 
-      /*
-        Complete onboarding
-      */
-      await invoke(
-        "db_complete_onboarding",
-        {
-          provider:
-            selectedProvider,
-          model: selectedModel,
-        },
-      );
-
-      console.log(
-        "[Resume] Onboarding complete",
-      );
-
-      navigate(
-        "/app/dashboard",
-      );
+      navigate("/app/dashboard", { replace: true });
+      if (window?.location?.pathname !== "/app/dashboard") {
+        window.location.href = "/app/dashboard";
+      }
     } catch (err) {
-      console.error(err);
+      console.error("[Onboarding] Complete failed", err);
+      setError(String(err));
     }
   };
 
   return (
     <section className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-3xl rounded-3xl border border-white/5 bg-[var(--surface)] p-10">
+
         <p className="text-sm uppercase tracking-[0.2em] text-orange-400">
           Resume Upload
         </p>
@@ -128,50 +93,75 @@ export default function UploadResumePage() {
         </h1>
 
         <p className="mt-4 leading-7 text-[var(--muted)]">
-          Upload your resume to begin
-          ATS analysis, interview
-          preparation, and AI-powered
-          job matching.
+          Upload your resume and we'll extract your profile locally —
+          no data leaves your machine.
         </p>
 
-        <div className="mt-10 flex min-h-[260px] items-center justify-center rounded-3xl border border-dashed border-white/10 bg-white/[0.03]">
-          <div className="text-center">
-            <p className="text-lg font-medium">
-              Drag & drop your resume
-            </p>
+        <div className="mt-10 flex min-h-[260px] items-center justify-center rounded-3xl border border-dashed border-white/10 bg-white/[0.03] transition hover:border-white/20">
+          <div className="text-center px-6">
 
-            <p className="mt-2 text-sm text-[var(--muted)]">
-              PDF or DOCX
-            </p>
+            {parseStatus === "idle" && !uploading && (
+              <>
+                <p className="text-lg font-medium">Drag & drop your resume</p>
+                <p className="mt-2 text-sm text-[var(--muted)]">PDF or DOCX supported</p>
+              </>
+            )}
 
-            {fileName ? (
-              <div className="mt-5">
-                <p className="text-sm text-green-400">
-                  Uploaded:
+            {uploading && (
+              <p className="text-sm text-[var(--muted)] animate-pulse">
+                Reading file...
+              </p>
+            )}
+
+            {parseStatus === "parsing" && (
+              <div className="space-y-3">
+                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+                <p className="text-sm text-orange-400 animate-pulse">
+                  Parsing resume locally...
                 </p>
-
-                <p className="mt-1 font-medium">
-                  {fileName}
+                <p className="text-xs text-[var(--muted)]">
+                  Running fully offline on your machine
                 </p>
               </div>
-            ) : null}
+            )}
 
-            <label className="mt-6 inline-flex cursor-pointer rounded-xl bg-[var(--accent)] px-5 py-3 text-white transition hover:opacity-90">
-              {uploading
-                ? "Uploading..."
-                : "Browse Files"}
+            {parseStatus === "done" && (
+              <div className="space-y-2">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
+                  <span className="text-green-400 text-lg">✓</span>
+                </div>
+                <p className="text-sm text-green-400 font-medium">Resume parsed successfully</p>
+                <p className="text-xs text-[var(--muted)]">{fileName}</p>
+              </div>
+            )}
 
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                className="hidden"
-                onChange={
-                  handleFileSelect
-                }
-              />
-            </label>
+            {parseStatus === "error" && (
+              <div className="space-y-2">
+                <p className="text-sm text-red-400">Failed to parse resume</p>
+                <p className="text-xs text-[var(--muted)]">{error}</p>
+              </div>
+            )}
+
+            {parseStatus !== "parsing" && !uploading && (
+              <label className="mt-6 inline-flex cursor-pointer rounded-xl bg-[var(--accent)] px-5 py-3 text-white transition hover:opacity-90">
+                {parseStatus === "done" ? "Upload Different Resume" : "Browse Files"}
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+              </label>
+            )}
+
           </div>
         </div>
+
+        {error && parseStatus === "error" && (
+          <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
 
         <div className="mt-10 flex justify-end">
           <button
@@ -184,9 +174,10 @@ export default function UploadResumePage() {
                 : "cursor-not-allowed bg-white/10 text-white/40",
             ].join(" ")}
           >
-            Continue
+            Continue to Dashboard
           </button>
         </div>
+
       </div>
     </section>
   );
