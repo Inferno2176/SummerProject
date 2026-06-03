@@ -10,141 +10,76 @@ echo ""
 echo "=== CareerForges Installer ==="
 echo ""
 
-#
-
-# Ollama
-
-#
-
 echo "Checking Ollama..."
 
 if ! command -v ollama >/dev/null 2>&1; then
-echo "Installing Ollama..."
-curl -fsSL https://ollama.com/install.sh | sh
+    echo "Installing Ollama..."
+    curl -fsSL https://ollama.com/install.sh | sh
 else
-echo "Ollama already installed."
+    echo "Ollama already installed."
 fi
-
-#
-
-# Start Ollama
-
-#
 
 echo "Starting Ollama..."
 
 if ! pgrep -x "ollama" >/dev/null 2>&1; then
-ollama serve >/dev/null 2>&1 &
+    ollama serve >/dev/null 2>&1 &
 fi
-
-#
-
-# Wait for Ollama API
-
-#
 
 echo "Waiting for Ollama..."
 
 READY=false
 
-for i in {1..20}; do
-if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
-READY=true
-break
-fi
+for i in $(seq 1 20); do
+    if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+        READY=true
+        break
+    fi
 
-```
-sleep 1
-```
-
+    sleep 1
 done
 
 if [ "$READY" = false ]; then
-echo "❌ Ollama failed to start."
-exit 1
+    echo "❌ Ollama failed to start."
+    exit 1
 fi
-
-#
-
-# Model
-
-#
 
 echo "Checking model..."
 
 if ! ollama list | grep -q "$MODEL_NAME"; then
-echo "Downloading $MODEL_NAME..."
-ollama pull "$MODEL_NAME"
+    echo "Downloading $MODEL_NAME..."
+    ollama pull "$MODEL_NAME"
 else
-echo "$MODEL_NAME already installed."
+    echo "$MODEL_NAME already installed."
 fi
-
-#
-
-# Temporary Directory
-
-#
 
 TMP_DIR=$(mktemp -d)
 
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-#
-
-# Find Latest Release
-
-#
-
 echo "Finding latest CareerForges release..."
 
-RELEASE_JSON=$(curl -s 
-"https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest")
+RELEASE_JSON=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest")
 
-DOWNLOAD_URL=$(echo "$RELEASE_JSON" | 
-grep browser_download_url | 
-grep AppImage | 
-grep -v ".sig" | 
-cut -d '"' -f 4 | 
-head -n 1)
+DOWNLOAD_URL=$(echo "$RELEASE_JSON" | grep browser_download_url | grep AppImage | grep -v ".sig" | cut -d '"' -f 4 | head -n 1)
 
 if [ -z "$DOWNLOAD_URL" ]; then
-echo "❌ Unable to locate AppImage release."
-exit 1
+    echo "❌ Unable to locate AppImage release."
+    exit 1
 fi
-
-#
-
-# Download
-
-#
 
 echo "Downloading CareerForges..."
 
-curl -L "$DOWNLOAD_URL" 
--o "$TMP_DIR/CareerForges.AppImage"
+curl -L "$DOWNLOAD_URL" -o "$TMP_DIR/CareerForges.AppImage"
 
 chmod +x "$TMP_DIR/CareerForges.AppImage"
-
-#
-
-# Install
-
-#
 
 mkdir -p "$HOME/.local/bin"
 
 rm -f "$HOME/.local/bin/CareerForges"
 
-mv "$TMP_DIR/CareerForges.AppImage" 
-"$HOME/.local/bin/CareerForges"
+mv "$TMP_DIR/CareerForges.AppImage" "$HOME/.local/bin/CareerForges"
 
 chmod +x "$HOME/.local/bin/CareerForges"
-
-#
-
-# Launch
-
-#
 
 echo "Launching CareerForges..."
 

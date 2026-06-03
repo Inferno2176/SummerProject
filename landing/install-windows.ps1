@@ -5,7 +5,7 @@ $ModelName = "qwen3:8b"
 $TempDir = Join-Path $env:TEMP "CareerForgesInstall"
 
 if (Test-Path $TempDir) {
-Remove-Item $TempDir -Recurse -Force
+    Remove-Item $TempDir -Recurse -Force
 }
 
 New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
@@ -15,144 +15,114 @@ $OllamaInstaller = Join-Path $TempDir "OllamaSetup.exe"
 
 try {
 
-```
-Write-Host ""
-Write-Host "=== CareerForges Installer ==="
-Write-Host ""
+    Write-Host ""
+    Write-Host "=== CareerForges Installer ==="
+    Write-Host ""
 
-#
-# Ollama
-#
+    Write-Host "Checking Ollama..."
 
-Write-Host "Checking Ollama..."
+    $OllamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
 
-$OllamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
+    if (-not $OllamaInstalled) {
 
-if (-not $OllamaInstalled) {
+        Write-Host "Downloading Ollama..."
 
-    Write-Host "Downloading Ollama..."
+        Invoke-WebRequest -Uri "https://ollama.com/download/OllamaSetup.exe" -OutFile $OllamaInstaller
 
-    Invoke-WebRequest `
-        -Uri "https://ollama.com/download/OllamaSetup.exe" `
-        -OutFile $OllamaInstaller
+        Write-Host "Installing Ollama..."
 
-    Write-Host "Installing Ollama..."
+        Start-Process -FilePath $OllamaInstaller -ArgumentList "/S" -Wait
 
-    Start-Process `
-        -FilePath $OllamaInstaller `
-        -ArgumentList "/S" `
-        -Wait
+        Start-Sleep -Seconds 5
 
-    Start-Sleep -Seconds 5
-}
-else {
-    Write-Host "Ollama already installed."
-}
-
-#
-# Start Ollama
-#
-
-Write-Host "Starting Ollama..."
-
-Start-Process `
-    -FilePath "ollama" `
-    -ArgumentList "serve" `
-    -WindowStyle Hidden `
-    -ErrorAction SilentlyContinue
-
-#
-# Wait for Ollama API
-#
-
-Write-Host "Waiting for Ollama..."
-
-$Ready = $false
-
-for ($i = 0; $i -lt 20; $i++) {
-
-    try {
-
-        Invoke-RestMethod `
-            -Uri "http://localhost:11434/api/tags" `
-            -Method Get `
-            -TimeoutSec 2 | Out-Null
-
-        $Ready = $true
-        break
     }
-    catch {
-        Start-Sleep -Seconds 1
+    else {
+
+        Write-Host "Ollama already installed."
+
     }
-}
 
-if (-not $Ready) {
-    throw "Ollama failed to start."
-}
+    Write-Host "Starting Ollama..."
 
-#
-# Model
-#
+    Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
 
-Write-Host "Checking model..."
+    Write-Host "Waiting for Ollama..."
 
-$ModelExists = ollama list | Select-String $ModelName
+    $Ready = $false
 
-if (-not $ModelExists) {
+    for ($i = 0; $i -lt 20; $i++) {
 
-    Write-Host "Downloading $ModelName..."
+        try {
 
-    ollama pull $ModelName
-}
-else {
-    Write-Host "$ModelName already installed."
-}
+            Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 2 | Out-Null
 
-#
-# CareerForges Release
-#
+            $Ready = $true
+            break
 
-Write-Host "Finding latest CareerForges release..."
+        }
+        catch {
 
-$Release = Invoke-RestMethod `
-    -Uri "https://api.github.com/repos/JoshiNaidu/career-forges/releases/latest"
+            Start-Sleep -Seconds 1
 
-$Asset = $Release.assets |
-    Where-Object { $_.name -like "*_x64-setup.exe" } |
-    Select-Object -First 1
+        }
 
-if (-not $Asset) {
-    throw "Unable to locate CareerForges Windows installer."
-}
+    }
 
-Write-Host "Downloading CareerForges..."
+    if (-not $Ready) {
 
-Invoke-WebRequest `
-    -Uri $Asset.browser_download_url `
-    -OutFile $CareerForgesInstaller
+        throw "Ollama failed to start."
 
-#
-# Install CareerForges
-#
+    }
 
-Write-Host "Installing CareerForges..."
+    Write-Host "Checking model..."
 
-Start-Process `
-    -FilePath $CareerForgesInstaller `
-    -ArgumentList "/S" `
-    -Wait
+    $ModelExists = ollama list | Select-String $ModelName
 
-Write-Host ""
-Write-Host "✅ CareerForges installed successfully!"
-```
+    if (-not $ModelExists) {
+
+        Write-Host "Downloading $ModelName..."
+
+        ollama pull $ModelName
+
+    }
+    else {
+
+        Write-Host "$ModelName already installed."
+
+    }
+
+    Write-Host "Finding latest CareerForges release..."
+
+    $Release = Invoke-RestMethod -Uri "https://api.github.com/repos/JoshiNaidu/career-forges/releases/latest"
+
+    $Asset = $Release.assets |
+        Where-Object { $_.name -like "*_x64-setup.exe" } |
+        Select-Object -First 1
+
+    if (-not $Asset) {
+
+        throw "Unable to locate CareerForges Windows installer."
+
+    }
+
+    Write-Host "Downloading CareerForges..."
+
+    Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $CareerForgesInstaller
+
+    Write-Host "Installing CareerForges..."
+
+    Start-Process -FilePath $CareerForgesInstaller -ArgumentList "/S" -Wait
+
+    Write-Host ""
+    Write-Host "✅ CareerForges installed successfully!"
 
 }
 finally {
 
-```
-if (Test-Path $TempDir) {
-    Remove-Item $TempDir -Recurse -Force
-}
-```
+    if (Test-Path $TempDir) {
+
+        Remove-Item $TempDir -Recurse -Force
+
+    }
 
 }
