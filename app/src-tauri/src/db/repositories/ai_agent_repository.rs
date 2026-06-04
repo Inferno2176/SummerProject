@@ -11,6 +11,7 @@ use crate::db::{
     connection::{
         execute_with_params,
         query_row,
+        query_rows,
         DbPool,
     },
     error::{
@@ -256,6 +257,183 @@ impl AIAgentRepository {
                         row.get(16)?,
                     updated_at:
                         row.get(17)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        LIST BY PROVIDER
+    */
+    pub async fn list_by_provider(
+        pool: &DbPool,
+        provider: &str,
+    ) -> DbResult<Vec<AIAgent>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                provider,
+                name,
+                model_id,
+                display_name,
+                description,
+                is_installed,
+                is_available,
+                is_default,
+                download_url,
+                local_path,
+                version,
+                size_mb,
+                performance_tier,
+                capabilities,
+                last_checked,
+                created_at,
+                updated_at
+            FROM ai_agents
+            WHERE provider = ?1
+            AND deleted_at IS NULL
+            ",
+            [provider.to_string()],
+            |row| {
+                Ok(AIAgent {
+                    id: row.get(0)?,
+                    provider: row.get(1)?,
+                    name: row.get(2)?,
+                    model_id: row.get(3)?,
+                    display_name: row.get(4)?,
+                    description: row.get(5)?,
+                    is_installed: row.get::<_, i32>(6)? != 0,
+                    is_available: row.get::<_, i32>(7)? != 0,
+                    is_default: row.get::<_, i32>(8)? != 0,
+                    download_url: row.get(9)?,
+                    local_path: row.get(10)?,
+                    version: row.get(11)?,
+                    size_mb: row.get(12)?,
+                    performance_tier: row.get(13)?,
+                    capabilities: row.get(14)?,
+                    last_checked: row.get(15)?,
+                    created_at: row.get(16)?,
+                    updated_at: row.get(17)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        LIST INSTALLED
+    */
+    pub async fn list_installed(
+        pool: &DbPool,
+    ) -> DbResult<Vec<AIAgent>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                provider,
+                name,
+                model_id,
+                display_name,
+                description,
+                is_installed,
+                is_available,
+                is_default,
+                download_url,
+                local_path,
+                version,
+                size_mb,
+                performance_tier,
+                capabilities,
+                last_checked,
+                created_at,
+                updated_at
+            FROM ai_agents
+            WHERE is_installed = 1
+            AND deleted_at IS NULL
+            ",
+            [],
+            |row| {
+                Ok(AIAgent {
+                    id: row.get(0)?,
+                    provider: row.get(1)?,
+                    name: row.get(2)?,
+                    model_id: row.get(3)?,
+                    display_name: row.get(4)?,
+                    description: row.get(5)?,
+                    is_installed: row.get::<_, i32>(6)? != 0,
+                    is_available: row.get::<_, i32>(7)? != 0,
+                    is_default: row.get::<_, i32>(8)? != 0,
+                    download_url: row.get(9)?,
+                    local_path: row.get(10)?,
+                    version: row.get(11)?,
+                    size_mb: row.get(12)?,
+                    performance_tier: row.get(13)?,
+                    capabilities: row.get(14)?,
+                    last_checked: row.get(15)?,
+                    created_at: row.get(16)?,
+                    updated_at: row.get(17)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        LIST ALL
+    */
+    pub async fn list_all(
+        pool: &DbPool,
+    ) -> DbResult<Vec<AIAgent>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                provider,
+                name,
+                model_id,
+                display_name,
+                description,
+                is_installed,
+                is_available,
+                is_default,
+                download_url,
+                local_path,
+                version,
+                size_mb,
+                performance_tier,
+                capabilities,
+                last_checked,
+                created_at,
+                updated_at
+            FROM ai_agents
+            WHERE deleted_at IS NULL
+            ",
+            [],
+            |row| {
+                Ok(AIAgent {
+                    id: row.get(0)?,
+                    provider: row.get(1)?,
+                    name: row.get(2)?,
+                    model_id: row.get(3)?,
+                    display_name: row.get(4)?,
+                    description: row.get(5)?,
+                    is_installed: row.get::<_, i32>(6)? != 0,
+                    is_available: row.get::<_, i32>(7)? != 0,
+                    is_default: row.get::<_, i32>(8)? != 0,
+                    download_url: row.get(9)?,
+                    local_path: row.get(10)?,
+                    version: row.get(11)?,
+                    size_mb: row.get(12)?,
+                    performance_tier: row.get(13)?,
+                    capabilities: row.get(14)?,
+                    last_checked: row.get(15)?,
+                    created_at: row.get(16)?,
+                    updated_at: row.get(17)?,
                 })
             },
         )

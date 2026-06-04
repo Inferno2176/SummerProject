@@ -19,6 +19,10 @@ pub async fn db_create_session(
     title: String,
     model: String,
     mode: String,
+    job_id: Option<String>,
+    job_description: Option<String>,
+    company: Option<String>,
+    job_title: Option<String>,
 ) -> Result<ChatSession, String>
 {
     let pool =
@@ -30,6 +34,10 @@ pub async fn db_create_session(
         &title,
         &model,
         &mode,
+        job_id,
+        job_description,
+        company,
+        job_title,
     )
     .await
     .map_err(|e| e.to_string())
@@ -50,6 +58,25 @@ pub async fn db_get_session(
     SessionRepository::get_by_id(
         &pool,
         &id,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/*
+    LIST USER SESSIONS
+*/
+#[tauri::command]
+pub async fn db_list_user_sessions(
+    app: AppHandle,
+    user_id: String,
+) -> Result<Vec<ChatSession>, String> {
+    let pool =
+        app.state::<DbPool>();
+
+    SessionRepository::list_by_user(
+        &pool,
+        &user_id,
     )
     .await
     .map_err(|e| e.to_string())

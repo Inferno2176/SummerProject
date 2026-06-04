@@ -11,6 +11,7 @@ use crate::db::{
     connection::{
         execute_with_params,
         query_row,
+        query_rows,
         DbPool,
     },
     error::{
@@ -141,6 +142,41 @@ impl UserRepository {
             AND deleted_at IS NULL
             ",
             [email.to_string()],
+            |row| {
+                Ok(User {
+                    id: row.get(0)?,
+                    email: row.get(1)?,
+                    name: row.get(2)?,
+                    avatar_url: row.get(3)?,
+                    created_at: row.get(4)?,
+                    updated_at: row.get(5)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        LIST
+    */
+    pub async fn list(
+        pool: &DbPool,
+    ) -> DbResult<Vec<User>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                email,
+                name,
+                avatar_url,
+                created_at,
+                updated_at
+            FROM users
+            WHERE deleted_at IS NULL
+            ORDER BY created_at DESC
+            ",
+            [],
             |row| {
                 Ok(User {
                     id: row.get(0)?,

@@ -329,5 +329,94 @@ migration!(
     );
     "
 ),
+migration!(
+    "015_resume_extended_fields",
+    "
+    ALTER TABLE resumes ADD COLUMN master_resume_json TEXT;
+    ALTER TABLE resumes ADD COLUMN ats_score REAL;
+    ALTER TABLE resumes ADD COLUMN ats_strengths TEXT;
+    ALTER TABLE resumes ADD COLUMN ats_weaknesses TEXT;
+    ALTER TABLE resumes ADD COLUMN ats_recommendations TEXT;
+    "
+),
+migration!(
+    "016_jobs_extended_fields",
+    "
+    ALTER TABLE jobs ADD COLUMN source TEXT;
+    ALTER TABLE jobs ADD COLUMN source_url TEXT;
+    ALTER TABLE jobs ADD COLUMN matched_skills TEXT;
+    ALTER TABLE jobs ADD COLUMN missing_skills TEXT;
+    ALTER TABLE jobs ADD COLUMN experience_match BOOLEAN;
+    ALTER TABLE jobs ADD COLUMN title_match BOOLEAN;
+    ALTER TABLE jobs ADD COLUMN discovered_at TIMESTAMP;
+    
+    -- Drop and recreate status constraint to include 'recommended'
+    -- Note: SQLite doesn't support dropping constraints easily, 
+    -- but we can update the CHECK constraint by recreating the table if needed.
+    -- For now, we'll just allow 'recommended' in the app logic.
+    "
+),
+migration!(
+    "017_generated_ats_documents",
+    "
+    CREATE TABLE generated_resumes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        job_id TEXT NOT NULL,
+        resume_id TEXT NOT NULL,
+        optimized_summary TEXT,
+        optimized_skills TEXT,
+        optimized_experience TEXT,
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+        FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE generated_cover_letters (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        job_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX idx_gen_resumes_job_id ON generated_resumes(job_id);
+    CREATE INDEX idx_gen_resumes_user_id ON generated_resumes(user_id);
+    CREATE INDEX idx_gen_cv_job_id ON generated_cover_letters(job_id);
+    CREATE INDEX idx_gen_cv_user_id ON generated_cover_letters(user_id);
+    "
+),
+migration!(
+    "018_applications_and_interview_updates",
+    "
+    CREATE TABLE job_applications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        job_id TEXT NOT NULL UNIQUE,
+        resume_id TEXT,
+        cover_letter_id TEXT,
+        applied_at TIMESTAMP NOT NULL,
+        status TEXT DEFAULT 'applied',
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+        FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE SET NULL,
+        FOREIGN KEY (cover_letter_id) REFERENCES generated_cover_letters(id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX idx_job_apps_user_id ON job_applications(user_id);
+    CREATE INDEX idx_job_apps_job_id ON job_applications(job_id);
+
+    -- Add fields to interview_sessions
+    ALTER TABLE interview_sessions ADD COLUMN job_id TEXT;
+    ALTER TABLE interview_sessions ADD COLUMN job_description TEXT;
+    "
+),
     ]
 }

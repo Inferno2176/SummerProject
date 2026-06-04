@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { RouterProvider } from "react-router-dom";
+import { listen } from "@tauri-apps/api/event";
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 
 import { router } from "./router";
 
@@ -10,12 +12,32 @@ export default function AppBootstrap() {
     useState(true);
 
   useEffect(() => {
+    // Listen for new jobs
+    const unlisten = listen<number>("new-jobs-discovered", async (event) => {
+      const count = event.payload;
+      
+      let permission = await isPermissionGranted();
+      if (!permission) {
+        permission = await requestPermission() === 'granted';
+      }
+
+      if (permission) {
+        sendNotification({
+          title: 'New Opportunities Found!',
+          body: `CareerForges found ${count} new jobs matching your profile.`,
+          icon: 'icon'
+        });
+      }
+    });
+
     const timer = setTimeout(() => {
       setLoading(false);
     }, 1800);
 
-    return () =>
+    return () => {
       clearTimeout(timer);
+      unlisten.then(u => u());
+    };
   }, []);
 
   if (loading) {

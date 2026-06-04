@@ -11,40 +11,42 @@ import type {
   Resume,
   Job,
   Preference,
-  InterviewSession,
   ActivityLog,
   AppState,
   AppStateKey,
   AIAgent,
   Setting,
   SettingKey,
+  GeneratedResume,
+  GeneratedCoverLetter,
+  JobApplication,
 } from './models';
 
 class DatabaseService {
   // ============ User Operations ============
   
   async createUser(email: string, name?: string): Promise<User> {
-    throw new Error('User operations not yet implemented via IPC');
+    return dbInvoke.user.create(email, name);
   }
 
   async getUser(id: string): Promise<User | null> {
-    throw new Error('User operations not yet implemented via IPC');
+    return dbInvoke.user.get(id);
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    throw new Error('User operations not yet implemented via IPC');
+    return dbInvoke.user.getByEmail(email);
   }
 
   async listUsers(): Promise<User[]> {
-    throw new Error('User operations not yet implemented via IPC');
+    return dbInvoke.user.listAll();
   }
 
   async updateUser(id: string, name?: string, avatar_url?: string): Promise<User> {
-    throw new Error('User operations not yet implemented via IPC');
+    return dbInvoke.user.update(id, name, avatar_url);
   }
 
   async deleteUser(id: string): Promise<void> {
-    throw new Error('User operations not yet implemented via IPC');
+    return dbInvoke.user.delete(id);
   }
 
   // ============ Session Operations ============
@@ -53,29 +55,42 @@ class DatabaseService {
     user_id: string,
     title: string,
     model: string,
-    mode: string
+    mode: string,
+    job_id?: string,
+    job_description?: string,
+    company?: string,
+    job_title?: string
   ): Promise<ChatSession> {
-    throw new Error('Session operations not yet implemented via IPC');
+    return dbInvoke.session.create(
+      user_id,
+      title,
+      model,
+      mode,
+      job_id,
+      job_description,
+      company,
+      job_title
+    );
   }
 
   async getSession(id: string): Promise<ChatSession | null> {
-    throw new Error('Session operations not yet implemented via IPC');
+    return dbInvoke.session.get(id);
   }
 
   async listUserSessions(user_id: string): Promise<ChatSession[]> {
-    throw new Error('Session operations not yet implemented via IPC');
+    return dbInvoke.session.listByUser(user_id);
   }
 
   async updateSessionTitle(id: string, title: string): Promise<ChatSession> {
-    throw new Error('Session operations not yet implemented via IPC');
+    return dbInvoke.session.updateTitle(id, title);
   }
 
   async deleteSession(id: string): Promise<void> {
-    throw new Error('Session operations not yet implemented via IPC');
+    return dbInvoke.session.delete(id);
   }
 
   async countUserSessions(user_id: string): Promise<number> {
-    throw new Error('Session operations not yet implemented via IPC');
+    return dbInvoke.session.countByUser(user_id);
   }
 
   // ============ Message Operations ============
@@ -87,31 +102,27 @@ class DatabaseService {
     model?: string,
     tokens_used?: number
   ): Promise<ChatMessage> {
-    throw new Error('Message operations not yet implemented via IPC');
+    return dbInvoke.message.create(session_id, role, content, model, tokens_used);
   }
 
   async getMessage(id: string): Promise<ChatMessage | null> {
-    throw new Error('Message operations not yet implemented via IPC');
+    return dbInvoke.message.get(id);
   }
 
   async listSessionMessages(session_id: string): Promise<ChatMessage[]> {
-    throw new Error('Message operations not yet implemented via IPC');
+    return dbInvoke.message.listBySession(session_id);
   }
 
-  async listRecentMessages(session_id: string, limit: number = 10): Promise<ChatMessage[]> {
-    throw new Error('Message operations not yet implemented via IPC');
+  async listRecentMessages(limit: number = 10): Promise<ChatMessage[]> {
+    return dbInvoke.message.listRecent(limit);
   }
 
   async deleteMessage(id: string): Promise<void> {
-    throw new Error('Message operations not yet implemented via IPC');
-  }
-
-  async deleteSessionMessages(session_id: string): Promise<void> {
-    throw new Error('Message operations not yet implemented via IPC');
+    return dbInvoke.message.delete(id);
   }
 
   async countSessionTokens(session_id: string): Promise<number> {
-    throw new Error('Message operations not yet implemented via IPC');
+    return dbInvoke.message.countTokens(session_id);
   }
 
   // ============ Resume Operations ============
@@ -123,23 +134,35 @@ class DatabaseService {
     file_size?: number,
     mime_type?: string
   ): Promise<Resume> {
-    throw new Error('Resume operations not yet implemented via IPC');
+    return dbInvoke.resume.create(user_id, filename, file_path, file_size, mime_type);
   }
 
   async getResume(id: string): Promise<Resume | null> {
-    throw new Error('Resume operations not yet implemented via IPC');
+    return dbInvoke.resume.get(id);
   }
 
   async listUserResumes(user_id: string): Promise<Resume[]> {
-    throw new Error('Resume operations not yet implemented via IPC');
+    return dbInvoke.resume.listByUser(user_id);
   }
 
-  async setDefaultResume(id: string): Promise<Resume> {
-    throw new Error('Resume operations not yet implemented via IPC');
+  async setDefaultResume(id: string, user_id: string): Promise<void> {
+    return dbInvoke.resume.setDefault(id, user_id);
+  }
+
+  async getDefaultResume(user_id: string): Promise<Resume | null> {
+    return dbInvoke.resume.getDefault(user_id);
   }
 
   async deleteResume(id: string): Promise<void> {
-    throw new Error('Resume operations not yet implemented via IPC');
+    return dbInvoke.resume.delete(id);
+  }
+
+  async uploadResume(path: string): Promise<Resume> {
+    return dbInvoke.resume.upload(path);
+  }
+
+  async parseAndStoreResume(fileName: string, fileBytes: number[]): Promise<Resume> {
+    return dbInvoke.resume.parseAndStore(fileName, fileBytes);
   }
 
   // ============ Job Operations ============
@@ -150,23 +173,43 @@ class DatabaseService {
     company?: string,
     url?: string
   ): Promise<Job> {
-    throw new Error('Job operations not yet implemented via IPC');
+    return dbInvoke.job.create(user_id, title, company, url);
   }
 
   async getJob(id: string): Promise<Job | null> {
-    throw new Error('Job operations not yet implemented via IPC');
+    return dbInvoke.job.get(id);
   }
 
-  async listUserJobs(user_id: string, status?: string): Promise<Job[]> {
-    throw new Error('Job operations not yet implemented via IPC');
+  async listUserJobs(user_id: string): Promise<Job[]> {
+    return dbInvoke.job.listByUser(user_id);
   }
 
-  async updateJobStatus(id: string, status: Job['status']): Promise<Job> {
-    throw new Error('Job operations not yet implemented via IPC');
+  async updateJobStatus(id: string, status: Job['status']): Promise<void> {
+    return dbInvoke.job.updateStatus(id, status);
   }
 
   async deleteJob(id: string): Promise<void> {
-    throw new Error('Job operations not yet implemented via IPC');
+    return dbInvoke.job.delete(id);
+  }
+
+  async fetchJobs(title?: string, location?: string, remote: boolean = false): Promise<number> {
+    return dbInvoke.job.fetch(title, location, remote);
+  }
+
+  async searchJobs(queryText: string): Promise<Job[]> {
+    return dbInvoke.job.search(queryText);
+  }
+
+  async saveJob(id: string): Promise<void> {
+    return dbInvoke.job.save(id);
+  }
+
+  async rejectJob(id: string): Promise<void> {
+    return dbInvoke.job.reject(id);
+  }
+
+  async listAllJobs(): Promise<Job[]> {
+    return dbInvoke.job.listAll();
   }
 
   // ============ Preference Operations ============
@@ -189,10 +232,14 @@ class DatabaseService {
     action: string,
     entity_type?: string,
     entity_id?: string,
-    user_id?: string,
+    user_id?: string | null,
     details?: string
   ): Promise<ActivityLog> {
-    throw new Error('Activity logging not yet implemented via IPC');
+    return dbInvoke.activityLog.create(user_id || null, action, entity_type, entity_id, details);
+  }
+
+  async listActivityLogs(user_id: string, limit: number = 50): Promise<ActivityLog[]> {
+    return dbInvoke.activityLog.listByUser(user_id, limit);
   }
 
   // ============ App State Operations ============
@@ -287,7 +334,23 @@ class DatabaseService {
   }
 
   async resetSettingsToDefaults(): Promise<void> {
-    return dbInvoke.settings.resetToDefaults();
+    return dbInvoke.settings.resetSettingsToDefaults();
+  }
+
+  async getSchedulerStatus(): Promise<any> {
+    return dbInvoke.settings.getSchedulerStatus();
+  }
+
+  async toggleScheduler(enabled: boolean): Promise<void> {
+    return dbInvoke.settings.toggleScheduler(enabled);
+  }
+
+  async updateSchedulerFrequency(mins: number): Promise<void> {
+    return dbInvoke.settings.updateSchedulerFrequency(mins);
+  }
+
+  async runSchedulerNow(): Promise<number> {
+    return dbInvoke.settings.runSchedulerNow();
   }
 
   // ============ Database Health ============
@@ -298,6 +361,58 @@ class DatabaseService {
 
   async ping(): Promise<boolean> {
     return dbInvoke.health.ping();
+  }
+
+  // ============ ATS Operations ============
+
+  async generateAtsResume(job_id: string, resume_id: string): Promise<GeneratedResume> {
+    return dbInvoke.ats.generateResume(job_id, resume_id);
+  }
+
+  async generateCoverLetter(job_id: string, resume_id: string): Promise<GeneratedCoverLetter> {
+    return dbInvoke.ats.generateCoverLetter(job_id, resume_id);
+  }
+
+  async listGeneratedResumes(job_id: string): Promise<GeneratedResume[]> {
+    return dbInvoke.ats.listGeneratedResumes(job_id);
+  }
+
+  async listGeneratedCoverLetters(job_id: string): Promise<GeneratedCoverLetter[]> {
+    return dbInvoke.ats.listGeneratedCoverLetters(job_id);
+  }
+
+  async listAllGeneratedResumes(user_id: string): Promise<GeneratedResume[]> {
+    return dbInvoke.ats.listAllGeneratedResumes(user_id);
+  }
+
+  async listAllGeneratedCoverLetters(user_id: string): Promise<GeneratedCoverLetter[]> {
+    return dbInvoke.ats.listAllGeneratedCoverLetters(user_id);
+  }
+
+  async deleteGeneratedResume(id: string): Promise<void> {
+    return dbInvoke.ats.deleteGeneratedResume(id);
+  }
+
+  async deleteGeneratedCoverLetter(id: string): Promise<void> {
+    return dbInvoke.ats.deleteGeneratedCoverLetter(id);
+  }
+
+  // ============ Application Operations ============
+
+  async markAsApplied(
+    job_id: string,
+    resume_id?: string,
+    cover_letter_id?: string
+  ): Promise<JobApplication> {
+    return dbInvoke.ats.markAsApplied(job_id, resume_id, cover_letter_id);
+  }
+
+  async listApplications(user_id: string): Promise<JobApplication[]> {
+    return dbInvoke.ats.listApplications(user_id);
+  }
+
+  async getApplicationByJob(job_id: string): Promise<JobApplication | null> {
+    return dbInvoke.ats.getApplicationByJob(job_id);
   }
 }
 

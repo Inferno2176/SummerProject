@@ -40,16 +40,13 @@ pub async fn db_get_user_by_email(
 
 #[tauri::command]
 pub async fn db_list_users(
-    _app: AppHandle,
+    app: AppHandle,
 ) -> Result<Vec<User>, String> {
-    // let pool = _app.state::<DbPool>();
+    let pool = app.state::<DbPool>();
 
-    // Temporarily disabled until async query_rows replacement exists
-    // UserRepository::list_installed(&pool)
-    //     .await
-    //     .map_err(|e| e.to_string())
-
-    Ok(vec![])
+    UserRepository::list(&pool)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

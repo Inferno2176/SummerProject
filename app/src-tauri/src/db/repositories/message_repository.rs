@@ -11,6 +11,7 @@ use crate::db::{
     connection::{
         execute_with_params,
         query_row,
+        query_rows,
         DbPool,
     },
     error::{
@@ -110,6 +111,84 @@ impl MessageRepository {
             AND deleted_at IS NULL
             ",
             [id.to_string()],
+            |row| {
+                Ok(ChatMessage {
+                    id: row.get(0)?,
+                    session_id: row.get(1)?,
+                    role: row.get(2)?,
+                    content: row.get(3)?,
+                    model: row.get(4)?,
+                    tokens_used: row.get(5)?,
+                    created_at: row.get(6)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        LIST BY SESSION
+    */
+    pub async fn list_by_session(
+        pool: &DbPool,
+        session_id: &str,
+    ) -> DbResult<Vec<ChatMessage>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                session_id,
+                role,
+                content,
+                model,
+                tokens_used,
+                created_at
+            FROM messages
+            WHERE session_id = ?1
+            AND deleted_at IS NULL
+            ORDER BY created_at ASC
+            ",
+            [session_id.to_string()],
+            |row| {
+                Ok(ChatMessage {
+                    id: row.get(0)?,
+                    session_id: row.get(1)?,
+                    role: row.get(2)?,
+                    content: row.get(3)?,
+                    model: row.get(4)?,
+                    tokens_used: row.get(5)?,
+                    created_at: row.get(6)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
+        LIST RECENT
+    */
+    pub async fn list_recent(
+        pool: &DbPool,
+        limit: i64,
+    ) -> DbResult<Vec<ChatMessage>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                session_id,
+                role,
+                content,
+                model,
+                tokens_used,
+                created_at
+            FROM messages
+            WHERE deleted_at IS NULL
+            ORDER BY created_at DESC
+            LIMIT ?1
+            ",
+            [limit],
             |row| {
                 Ok(ChatMessage {
                     id: row.get(0)?,

@@ -17,24 +17,32 @@ import AIOrb from "./AIOrb";
 
 import SpeakingWave from "./SpeakingWave";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
 };
 
+type Analysis = {
+  confidence: string;
+  technical: string;
+  communication: string;
+  feedback: string;
+};
+
 type Props = {
   messages: Message[];
-
   latestMessage: string;
-
   speaking: boolean;
-
   listening: boolean;
-
   thinking: boolean;
-
   aiState: string;
+  analysis: Analysis | null;
+  onTabChange?: (tab: "live" | "transcript" | "analysis" | "notes") => void;
+  activeTab?: "live" | "transcript" | "analysis" | "notes";
 };
 
 export default function InterviewTabs({
@@ -44,14 +52,26 @@ export default function InterviewTabs({
   listening,
   thinking,
   aiState,
+  analysis,
+  onTabChange,
+  activeTab = "live",
 }: Props) {
-  const [tab, setTab] =
+  const [internalTab, setInternalTab] =
     useState<
       | "live"
       | "transcript"
       | "analysis"
       | "notes"
     >("live");
+
+  const tab = onTabChange ? activeTab : internalTab;
+  const setTab = (t: typeof tab) => {
+    if (onTabChange) {
+      onTabChange(t);
+    } else {
+      setInternalTab(t);
+    }
+  };
 
   const tabs = [
     {
@@ -190,11 +210,14 @@ export default function InterviewTabs({
 
                   </p>
 
-                  <h2 className="mt-2 text-[15px] font-medium leading-7 text-[var(--text)]">
-
-                    {latestMessage ||
-                      "Start the interview to begin AI interaction."}
-
+                  <h2 className="mt-2 text-[15px] font-medium leading-7 text-[var(--text)] prose prose-invert prose-sm max-w-none">
+                    {latestMessage ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {latestMessage}
+                      </ReactMarkdown>
+                    ) : (
+                      "Start the interview to begin AI interaction."
+                    )}
                   </h2>
 
                 </motion.div>
@@ -229,52 +252,63 @@ export default function InterviewTabs({
           )}
 
         {/* ANALYSIS */}
-        {tab ===
-          "analysis" && (
-            <div className="h-full overflow-y-auto p-5">
+        {tab === "analysis" && (
+          <div className="h-full overflow-y-auto p-5">
+            {analysis ? (
+              <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.06] p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+                      Confidence
+                    </p>
+                    <h3 className="mt-3 text-3xl font-bold text-emerald-400">
+                      {analysis.confidence}
+                    </h3>
+                  </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl border border-orange-500/10 bg-orange-500/[0.06] p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+                      Technical
+                    </p>
+                    <h3 className="mt-3 text-3xl font-bold text-orange-400">
+                      {analysis.technical}
+                    </h3>
+                  </div>
 
-                <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.06] p-5">
-
-                  <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
-                    Confidence
-                  </p>
-
-                  <h3 className="mt-3 text-3xl font-bold text-emerald-400">
-                    84%
-                  </h3>
-
+                  <div className="rounded-2xl border border-blue-500/10 bg-blue-500/[0.06] p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+                      Communication
+                    </p>
+                    <h3 className="mt-3 text-3xl font-bold text-blue-400">
+                      {analysis.communication}
+                    </h3>
+                  </div>
                 </div>
 
-                <div className="rounded-2xl border border-orange-500/10 bg-orange-500/[0.06] p-5">
-
-                  <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
-                    Technical
-                  </p>
-
-                  <h3 className="mt-3 text-3xl font-bold text-orange-400">
-                    Strong
-                  </h3>
-
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-orange-400 mb-4">
+                    Detailed Feedback
+                  </h4>
+                  <div className="prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {analysis.feedback}
+                    </ReactMarkdown>
+                  </div>
                 </div>
-
-                <div className="rounded-2xl border border-blue-500/10 bg-blue-500/[0.06] p-5">
-
-                  <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
-                    Communication
-                  </p>
-
-                  <h3 className="mt-3 text-3xl font-bold text-blue-400">
-                    Good
-                  </h3>
-
-                </div>
-
               </div>
-
-            </div>
-          )}
+            ) : (
+              <div className="flex h-full items-center justify-center text-center">
+                <div className="max-w-xs">
+                  <Sparkles className="mx-auto mb-4 h-12 w-12 text-white/10" />
+                  <h3 className="text-lg font-medium">No Analysis Yet</h3>
+                  <p className="mt-2 text-sm text-[var(--muted)]">
+                    Complete your interview to see AI feedback and performance metrics.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* NOTES */}
         {tab ===

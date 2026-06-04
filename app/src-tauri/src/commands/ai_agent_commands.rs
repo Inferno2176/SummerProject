@@ -97,6 +97,59 @@ pub async fn db_get_ai_agent(
 }
 
 /*
+    LIST BY PROVIDER
+*/
+#[tauri::command]
+pub async fn db_list_ai_agents_by_provider(
+    app: AppHandle,
+    provider: String,
+) -> Result<Vec<AIAgent>, String> {
+    let pool =
+        app.state::<DbPool>();
+
+    AIAgentRepository::list_by_provider(
+        &pool,
+        &provider,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/*
+    LIST INSTALLED
+*/
+#[tauri::command]
+pub async fn db_list_installed_ai_agents(
+    app: AppHandle,
+) -> Result<Vec<AIAgent>, String> {
+    let pool =
+        app.state::<DbPool>();
+
+    AIAgentRepository::list_installed(
+        &pool,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/*
+    LIST ALL
+*/
+#[tauri::command]
+pub async fn db_list_all_ai_agents(
+    app: AppHandle,
+) -> Result<Vec<AIAgent>, String> {
+    let pool =
+        app.state::<DbPool>();
+
+    AIAgentRepository::list_all(
+        &pool,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/*
     GET DEFAULT AI AGENT
 */
 #[tauri::command]

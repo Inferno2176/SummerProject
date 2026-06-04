@@ -11,6 +11,7 @@ use crate::db::{
     connection::{
         execute_with_params,
         query_row,
+        query_rows,
         DbPool,
     },
     error::{
@@ -33,6 +34,10 @@ pub struct ChatSession {
     pub mode: String,
     pub created_at: String,
     pub updated_at: String,
+    pub job_id: Option<String>,
+    pub job_description: Option<String>,
+    pub company: Option<String>,
+    pub job_title: Option<String>,
 }
 
 pub struct SessionRepository;
@@ -47,6 +52,10 @@ impl SessionRepository {
         title: &str,
         model: &str,
         mode: &str,
+        job_id: Option<String>,
+        job_description: Option<String>,
+        company: Option<String>,
+        job_title: Option<String>,
     ) -> DbResult<ChatSession> {
         let id =
             Uuid::new_v4().to_string();
@@ -64,27 +73,29 @@ impl SessionRepository {
                 model,
                 mode,
                 created_at,
-                updated_at
+                updated_at,
+                job_id,
+                job_description,
+                company,
+                job_title
             )
             VALUES (
-                ?1,
-                ?2,
-                ?3,
-                ?4,
-                ?5,
-                ?6,
-                ?7
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11
             )
             ",
-(
-    id.clone(),
-    user_id.to_string(),
-    title.to_string(),
-    model.to_string(),
-    mode.to_string(),
-    now.clone(),
-    now.clone(),
-),
+            (
+                id.clone(),
+                user_id.to_string(),
+                title.to_string(),
+                model.to_string(),
+                mode.to_string(),
+                now.clone(),
+                now.clone(),
+                job_id,
+                job_description,
+                company,
+                job_title,
+            ),
         )
         .await?;
 
@@ -111,7 +122,11 @@ impl SessionRepository {
                 model,
                 mode,
                 created_at,
-                updated_at
+                updated_at,
+                job_id,
+                job_description,
+                company,
+                job_title
             FROM sessions
             WHERE id = ?1
             AND deleted_at IS NULL
@@ -126,6 +141,10 @@ impl SessionRepository {
                     mode: row.get(4)?,
                     created_at: row.get(5)?,
                     updated_at: row.get(6)?,
+                    job_id: row.get(7)?,
+                    job_description: row.get(8)?,
+                    company: row.get(9)?,
+                    job_title: row.get(10)?,
                 })
             },
         )
@@ -190,6 +209,53 @@ impl SessionRepository {
         .await?;
 
         Ok(())
+    }
+
+    /*
+        LIST BY USER
+    */
+    pub async fn list_by_user(
+        pool: &DbPool,
+        user_id: &str,
+    ) -> DbResult<Vec<ChatSession>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                user_id,
+                title,
+                model,
+                mode,
+                created_at,
+                updated_at,
+                job_id,
+                job_description,
+                company,
+                job_title
+            FROM sessions
+            WHERE user_id = ?1
+            AND deleted_at IS NULL
+            ORDER BY updated_at DESC
+            ",
+            [user_id.to_string()],
+            |row| {
+                Ok(ChatSession {
+                    id: row.get(0)?,
+                    user_id: row.get(1)?,
+                    title: row.get(2)?,
+                    model: row.get(3)?,
+                    mode: row.get(4)?,
+                    created_at: row.get(5)?,
+                    updated_at: row.get(6)?,
+                    job_id: row.get(7)?,
+                    job_description: row.get(8)?,
+                    company: row.get(9)?,
+                    job_title: row.get(10)?,
+                })
+            },
+        )
+        .await
     }
 
     /*

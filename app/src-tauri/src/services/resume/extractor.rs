@@ -15,7 +15,8 @@ pub async fn extract_resume_text(file_path: &str) -> DbResult<String> {
 
     match ext.as_str() {
         "pdf" => extract_pdf(file_path),
-        "docx" | "doc" => extract_docx(file_path),
+        "docx" => extract_docx(file_path),
+        "doc" => extract_doc_legacy(file_path),
         _ => Err(DbError::QueryError(format!("Unsupported file type: {}", ext))),
     }
 }
@@ -27,12 +28,7 @@ fn extract_pdf(file_path: &str) -> DbResult<String> {
     let text = pdf_extract::extract_text_from_mem(&bytes)
         .map_err(|e| DbError::QueryError(format!("Failed to extract PDF text: {}", e)))?;
 
-    let cleaned = text
-        .lines()
-        .map(|l| l.trim())
-        .filter(|l| !l.is_empty())
-        .collect::<Vec<_>>()
-        .join("\n");
+    let cleaned = clean_extracted_text(&text);
 
     if cleaned.is_empty() {
         return Err(DbError::QueryError("PDF appears to be empty or image-only".into()));
@@ -66,22 +62,52 @@ fn extract_docx(file_path: &str) -> DbResult<String> {
         return Err(DbError::QueryError("DOCX document.xml not found".into()));
     }
 
-    // Strip XML tags, keep text
     let text = strip_xml_tags(&xml_content);
-    let cleaned = text
-        .lines()
+    let cleaned = clean_extracted_text(&text);
+
+    Ok(cleaned)
+}
+
+fn extract_doc_legacy(file_path: &str) -> DbResult<String> {
+    // For legacy .doc files, we'll try a very basic string extraction
+    let bytes = std::fs::read(file_path)
+        .map_err(|e| DbError::QueryError(format!("Failed to read DOC: {}", e)))?;
+    
+    // Extract printable ASCII/UTF-8 strings
+    let mut text = String::new();
+    let mut current_string = String::new();
+    
+    for &b in &bytes {
+        if (b >= 32 && b <= 126) || b == b'\n' || b == b'\r' || b == b'\t' {
+            current_string.push(b as char);
+        } else {
+            if current_string.len() > 4 {
+                text.push_str(&current_string);
+                text.push(' ');
+            }
+            current_string.clear();
+        }
+    }
+    
+    let cleaned = clean_extracted_text(&text);
+    if cleaned.is_empty() {
+        return Err(DbError::QueryError("Could not extract meaningful text from legacy DOC file".into()));
+    }
+    
+    Ok(cleaned)
+}
+
+fn clean_extracted_text(text: &str) -> String {
+    text.lines()
         .map(|l| l.trim())
         .filter(|l| !l.is_empty())
         .collect::<Vec<_>>()
-        .join("\n");
-
-    Ok(cleaned)
+        .join("\n")
 }
 
 fn strip_xml_tags(xml: &str) -> String {
     let mut result = String::new();
     let mut in_tag = false;
-    let mut in_space = false;
 
     for ch in xml.chars() {
         match ch {
@@ -89,18 +115,9 @@ fn strip_xml_tags(xml: &str) -> String {
             '>' => {
                 in_tag = false;
                 result.push(' ');
-                in_space = true;
             }
             _ if !in_tag => {
-                if ch == ' ' || ch == '\n' {
-                    if !in_space {
-                        result.push(ch);
-                        in_space = true;
-                    }
-                } else {
-                    result.push(ch);
-                    in_space = false;
-                }
+                result.push(ch);
             }
             _ => {}
         }

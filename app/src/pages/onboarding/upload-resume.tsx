@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
+import ResumeViewer from "@/components/resume/ResumeViewer";
+import type { Resume } from "@/lib/db/models";
 
 type ParseStatus = "idle" | "parsing" | "done" | "error";
 
@@ -13,6 +15,7 @@ export default function UploadResumePage() {
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [parseStatus, setParseStatus] = useState<ParseStatus>("idle");
+  const [resumeData, setResumeData] = useState<Resume | null>(null);
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -33,11 +36,12 @@ export default function UploadResumePage() {
       setParsing(true);
       setParseStatus("parsing");
 
-      await invoke("parse_and_store_resume", {
+      const result = await invoke<Resume>("parse_and_store_resume", {
         fileName: file.name,
         fileBytes: bytes,
       });
 
+      setResumeData(result);
       setParseStatus("done");
       setResumeUploaded(true);
     } catch (err) {
@@ -125,13 +129,22 @@ export default function UploadResumePage() {
               </div>
             )}
 
-            {parseStatus === "done" && (
-              <div className="space-y-2">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
-                  <span className="text-green-400 text-lg">✓</span>
+            {parseStatus === "done" && resumeData && (
+              <div className="w-full text-left">
+                <div className="mb-6 flex items-center gap-2 text-green-400">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20">
+                    <span className="text-sm">✓</span>
+                  </div>
+                  <span className="text-sm font-medium">Resume parsed successfully</span>
                 </div>
-                <p className="text-sm text-green-400 font-medium">Resume parsed successfully</p>
-                <p className="text-xs text-[var(--muted)]">{fileName}</p>
+                <ResumeViewer 
+                  resume={resumeData} 
+                  onDelete={() => {
+                    setResumeData(null);
+                    setParseStatus("idle");
+                    setResumeUploaded(false);
+                  }} 
+                />
               </div>
             )}
 

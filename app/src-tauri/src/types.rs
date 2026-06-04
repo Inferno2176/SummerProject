@@ -48,6 +48,7 @@ pub struct ChatInputMessage {
 #[serde(rename_all = "camelCase")]
 pub struct StreamChunkPayload {
     pub chunk: String,
+    pub mode: String,
 }
 
 #[derive(Serialize)]

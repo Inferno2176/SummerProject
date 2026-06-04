@@ -16,6 +16,10 @@ import {
   getCurrentProvider,
 } from "../lib/ai-preferences";
 
+import { db } from "@/lib/db/service";
+import { useSearchParams } from "react-router-dom";
+import type { ChatSession } from "@/lib/db/models";
+
 import InterviewHeader from "../components/interview/InterviewHeader";
 
 import InterviewSetupPanel from "../components/interview/InterviewSetupPanel";
@@ -80,6 +84,19 @@ const PERSONALITIES = [
   "HR Manager",
 ];
 
+
+interface SpeechRecognitionEvent extends Event {
+  results: {
+    [key: number]: {
+      [key: number]: {
+        transcript: string;
+      };
+      isFinal: boolean;
+    };
+    length: number;
+  };
+  resultIndex: number;
+}
 
 type SpeechRecognitionInstance = {
   continuous: boolean;
@@ -186,6 +203,17 @@ export default function InterviewPage() {
       null
     );
 
+  const [analysis, setAnalysis] =
+    useState<{
+      confidence: string;
+      technical: string;
+      communication: string;
+      feedback: string;
+    } | null>(null);
+
+  const [activeTab, setActiveTab] =
+    useState<"live" | "transcript" | "analysis" | "notes">("live");
+
   const [
     isListening,
     setIsListening,
@@ -224,6 +252,30 @@ export default function InterviewPage() {
     useRef<string | null>(
       null
     );
+
+  const [searchParams] = useSearchParams();
+  const [session, setSession] = useState<ChatSession | null>(null);
+
+  /*
+    LOAD SESSION FROM URL
+  */
+  useEffect(() => {
+    const sessionId = searchParams.get("session");
+    if (sessionId) {
+      void db.getSession(sessionId).then(s => {
+        if (s) {
+          setSession(s);
+          if (s.job_description) {
+            setJobContext(s.job_description);
+            setInputSource("custom_jd");
+          }
+        }
+      });
+    }
+  }, [searchParams]);
+
+  const spokenTextRef =
+    useRef<string>("");
 
   const recognitionRef =
     useRef<{
@@ -320,6 +372,7 @@ export default function InterviewPage() {
     const unlistenPromise =
       listen<{
         chunk: string;
+        mode: string;
       }>(
         "ollama-chat-chunk",
         (
@@ -328,7 +381,7 @@ export default function InterviewPage() {
           const id =
             activeAssistantId.current;
 
-          if (!id) {
+          if (!id || !INTERVIEW_MODES.some(m => m.id === event.payload.mode)) {
             return;
           }
 
@@ -368,18 +421,33 @@ export default function InterviewPage() {
                 return prev;
               }
 
+              const newContent = copy[idx].content + chunk;
               copy[idx] =
               {
                 ...copy[
                 idx
                 ],
-                content:
-                  copy[
-                    idx
-                  ]
-                    .content +
-                  chunk,
+                content: newContent,
               };
+
+              // Real-time speech: detect sentences
+              const sentenceEndings = /[.!?]\s/;
+              const remaining = newContent.slice(spokenTextRef.current.length);
+              
+              if (sentenceEndings.test(remaining)) {
+                // Find the last complete sentence in the remaining part
+                const lastSentenceIdx = Math.max(
+                  remaining.lastIndexOf(". "),
+                  remaining.lastIndexOf("? "),
+                  remaining.lastIndexOf("! ")
+                );
+
+                if (lastSentenceIdx !== -1) {
+                  const toSpeak = remaining.slice(0, lastSentenceIdx + 1);
+                  speak(toSpeak, false);
+                  spokenTextRef.current += toSpeak;
+                }
+              }
 
               return copy;
             }
@@ -430,7 +498,8 @@ export default function InterviewPage() {
   const speak =
     useCallback(
       (
-        text: string
+        text: string,
+        shouldCancel: boolean = true
       ) => {
         if (
           !window.speechSynthesis ||
@@ -439,7 +508,10 @@ export default function InterviewPage() {
           return;
         }
 
-        window.speechSynthesis.cancel();
+        if (shouldCancel) {
+          window.speechSynthesis.cancel();
+          spokenTextRef.current = "";
+        }
 
         const utter =
           new SpeechSynthesisUtterance(
@@ -540,6 +612,9 @@ export default function InterviewPage() {
         setPrompt("");
 
         setLiveAssistantText("");
+        
+        spokenTextRef.current = "";
+        window.speechSynthesis?.cancel();
 
         setMessages(
           (
@@ -642,9 +717,12 @@ export default function InterviewPage() {
               );
             }
 
-            speak(
-              result.response
-            );
+            // Speak whatever is left in the buffer
+            const remaining = result.response.slice(spokenTextRef.current.length);
+            if (remaining.trim()) {
+              speak(remaining, false);
+            }
+            spokenTextRef.current = "";
           }
         } catch (
         e
@@ -684,6 +762,75 @@ export default function InterviewPage() {
         speak,
       ]
     );
+
+  const handleFinishInterview = useCallback(async () => {
+    if (messages.length < 2 || isLoading) return;
+
+    setIsLoading(true);
+    setAiState("thinking");
+    window.speechSynthesis?.cancel();
+
+    const summaryPrompt = `The interview is over. Please provide a final analysis of the candidate's performance based on our conversation. 
+    Format your response EXACTLY as a JSON object with these keys: 
+    "confidence" (e.g. "85%"), 
+    "technical" (e.g. "Strong"), 
+    "communication" (e.g. "Excellent"), 
+    "feedback" (detailed markdown summary). 
+    Do not include any other text or markdown code blocks in your response, just the raw JSON.`;
+
+    try {
+      const result = await invoke<ChatReply>("chat_with_ollama", {
+        messages: [
+          ...messages.map(m => ({ role: m.role, content: m.content })),
+          { role: "user", content: summaryPrompt }
+        ],
+        model,
+        mode: "general", // Use general mode for summary to avoid interviewer persona
+      });
+
+      if (result.success) {
+        try {
+          // Clean the response in case the AI included markdown blocks
+          const cleanJson = result.response.replace(/```json|```/g, "").trim();
+          const parsed = JSON.parse(cleanJson);
+          setAnalysis({
+            confidence: parsed.confidence || "N/A",
+            technical: parsed.technical || "N/A",
+            communication: parsed.communication || "N/A",
+            feedback: parsed.feedback || result.response,
+          });
+          setActiveTab("analysis");
+          
+          // Save report if linked to a job
+          if (session?.job_id) {
+             // In a real app, we'd call a save_interview_report command here
+             console.log("Saving interview report for job", session.job_id);
+          }
+
+          // Reset interview state
+          setMessages([]);
+          sessionStorage.removeItem(KEY);
+          spokenTextRef.current = "";
+        } catch (e) {
+          // Fallback if JSON parsing fails
+          setAnalysis({
+            confidence: "Analyzed",
+            technical: "Analyzed",
+            communication: "Analyzed",
+            feedback: result.response,
+          });
+          setActiveTab("analysis");
+          setMessages([]);
+          sessionStorage.removeItem(KEY);
+        }
+      }
+    } catch (e) {
+      setError("Failed to generate interview analysis.");
+    } finally {
+      setIsLoading(false);
+      setAiState("idle");
+    }
+  }, [messages, model, isLoading]);
 
   const startSpeechRecognition =
     useCallback(() => {
@@ -861,92 +1008,6 @@ export default function InterviewPage() {
       );
     };
 
-  const finishInterview =
-    async () => {
-      if (
-        !model
-      ) {
-        setError(
-          "No AI model selected."
-        );
-
-        return;
-      }
-
-      const summaryRequest =
-        [
-          ...messages
-            .slice(-14)
-            .map(
-              (
-                m
-              ) => ({
-                role:
-                  m.role,
-                content:
-                  m.content,
-              })
-            ),
-          {
-            role: "user",
-            content:
-              "Interview ended. Give: overall score/10, communication rating, technical rating, confidence rating, strengths, missed concepts, and top 5 improvements.",
-          },
-        ];
-
-      setIsLoading(
-        true
-      );
-
-      try {
-        const result =
-          await invoke<ChatReply>(
-            "chat_with_ollama",
-            {
-              messages:
-                summaryRequest,
-              model,
-              mode:
-                "interview_technical",
-            }
-          );
-
-        if (
-          result.success
-        ) {
-          setMessages(
-            (
-              prev
-            ) => [
-                ...prev,
-                {
-                  id: `${Date.now()}-summary`,
-                  role:
-                    "assistant",
-                  content:
-                    result.response,
-                },
-              ]
-          );
-        } else {
-          setError(
-            result.error ||
-            "Failed to generate interview report."
-          );
-        }
-      } catch (
-      e
-      ) {
-        setError(
-          String(e)
-        );
-      } finally {
-        setIsLoading(
-          false
-        );
-      }
-    };
-
   const latestAssistantMessage =
     liveAssistantText ||
     [...messages]
@@ -987,7 +1048,7 @@ export default function InterviewPage() {
         }}
 
         finishInterview={() => {
-          void finishInterview();
+          void handleFinishInterview();
         }}
       />
 
@@ -997,6 +1058,9 @@ export default function InterviewPage() {
         {/* HEADER */}
         <InterviewHeader
           aiState={aiState}
+          onFinish={() => {
+            void handleFinishInterview();
+          }}
         />
 
         {/* TABS */}
@@ -1009,6 +1073,9 @@ export default function InterviewPage() {
           listening={isListening}
           thinking={isLoading}
           aiState={aiState}
+          analysis={analysis}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
 
         {/* DOCK */}

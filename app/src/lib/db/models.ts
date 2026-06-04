@@ -20,6 +20,10 @@ export interface ChatSession {
   mode: string;
   created_at: string;
   updated_at: string;
+  job_id?: string;
+  job_description?: string;
+  company?: string;
+  job_title?: string;
 }
 
 export interface ChatMessage {
@@ -44,6 +48,11 @@ export interface Resume {
   is_default: boolean;
   created_at: string;
   updated_at: string;
+  master_resume_json?: string;
+  ats_score?: number;
+  ats_strengths?: string;
+  ats_weaknesses?: string;
+  ats_recommendations?: string;
 }
 
 export interface Job {
@@ -59,11 +68,18 @@ export interface Job {
   location?: string;
   job_type?: string;
   posted_date?: string;
-  status: 'saved' | 'applied' | 'rejected' | 'interview';
+  status: 'recommended' | 'saved' | 'applied' | 'rejected' | 'interview';
   match_score?: number;
   notes?: string;
   created_at: string;
   updated_at: string;
+  source?: string;
+  source_url?: string;
+  matched_skills?: string;
+  missing_skills?: string;
+  experience_match?: boolean;
+  title_match?: boolean;
+  discovered_at?: string;
 }
 
 export interface Preference {
@@ -84,6 +100,41 @@ export interface InterviewSession {
   score?: number;
   duration_seconds?: number;
   feedback?: string;
+  created_at: string;
+  updated_at: string;
+  job_id?: string;
+  job_description?: string;
+}
+
+export interface JobApplication {
+  id: string;
+  user_id: string;
+  job_id: string;
+  resume_id?: string;
+  cover_letter_id?: string;
+  applied_at: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GeneratedResume {
+  id: string;
+  user_id: string;
+  job_id: string;
+  resume_id: string;
+  optimized_summary?: string;
+  optimized_skills?: string;
+  optimized_experience?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GeneratedCoverLetter {
+  id: string;
+  user_id: string;
+  job_id: string;
+  content: string;
   created_at: string;
   updated_at: string;
 }

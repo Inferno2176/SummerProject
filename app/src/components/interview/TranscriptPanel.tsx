@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Message = {
   id: string;
@@ -81,7 +83,7 @@ export default function TranscriptPanel({
                 }`}
               >
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-2">
 
                   <div
                     className={`h-2 w-2 rounded-full ${
@@ -117,11 +119,11 @@ export default function TranscriptPanel({
 
                 </div>
 
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text)]">
-
-                  {message.content}
-
-                </p>
+                <div className="prose prose-invert prose-sm max-w-none text-[var(--text)] leading-relaxed">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message.content}
+                  </ReactMarkdown>
+                </div>
 
               </div>
 

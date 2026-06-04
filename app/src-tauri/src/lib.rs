@@ -6,6 +6,7 @@ pub mod services;
 
 use futures_util::StreamExt;
 use reqwest::Client;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use sysinfo::System;
@@ -150,6 +151,7 @@ fn detect_mode(user_text: &str) -> String {
 
 fn mode_system_prompt(mode: &str) -> String {
     match mode {
+        "general" => "You are a helpful, friendly AI assistant. You provide clear, concise, and useful information. You can help with anything from coding to career advice, but you are not an interviewer unless specifically asked to roleplay. Never continue the conversation on your own.".to_string(),
         "career" => "You are a practical career coach. Give direct, actionable advice. Keep answers concise unless asked for detail. Never continue the conversation on your own.".to_string(),
         "coding" => "You are a senior coding assistant. Be precise, brief, and solution-first. Prefer concrete steps and short code examples only when needed. Never continue the conversation on your own.".to_string(),
         "emotional" => "You are a calm, supportive companion. Be warm, grounded, and concise. Validate feelings without being dramatic. Offer one or two practical next steps. Never continue the conversation on your own.".to_string(),
@@ -744,6 +746,7 @@ async fn chat_with_ollama(
                         "ollama-chat-chunk",
                         StreamChunkPayload {
                             chunk: message.content,
+                            mode: detected_mode.clone(),
                         },
                     );
                 }
@@ -909,6 +912,14 @@ pub fn run() {
 
     app.manage(pool.clone());
 
+    // Initialize Job Scheduler in background
+    let scheduler_pool = Arc::new(pool.clone());
+    let scheduler_app = app.handle().clone();
+    tauri::async_runtime::spawn(async move {
+        let scheduler = crate::services::job::JobScheduler::new(scheduler_pool, scheduler_app);
+        scheduler.start().await;
+    });
+
     Ok(())
 })
 .invoke_handler(tauri::generate_handler![
@@ -946,27 +957,27 @@ pub fn run() {
     // AI Agent Commands
     db_create_ai_agent,
     db_get_ai_agent,
-    // db_list_ai_agents_by_provider,
-    // db_list_installed_ai_agents,
+    db_list_ai_agents_by_provider,
+    db_list_installed_ai_agents,
     db_get_default_ai_agent,
     db_set_default_ai_agent,
     db_update_ai_agent_install_status,
     db_update_ai_agent_availability,
     db_delete_ai_agent,
-    // db_list_all_ai_agents,
+    db_list_all_ai_agents,
 
     // User Commands
     db_create_user,
     db_get_user,
     db_get_user_by_email,
-    // db_list_users,
+    db_list_users,
     db_update_user,
     db_delete_user,
 
     // Session Commands
     db_create_session,
     db_get_session,
-    // db_list_user_sessions,
+    db_list_user_sessions,
     db_update_session_title,
     db_delete_session,
     db_count_user_sessions,
@@ -974,8 +985,8 @@ pub fn run() {
     // Message Commands
     db_create_message,
     db_get_message,
-    // db_list_session_messages,
-    // db_list_recent_messages,
+    db_list_session_messages,
+    db_list_recent_messages,
     db_delete_message,
     db_count_session_tokens,
     
@@ -998,8 +1009,54 @@ pub fn run() {
     db_get_size,
 
     // Resume Commands
+    db_create_resume,
+    db_get_resume,
+    db_list_resumes,
+    db_set_default_resume,
+    db_get_default_resume,
+    db_update_resume_content,
+    db_delete_resume,
     upload_resume,
+    get_resume,
+    delete_resume,
+    view_resume,
+    download_resume,
     parse_and_store_resume,
+
+    // Job Commands
+    db_create_job,
+    db_get_job,
+    db_list_jobs,
+    db_update_job_status,
+    db_delete_job,
+    fetch_jobs,
+    search_jobs,
+    save_job,
+    reject_job,
+    delete_job,
+    get_jobs,
+    update_job_status,
+    get_scheduler_status,
+    toggle_scheduler,
+    update_scheduler_frequency,
+    run_scheduler_now,
+
+    // Activity Log Commands
+    db_create_activity_log,
+    db_list_activity_logs,
+
+    // ATS Commands
+    generate_ats_resume,
+    generate_cover_letter,
+    db_list_generated_resumes,
+    db_list_generated_cover_letters,
+    db_list_all_generated_resumes,
+    db_list_all_generated_cover_letters,
+    db_delete_generated_resume,
+    db_delete_generated_cover_letter,
+    mark_job_as_applied,
+    db_list_applications,
+    db_get_application_by_job,
 ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

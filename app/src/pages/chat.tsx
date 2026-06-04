@@ -238,13 +238,15 @@ export default function ChatPage() {
     const unlistenPromise =
       listen<{
         chunk: string;
+        mode: string;
       }>(
         "ollama-chat-chunk",
         (
           event
         ) => {
           if (
-            !activeAssistantId.current
+            !activeAssistantId.current ||
+            event.payload.mode !== "general"
           ) {
             return;
           }
@@ -356,8 +358,7 @@ export default function ChatPage() {
                 },
               ],
               model,
-              mode:
-                undefined,
+              mode: "general",
             }
           );
 

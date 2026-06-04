@@ -58,6 +58,44 @@ pub async fn db_get_message(
 }
 
 /*
+    LIST SESSION MESSAGES
+*/
+#[tauri::command]
+pub async fn db_list_session_messages(
+    app: AppHandle,
+    session_id: String,
+) -> Result<Vec<ChatMessage>, String> {
+    let pool =
+        app.state::<DbPool>();
+
+    MessageRepository::list_by_session(
+        &pool,
+        &session_id,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/*
+    LIST RECENT MESSAGES
+*/
+#[tauri::command]
+pub async fn db_list_recent_messages(
+    app: AppHandle,
+    limit: i64,
+) -> Result<Vec<ChatMessage>, String> {
+    let pool =
+        app.state::<DbPool>();
+
+    MessageRepository::list_recent(
+        &pool,
+        limit,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/*
     DELETE MESSAGE
 */
 #[tauri::command]

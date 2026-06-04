@@ -176,6 +176,39 @@ where
 }
 
 /*
+    QUERY MULTIPLE ROWS
+*/
+pub async fn query_rows<T, P, F>(
+    pool: &DbPool,
+    query: &str,
+    params: P,
+    mapper: F,
+) -> DbResult<Vec<T>>
+where
+    P: Params + Send + 'static,
+    T: Send + 'static,
+    F: Fn(&rusqlite::Row) -> rusqlite::Result<T> + Send + 'static,
+{
+    let conn = get_connection(pool).await?;
+    let query = query.to_string();
+
+    conn.interact(move |conn| {
+        let mut stmt = conn.prepare(&query)?;
+        let rows = stmt.query_map(params, mapper)?;
+        let mut results = Vec::new();
+        for row in rows {
+            results.push(row?);
+        }
+        Ok(results)
+    })
+    .await
+    .map_err(|e| {
+        DbError::QueryError(format!("Query rows interact failed: {}", e))
+    })?
+    .map_err(DbError::SqliteError)
+}
+
+/*
     EXECUTE
 */
 pub async fn execute(
