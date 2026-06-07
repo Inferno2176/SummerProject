@@ -418,5 +418,67 @@ migration!(
     ALTER TABLE interview_sessions ADD COLUMN job_description TEXT;
     "
 ),
+migration!(
+    "019_jobs_status_recommended",
+    "
+    CREATE TABLE jobs_new (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        company TEXT,
+        url TEXT,
+        description TEXT,
+        requirements TEXT,
+        salary_min REAL,
+        salary_max REAL,
+        location TEXT,
+        job_type TEXT,
+        posted_date TIMESTAMP,
+
+        status TEXT DEFAULT 'recommended'
+        CHECK (
+            status IN (
+                'recommended',
+                'saved',
+                'applied',
+                'rejected',
+                'interview'
+            )
+        ),
+
+        match_score REAL,
+        notes TEXT,
+
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL,
+        deleted_at TIMESTAMP,
+
+        source TEXT,
+        source_url TEXT,
+        matched_skills TEXT,
+        missing_skills TEXT,
+        experience_match BOOLEAN,
+        title_match BOOLEAN,
+        discovered_at TIMESTAMP,
+
+        FOREIGN KEY (user_id)
+            REFERENCES users(id)
+            ON DELETE CASCADE
+    );
+
+    INSERT INTO jobs_new
+    SELECT *
+    FROM jobs;
+
+    DROP TABLE jobs;
+
+    ALTER TABLE jobs_new
+    RENAME TO jobs;
+
+    CREATE INDEX idx_jobs_user_id ON jobs(user_id);
+    CREATE INDEX idx_jobs_status ON jobs(status);
+    CREATE INDEX idx_jobs_created_at ON jobs(created_at);
+    "
+),
     ]
 }
