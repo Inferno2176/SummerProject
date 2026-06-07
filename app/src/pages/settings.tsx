@@ -215,7 +215,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Software Update</p>
-                <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold text-blue-500">v0.1.6</span>
+                <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold text-blue-500">v0.1.7</span>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
