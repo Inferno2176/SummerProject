@@ -12,6 +12,7 @@ use crate::db::{
         execute_with_params,
         get_connection,
         query_row,
+        query_rows,
         DbPool,
     },
     error::{
@@ -205,6 +206,39 @@ impl AppStateRepository {
         .await?;
 
         Ok(())
+    }
+
+    /*
+        LIST ALL
+    */
+    pub async fn list_all(
+        pool: &DbPool,
+    ) -> DbResult<Vec<AppState>> {
+        query_rows(
+            pool,
+            "
+            SELECT
+                id,
+                key,
+                value,
+                data_type,
+                created_at,
+                updated_at
+            FROM app_state
+            ",
+            [],
+            |row| {
+                Ok(AppState {
+                    id: row.get(0)?,
+                    key: row.get(1)?,
+                    value: row.get(2)?,
+                    data_type: row.get(3)?,
+                    created_at: row.get(4)?,
+                    updated_at: row.get(5)?,
+                })
+            },
+        )
+        .await
     }
 
     /*

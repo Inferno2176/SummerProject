@@ -20,12 +20,18 @@ impl JobMatchingEngine {
         let mut missing_skills = Vec::new();
         
         // 1. Title Match (30%)
-        let title_match = if let Some(resume_name) = &resume.name {
-             // This is a simplified check. A better one would compare previous job titles.
-             job.title.to_lowercase().contains(&resume_name.to_lowercase())
-        } else {
-            false
-        };
+        let mut title_match = false;
+        let job_title_lower = job.title.to_lowercase();
+        
+        for exp in &resume.experience {
+            let exp_title = exp.title.as_deref().unwrap_or("").to_lowercase();
+            if job_title_lower.contains(&exp_title) || 
+               exp_title.contains(&job_title_lower) {
+                title_match = true;
+                break;
+            }
+        }
+        
         if title_match { score += 30.0; }
 
         // 2. Skills Match (50%)

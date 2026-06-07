@@ -7,6 +7,7 @@ import {
   MessageSquare,
   UserCheck,
   Users,
+  Mail,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -42,6 +43,11 @@ const items = [
     label: "Interview",
     icon: FileText,
     path: "/app/interview",
+  },
+  {
+    label: "Emails",
+    icon: Mail,
+    path: "/app/emails",
   },
   {
     label: "Community",

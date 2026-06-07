@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { db } from "@/lib/db/service";
+import { invoke } from "@tauri-apps/api/core";
 import type { Resume, GeneratedResume, GeneratedCoverLetter, Job } from "@/lib/db/models";
 import ResumeViewer from "@/components/resume/ResumeViewer";
 import { 
@@ -19,7 +20,9 @@ import {
   Download,
   Eye,
   Mail,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Upload
 } from "lucide-react";
 
 export default function ATSPage() {
@@ -28,6 +31,9 @@ export default function ATSPage() {
   const [jobDescription, setJobDescription] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<"analysis" | "profile" | "history">("analysis");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [result, setResult] = useState<{
     score: number;
     feedback: string[];
@@ -59,9 +65,11 @@ export default function ATSPage() {
       // Load Master Resumes
       const userResumes = await db.listUserResumes(userId);
       setResumes(userResumes);
-      if (userResumes.length > 0 && !selectedResumeId) {
-        const defaultResume = userResumes.find(r => r.is_default);
-        setSelectedResumeId(defaultResume?.id || userResumes[0].id);
+      if (userResumes.length > 0) {
+        if (!selectedResumeId) {
+          const defaultResume = userResumes.find(r => r.is_default);
+          setSelectedResumeId(defaultResume?.id || userResumes[0].id);
+        }
       }
 
       // Load History
@@ -86,6 +94,45 @@ export default function ATSPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = Array.from(new Uint8Array(arrayBuffer));
+
+      const result = await invoke<Resume>("parse_and_store_resume", {
+        fileName: file.name,
+        fileBytes: bytes,
+      });
+
+      await loadData();
+      setSelectedResumeId(result.id);
+      setActiveTab("profile");
+    } catch (err) {
+      console.error("[ATS] Upload failed", err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSetMaster = async (resumeId: string) => {
+    try {
+      const users = await db.listUsers();
+      if (users.length > 0) {
+        await invoke("db_set_default_resume", {
+          id: resumeId,
+          userId: users[0].id
+        });
+        await loadData();
+      }
+    } catch (err) {
+      console.error("[ATS] Set master failed", err);
+    }
+  };
 
   const handleAnalyze = async () => {
     if (!selectedResume || !jobDescription) return;
@@ -338,22 +385,57 @@ export default function ATSPage() {
           {/* Input Section */}
           <div className="space-y-6">
             <div className="rounded-3xl border border-white/5 bg-white/[0.02] p-8 space-y-6">
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-[var(--muted)]">Select Resume</label>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-2 text-xs font-bold text-orange-400 hover:text-orange-300 transition"
+                >
+                  {uploading ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                  Upload New
+                </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileUpload}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
                 <select 
                   className="w-full rounded-xl border border-white/5 bg-[var(--surface)] p-3 outline-none focus:border-orange-500/50"
                   value={selectedResumeId}
                   onChange={(e) => setSelectedResumeId(e.target.value)}
                 >
                   {resumes.map(r => (
-                    <option key={r.id} value={r.id}>{r.filename} {r.is_default ? '(Default)' : ''}</option>
+                    <option key={r.id} value={r.id}>{r.filename} {r.is_default ? '(Master Piece)' : ''}</option>
                   ))}
                 </select>
+                
+                {selectedResume && !selectedResume.is_default && (
+                  <button 
+                    onClick={() => handleSetMaster(selectedResume.id)}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-orange-500/10 border border-orange-500/20 py-2 text-xs font-bold text-orange-400 hover:bg-orange-500/20 transition"
+                  >
+                    <CheckCircle2 size={14} />
+                    Set as Master Piece
+                  </button>
+                )}
               </div>
 
               {selectedResume && (
                 <div className="space-y-4">
-                  <label className="text-sm font-medium text-[var(--muted)]">Selected Master Piece</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-[var(--muted)]">Selected Resume Details</label>
+                    {selectedResume.is_default && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full uppercase tracking-widest ring-1 ring-green-400/20">
+                        <Zap size={10} /> Master Piece
+                      </span>
+                    )}
+                  </div>
                   <ResumeViewer resume={selectedResume} />
                 </div>
               )}

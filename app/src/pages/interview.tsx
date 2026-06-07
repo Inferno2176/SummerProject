@@ -996,16 +996,31 @@ export default function InterviewPage() {
 
   const startInterview =
     async () => {
-      setMessages([]);
+      try {
+        setMessages([]);
+        setRound(1);
+        setElapsedSec(0);
 
-      setRound(1);
+        // Save session to DB
+        await db.createInterviewSession(
+          mode,
+          jobContext,
+          undefined, // company
+          undefined, // job_id
+          jobContext, // job_description
+          inputSource, // experience_level
+          personality,
+          resumeContext
+        );
 
-      setElapsedSec(0);
-
-      await sendTurn(
-        undefined,
-        "Start the interview with the first question."
-      );
+        await sendTurn(
+          undefined,
+          "Start the interview with the first question."
+        );
+      } catch (err) {
+        console.error("Failed to start interview session", err);
+        setError("Failed to start interview session. Please try again.");
+      }
     };
 
   const latestAssistantMessage =

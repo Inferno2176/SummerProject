@@ -6,7 +6,8 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
         migration!(
             "001_initial_schema",
             "
-            CREATE TABLE users (
+            -- 1. Users
+            CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
                 email TEXT NOT NULL UNIQUE,
                 name TEXT,
@@ -16,14 +17,31 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 deleted_at TIMESTAMP
             );
 
-            CREATE INDEX idx_users_email ON users(email);
-            CREATE INDEX idx_users_created_at ON users(created_at);
-            "
-        ),
-        migration!(
-            "002_sessions_table",
-            "
-            CREATE TABLE sessions (
+            -- 2. User Profiles
+            CREATE TABLE IF NOT EXISTS user_profiles (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL UNIQUE,
+                full_name TEXT,
+                email TEXT,
+                phone TEXT,
+                linkedin_url TEXT,
+                github_url TEXT,
+                portfolio_url TEXT,
+                location TEXT,
+                summary TEXT,
+                skills TEXT,
+                experience_json TEXT,
+                education_json TEXT,
+                certifications_json TEXT,
+                projects_json TEXT,
+                years_experience REAL,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            -- 3. Sessions (Chat)
+            CREATE TABLE IF NOT EXISTS sessions (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 title TEXT NOT NULL,
@@ -32,17 +50,15 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 created_at TIMESTAMP NOT NULL,
                 updated_at TIMESTAMP NOT NULL,
                 deleted_at TIMESTAMP,
+                job_id TEXT,
+                job_description TEXT,
+                company TEXT,
+                job_title TEXT,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
-            CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-            CREATE INDEX idx_sessions_created_at ON sessions(created_at);
-            "
-        ),
-        migration!(
-            "003_messages_table",
-            "
-            CREATE TABLE messages (
+            -- 4. Messages
+            CREATE TABLE IF NOT EXISTS messages (
                 id TEXT PRIMARY KEY,
                 session_id TEXT NOT NULL,
                 role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
@@ -54,14 +70,8 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
             );
 
-            CREATE INDEX idx_messages_session_id ON messages(session_id);
-            CREATE INDEX idx_messages_created_at ON messages(created_at);
-            "
-        ),
-        migration!(
-            "004_resumes_table",
-            "
-            CREATE TABLE resumes (
+            -- 5. Resumes
+            CREATE TABLE IF NOT EXISTS resumes (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 filename TEXT NOT NULL,
@@ -74,18 +84,16 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 created_at TIMESTAMP NOT NULL,
                 updated_at TIMESTAMP NOT NULL,
                 deleted_at TIMESTAMP,
+                master_resume_json TEXT,
+                ats_score REAL,
+                ats_strengths TEXT,
+                ats_weaknesses TEXT,
+                ats_recommendations TEXT,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
-            CREATE INDEX idx_resumes_user_id ON resumes(user_id);
-            CREATE INDEX idx_resumes_is_default ON resumes(is_default);
-            CREATE INDEX idx_resumes_created_at ON resumes(created_at);
-            "
-        ),
-        migration!(
-            "005_jobs_table",
-            "
-            CREATE TABLE jobs (
+            -- 6. Jobs
+            CREATE TABLE IF NOT EXISTS jobs (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 title TEXT NOT NULL,
@@ -98,24 +106,24 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 location TEXT,
                 job_type TEXT,
                 posted_date TIMESTAMP,
-                status TEXT DEFAULT 'saved' CHECK(status IN ('saved', 'applied', 'rejected', 'interview')),
+                status TEXT DEFAULT 'recommended' CHECK(status IN ('recommended', 'saved', 'applied', 'rejected', 'interview')),
                 match_score REAL,
                 notes TEXT,
                 created_at TIMESTAMP NOT NULL,
                 updated_at TIMESTAMP NOT NULL,
                 deleted_at TIMESTAMP,
+                source TEXT,
+                source_url TEXT,
+                matched_skills TEXT,
+                missing_skills TEXT,
+                experience_match BOOLEAN,
+                title_match BOOLEAN,
+                discovered_at TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
-            CREATE INDEX idx_jobs_user_id ON jobs(user_id);
-            CREATE INDEX idx_jobs_status ON jobs(status);
-            CREATE INDEX idx_jobs_created_at ON jobs(created_at);
-            "
-        ),
-        migration!(
-            "006_preferences_table",
-            "
-            CREATE TABLE preferences (
+            -- 7. Preferences (Generic)
+            CREATE TABLE IF NOT EXISTS preferences (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 key TEXT NOT NULL,
@@ -126,13 +134,8 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
-            CREATE INDEX idx_preferences_user_id ON preferences(user_id);
-            "
-        ),
-        migration!(
-            "007_app_config_table",
-            "
-            CREATE TABLE app_config (
+            -- 8. App Config
+            CREATE TABLE IF NOT EXISTS app_config (
                 id TEXT PRIMARY KEY,
                 key TEXT NOT NULL UNIQUE,
                 value TEXT,
@@ -141,18 +144,11 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 updated_at TIMESTAMP NOT NULL
             );
 
-            INSERT INTO app_config (id, key, value, type, created_at, updated_at) VALUES
-            ('1', 'db_version', '1', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('2', 'app_initialized', 'true', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-            "
-        ),
-        migration!(
-            "008_interview_sessions_table",
-            "
-            CREATE TABLE interview_sessions (
+            -- 9. Interview Sessions
+            CREATE TABLE IF NOT EXISTS interview_sessions (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
-                session_type TEXT NOT NULL CHECK(session_type IN ('practice', 'realistic', 'technical', 'hr', 'behavioral', 'rapid_fire')),
+                session_type TEXT NOT NULL CHECK(session_type IN ('practice', 'realistic', 'technical', 'hr', 'behavioral', 'rapid_fire', 'system-design')),
                 job_title TEXT,
                 company TEXT,
                 score REAL,
@@ -161,17 +157,16 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 created_at TIMESTAMP NOT NULL,
                 updated_at TIMESTAMP NOT NULL,
                 deleted_at TIMESTAMP,
+                job_id TEXT,
+                job_description TEXT,
+                experience_level TEXT,
+                personality TEXT,
+                resume_context TEXT,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
-            CREATE INDEX idx_interview_sessions_user_id ON interview_sessions(user_id);
-            CREATE INDEX idx_interview_sessions_created_at ON interview_sessions(created_at);
-            "
-        ),
-        migration!(
-            "009_activity_logs_table",
-            "
-            CREATE TABLE activity_logs (
+            -- 10. Activity Logs
+            CREATE TABLE IF NOT EXISTS activity_logs (
                 id TEXT PRIMARY KEY,
                 user_id TEXT,
                 action TEXT NOT NULL,
@@ -182,15 +177,8 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
-            CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
-            CREATE INDEX idx_activity_logs_created_at ON activity_logs(created_at);
-            CREATE INDEX idx_activity_logs_action ON activity_logs(action);
-            "
-        ),
-        migration!(
-            "010_app_state_table",
-            "
-            CREATE TABLE app_state (
+            -- 11. App State
+            CREATE TABLE IF NOT EXISTS app_state (
                 id TEXT PRIMARY KEY,
                 key TEXT NOT NULL UNIQUE,
                 value TEXT NOT NULL,
@@ -199,21 +187,8 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 updated_at TIMESTAMP NOT NULL
             );
 
-            CREATE INDEX idx_app_state_key ON app_state(key);
-
-INSERT INTO app_state (id, key, value, data_type, created_at, updated_at) VALUES
-('1', 'onboarding_completed', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('2', 'onboarding_step', 'provider_selection', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('3', 'selected_provider', '', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('4', 'selected_model', '', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('5', 'ollama_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('6', 'claude_cli_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-            "
-        ),
-        migration!(
-            "011_ai_agents_table",
-            "
-            CREATE TABLE ai_agents (
+            -- 12. AI Agents
+            CREATE TABLE IF NOT EXISTS ai_agents (
                 id TEXT PRIMARY KEY,
                 provider TEXT NOT NULL CHECK(provider IN ('ollama', 'claude', 'openai', 'anthropic')),
                 name TEXT NOT NULL,
@@ -235,16 +210,8 @@ INSERT INTO app_state (id, key, value, data_type, created_at, updated_at) VALUES
                 deleted_at TIMESTAMP
             );
 
-            CREATE INDEX idx_ai_agents_provider ON ai_agents(provider);
-            CREATE INDEX idx_ai_agents_is_installed ON ai_agents(is_installed);
-            CREATE INDEX idx_ai_agents_is_default ON ai_agents(is_default);
-            CREATE INDEX idx_ai_agents_created_at ON ai_agents(created_at);
-            "
-        ),
-        migration!(
-            "012_settings_table",
-            "
-            CREATE TABLE settings (
+            -- 13. Settings
+            CREATE TABLE IF NOT EXISTS settings (
                 id TEXT PRIMARY KEY,
                 key TEXT NOT NULL UNIQUE,
                 value TEXT NOT NULL,
@@ -254,9 +221,108 @@ INSERT INTO app_state (id, key, value, data_type, created_at, updated_at) VALUES
                 updated_at TIMESTAMP NOT NULL
             );
 
-            CREATE INDEX idx_settings_key ON settings(key);
+            -- 14. Generated Documents
+            CREATE TABLE IF NOT EXISTS generated_resumes (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                job_id TEXT NOT NULL,
+                resume_id TEXT NOT NULL,
+                optimized_summary TEXT,
+                optimized_skills TEXT,
+                optimized_experience TEXT,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+                FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE
+            );
 
-            INSERT INTO settings (id, key, value, data_type, description, created_at, updated_at) VALUES
+            CREATE TABLE IF NOT EXISTS generated_cover_letters (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                job_id TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+            );
+
+            -- 15. Job Applications
+            CREATE TABLE IF NOT EXISTS job_applications (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                job_id TEXT NOT NULL UNIQUE,
+                resume_id TEXT,
+                cover_letter_id TEXT,
+                applied_at TIMESTAMP NOT NULL,
+                status TEXT DEFAULT 'applied',
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+                FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE SET NULL,
+                FOREIGN KEY (cover_letter_id) REFERENCES generated_cover_letters(id) ON DELETE SET NULL
+            );
+
+            -- 16. Emails
+            CREATE TABLE IF NOT EXISTS emails (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                sender TEXT NOT NULL,
+                recipient TEXT NOT NULL,
+                subject TEXT,
+                body TEXT,
+                received_at TIMESTAMP NOT NULL,
+                is_read BOOLEAN DEFAULT 0,
+                is_job_related BOOLEAN DEFAULT 0,
+                job_id TEXT,
+                ai_suggested_reply TEXT,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NOT NULL,
+                deleted_at TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
+            );
+
+            -- Indices
+            CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+            CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+            CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
+            CREATE INDEX IF NOT EXISTS idx_resumes_user_id ON resumes(user_id);
+            CREATE INDEX IF NOT EXISTS idx_jobs_user_id ON jobs(user_id);
+            CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
+            CREATE INDEX IF NOT EXISTS idx_interview_sessions_user_id ON interview_sessions(user_id);
+            CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs(user_id);
+            CREATE INDEX IF NOT EXISTS idx_app_state_key ON app_state(key);
+            CREATE INDEX IF NOT EXISTS idx_ai_agents_provider ON ai_agents(provider);
+            CREATE INDEX IF NOT EXISTS idx_settings_key ON settings(key);
+            CREATE INDEX IF NOT EXISTS idx_gen_resumes_job_id ON generated_resumes(job_id);
+            CREATE INDEX IF NOT EXISTS idx_gen_cv_job_id ON generated_cover_letters(job_id);
+            CREATE INDEX IF NOT EXISTS idx_job_apps_job_id ON job_applications(job_id);
+            CREATE INDEX IF NOT EXISTS idx_emails_user_id ON emails(user_id);
+            CREATE INDEX IF NOT EXISTS idx_emails_job_id ON emails(job_id);
+            CREATE INDEX IF NOT EXISTS idx_emails_received_at ON emails(received_at);
+
+            -- Initial Data
+            INSERT OR IGNORE INTO users (id, email, name, created_at, updated_at) 
+            VALUES ('local-user-id', 'localuser@careerforges.local', 'Local User', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+            INSERT OR IGNORE INTO app_config (id, key, value, type, created_at, updated_at) VALUES
+            ('1', 'db_version', '1', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('2', 'app_initialized', 'true', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+            INSERT OR IGNORE INTO app_state (id, key, value, data_type, created_at, updated_at) VALUES
+            ('1', 'onboarding_completed', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('2', 'onboarding_step', 'provider_selection', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('3', 'selected_provider', '', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('4', 'selected_model', '', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('5', 'ollama_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('6', 'claude_cli_detected', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('7', 'resume_uploaded', 'false', 'boolean', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('8', 'anonymous_installation_id', 'local-install', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+            INSERT OR IGNORE INTO settings (id, key, value, data_type, description, created_at, updated_at) VALUES
             ('1', 'theme', 'dark', 'string', 'UI theme: dark or light', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('2', 'default_interview_mode', 'practice', 'string', 'Default interview mode', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('3', 'auto_save_sessions', 'true', 'boolean', 'Automatically save chat sessions', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -264,221 +330,10 @@ INSERT INTO app_state (id, key, value, data_type, created_at, updated_at) VALUES
             ('5', 'enable_analytics', 'false', 'boolean', 'Enable usage analytics', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('6', 'check_for_updates', 'true', 'boolean', 'Check for updates on startup', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('7', 'resume_parser_enabled', 'true', 'boolean', 'Enable resume parsing', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('8', 'ai_response_streaming', 'true', 'boolean', 'Stream AI responses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            ('8', 'ai_response_streaming', 'true', 'boolean', 'Stream AI responses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('9', 'job_scheduler_enabled', 'true', 'boolean', 'Enable background job search', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('10', 'job_scheduler_frequency', '60', 'number', 'Job search frequency in minutes', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
             "
         ),
-        migration!(
-    "013_user_profiles_table",
-    "
-    CREATE TABLE user_profiles (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL UNIQUE,
-
-        full_name TEXT,
-        email TEXT,
-        phone TEXT,
-        linkedin_url TEXT,
-        github_url TEXT,
-        portfolio_url TEXT,
-        location TEXT,
-        summary TEXT,
-
-        skills TEXT,
-        experience_json TEXT,
-        education_json TEXT,
-        certifications_json TEXT,
-        projects_json TEXT,
-
-        years_experience REAL,
-
-        created_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL,
-
-        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
-    "
-),
-migration!(
-    "014_app_state_extensions",
-    "
-    INSERT INTO app_state (
-        id,
-        key,
-        value,
-        data_type,
-        created_at,
-        updated_at
-    ) VALUES
-    (
-        '7',
-        'resume_uploaded',
-        'false',
-        'boolean',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        '8',
-        'anonymous_installation_id',
-        '',
-        'string',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
-    );
-    "
-),
-migration!(
-    "015_resume_extended_fields",
-    "
-    ALTER TABLE resumes ADD COLUMN master_resume_json TEXT;
-    ALTER TABLE resumes ADD COLUMN ats_score REAL;
-    ALTER TABLE resumes ADD COLUMN ats_strengths TEXT;
-    ALTER TABLE resumes ADD COLUMN ats_weaknesses TEXT;
-    ALTER TABLE resumes ADD COLUMN ats_recommendations TEXT;
-    "
-),
-migration!(
-    "016_jobs_extended_fields",
-    "
-    ALTER TABLE jobs ADD COLUMN source TEXT;
-    ALTER TABLE jobs ADD COLUMN source_url TEXT;
-    ALTER TABLE jobs ADD COLUMN matched_skills TEXT;
-    ALTER TABLE jobs ADD COLUMN missing_skills TEXT;
-    ALTER TABLE jobs ADD COLUMN experience_match BOOLEAN;
-    ALTER TABLE jobs ADD COLUMN title_match BOOLEAN;
-    ALTER TABLE jobs ADD COLUMN discovered_at TIMESTAMP;
-    
-    -- Drop and recreate status constraint to include 'recommended'
-    -- Note: SQLite doesn't support dropping constraints easily, 
-    -- but we can update the CHECK constraint by recreating the table if needed.
-    -- For now, we'll just allow 'recommended' in the app logic.
-    "
-),
-migration!(
-    "017_generated_ats_documents",
-    "
-    CREATE TABLE generated_resumes (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        job_id TEXT NOT NULL,
-        resume_id TEXT NOT NULL,
-        optimized_summary TEXT,
-        optimized_skills TEXT,
-        optimized_experience TEXT,
-        created_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
-        FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE generated_cover_letters (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        job_id TEXT NOT NULL,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
-    );
-
-    CREATE INDEX idx_gen_resumes_job_id ON generated_resumes(job_id);
-    CREATE INDEX idx_gen_resumes_user_id ON generated_resumes(user_id);
-    CREATE INDEX idx_gen_cv_job_id ON generated_cover_letters(job_id);
-    CREATE INDEX idx_gen_cv_user_id ON generated_cover_letters(user_id);
-    "
-),
-migration!(
-    "018_applications_and_interview_updates",
-    "
-    CREATE TABLE job_applications (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        job_id TEXT NOT NULL UNIQUE,
-        resume_id TEXT,
-        cover_letter_id TEXT,
-        applied_at TIMESTAMP NOT NULL,
-        status TEXT DEFAULT 'applied',
-        created_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
-        FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE SET NULL,
-        FOREIGN KEY (cover_letter_id) REFERENCES generated_cover_letters(id) ON DELETE SET NULL
-    );
-
-    CREATE INDEX idx_job_apps_user_id ON job_applications(user_id);
-    CREATE INDEX idx_job_apps_job_id ON job_applications(job_id);
-
-    -- Add fields to interview_sessions
-    ALTER TABLE interview_sessions ADD COLUMN job_id TEXT;
-    ALTER TABLE interview_sessions ADD COLUMN job_description TEXT;
-    "
-),
-migration!(
-    "019_jobs_status_recommended",
-    "
-    CREATE TABLE jobs_new (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        company TEXT,
-        url TEXT,
-        description TEXT,
-        requirements TEXT,
-        salary_min REAL,
-        salary_max REAL,
-        location TEXT,
-        job_type TEXT,
-        posted_date TIMESTAMP,
-
-        status TEXT DEFAULT 'recommended'
-        CHECK (
-            status IN (
-                'recommended',
-                'saved',
-                'applied',
-                'rejected',
-                'interview'
-            )
-        ),
-
-        match_score REAL,
-        notes TEXT,
-
-        created_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL,
-        deleted_at TIMESTAMP,
-
-        source TEXT,
-        source_url TEXT,
-        matched_skills TEXT,
-        missing_skills TEXT,
-        experience_match BOOLEAN,
-        title_match BOOLEAN,
-        discovered_at TIMESTAMP,
-
-        FOREIGN KEY (user_id)
-            REFERENCES users(id)
-            ON DELETE CASCADE
-    );
-
-    INSERT INTO jobs_new
-    SELECT *
-    FROM jobs;
-
-    DROP TABLE jobs;
-
-    ALTER TABLE jobs_new
-    RENAME TO jobs;
-
-    CREATE INDEX idx_jobs_user_id ON jobs(user_id);
-    CREATE INDEX idx_jobs_status ON jobs(status);
-    CREATE INDEX idx_jobs_created_at ON jobs(created_at);
-    "
-),
     ]
 }

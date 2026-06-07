@@ -1,10 +1,12 @@
 use std::sync::Arc;
 use tokio::time::{interval, Duration};
 use tauri::{AppHandle, Emitter};
-use crate::db::{DbPool, SettingRepository, UserRepository};
+use crate::db::{DbPool, SettingRepository, UserRepository, ResumeRepository};
+use crate::db::repositories::email_repository::EmailRepository;
 use super::{JobDiscoveryEngine, JobSearchQuery};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use tauri_plugin_notification::NotificationExt;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulerStatus {
@@ -81,19 +83,52 @@ impl JobScheduler {
         
         let engine = JobDiscoveryEngine::new(self.pool.clone());
         
-        // Get default user
+        // Get default user or create if not exists
         let user = match UserRepository::get_by_email(&self.pool, "localuser@careerforges.local").await {
             Ok(Some(u)) => u,
-            _ => return Err("Local user not found".to_string()),
+            _ => {
+                log::info!("Scheduler: Creating local user...");
+                UserRepository::create(&self.pool, "localuser@careerforges.local", Some("Local User".to_string())).await
+                    .map_err(|e| format!("Failed to create local user: {}", e))?
+            }
         };
 
-        let query = JobSearchQuery {
+        // Try to get search parameters from default resume
+        let mut query = JobSearchQuery {
             title: None,
             location: None,
             skills: vec![],
             experience_years: None,
             remote: false,
         };
+
+        if let Ok(Some(resume)) = ResumeRepository::get_default(&self.pool, &user.id).await {
+            if let Some(json_str) = resume.master_resume_json.as_deref() {
+                if let Ok(master) = serde_json::from_str::<serde_json::Value>(json_str) {
+                    let profile = &master["profile"];
+                    
+                    // Prioritize first experience title as job title for search
+                    if let Some(exp_list) = profile["experience"].as_array() {
+                        if let Some(first_exp) = exp_list.first() {
+                            query.title = first_exp["title"].as_str().map(|s| s.to_string());
+                        }
+                    }
+
+                    if let Some(skills) = profile["skills"].as_array() {
+                        query.skills = skills.iter()
+                            .filter_map(|v| v.as_str())
+                            .take(5)
+                            .map(|s| s.to_string())
+                            .collect();
+                    }
+                }
+            }
+        }
+
+        // If still no title, use a generic default to at least fetch something
+        if query.title.is_none() {
+            query.title = Some("Software Engineer".to_string());
+        }
 
         let count = engine.fetch_and_match(&user.id, &query)
             .await
@@ -102,6 +137,9 @@ impl JobScheduler {
         if count > 0 {
             let _ = self.app_handle.emit("new-jobs-discovered", count);
         }
+
+        // Email simulation
+        let _ = self.simulate_emails(&user.id).await;
 
         let now = Utc::now().to_rfc3339();
         
@@ -112,6 +150,44 @@ impl JobScheduler {
         log::info!("Scheduler: Finished. Found {} new jobs.", count);
         
         Ok(count)
+    }
+
+    async fn simulate_emails(&self, user_id: &str) -> Result<(), String> {
+        // Pseudo-random chance based on timestamp (30% chance)
+        let now_ts = Utc::now().timestamp();
+        if now_ts % 10 < 3 {
+            let recruiters = [
+                ("google-recruiter@google.com", "Google", "Your application for Software Engineer"),
+                ("hr@stripe.com", "Stripe", "Next steps: Interview with Stripe"),
+                ("talent@netflix.com", "Netflix", "Regarding your interest in Netflix"),
+            ];
+            
+            let idx = (now_ts % recruiters.len() as i64) as usize;
+            let (sender, company, subject) = recruiters[idx];
+            
+            let body = format!("Hi there,\n\nThanks for applying to {}. We've reviewed your resume and would like to schedule a call to discuss the role further.\n\nPlease let us know your availability for next week.\n\nBest regards,\n{} Recruitment Team", company, company);
+            
+            let email = EmailRepository::create(
+                &self.pool,
+                user_id,
+                sender,
+                "localuser@careerforges.local",
+                Some(subject.to_string()),
+                Some(body),
+                true,
+                None,
+            ).await.map_err(|e| e.to_string())?;
+            
+            let _ = self.app_handle.emit("new-email-received", email);
+            
+            // Trigger OS notification
+            let _ = self.app_handle.notification()
+                .builder()
+                .title("New Career Email")
+                .body(format!("Recruiter from {} reached out!", company))
+                .show();
+        }
+        Ok(())
     }
 
     pub async fn get_status(&self) -> SchedulerStatus {

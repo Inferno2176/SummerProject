@@ -6,6 +6,7 @@ import { isPermissionGranted, requestPermission, sendNotification } from '@tauri
 import { router } from "./router";
 
 import LaunchLoader from "../components/launch-loader";
+import type { Email } from "@/lib/db/models";
 
 export default function AppBootstrap() {
   const [loading, setLoading] =
@@ -13,7 +14,7 @@ export default function AppBootstrap() {
 
   useEffect(() => {
     // Listen for new jobs
-    const unlisten = listen<number>("new-jobs-discovered", async (event) => {
+    const unlistenJobs = listen<number>("new-jobs-discovered", async (event) => {
       const count = event.payload;
       
       let permission = await isPermissionGranted();
@@ -25,7 +26,23 @@ export default function AppBootstrap() {
         sendNotification({
           title: 'New Opportunities Found!',
           body: `CareerForges found ${count} new jobs matching your profile.`,
-          icon: 'icon'
+        });
+      }
+    });
+
+    // Listen for new emails
+    const unlistenEmails = listen<Email>("new-email-received", async (event) => {
+      const email = event.payload;
+      
+      let permission = await isPermissionGranted();
+      if (!permission) {
+        permission = await requestPermission() === 'granted';
+      }
+
+      if (permission) {
+        sendNotification({
+          title: 'New Career Email',
+          body: `Recruiter from ${email.sender} reached out regarding "${email.subject}"`,
         });
       }
     });
@@ -36,7 +53,8 @@ export default function AppBootstrap() {
 
     return () => {
       clearTimeout(timer);
-      unlisten.then(u => u());
+      unlistenJobs.then(u => u());
+      unlistenEmails.then(u => u());
     };
   }, []);
 

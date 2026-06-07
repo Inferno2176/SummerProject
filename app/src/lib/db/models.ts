@@ -94,7 +94,7 @@ export interface Preference {
 export interface InterviewSession {
   id: string;
   user_id: string;
-  session_type: 'practice' | 'realistic' | 'technical' | 'hr' | 'behavioral' | 'rapid_fire';
+  session_type: string;
   job_title?: string;
   company?: string;
   score?: number;
@@ -104,6 +104,25 @@ export interface InterviewSession {
   updated_at: string;
   job_id?: string;
   job_description?: string;
+  experience_level?: string;
+  personality?: string;
+  resume_context?: string;
+}
+
+export interface Email {
+  id: string;
+  user_id: string;
+  sender: string;
+  recipient: string;
+  subject?: string;
+  body?: string;
+  received_at: string;
+  is_read: boolean;
+  is_job_related: boolean;
+  job_id?: string;
+  ai_suggested_reply?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface JobApplication {

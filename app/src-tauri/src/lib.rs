@@ -16,7 +16,7 @@ use tauri::Manager;
 use crate::commands::*;
 use crate::types::*;
 use crate::utils::*;
-use crate::db::{init_db, MigrationRunner, get_migrations};
+use crate::db::{init_db, MigrationRunner, get_migrations, DbPool};
 
 // ==========================================
 // UPDATED CAREERFORGES MODEL LIFECYCLE
@@ -785,143 +785,107 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
-    // Initialize database
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| {
-            Box::new(e)
-                as Box<
-                    dyn std::error::Error
-                >
-        })?;
+            // Initialize database
+            let app_data_dir = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| {
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?;
 
-    let db_path =
-        app_data_dir.join(
-            "careerforges.db",
-        );
+            let db_path = app_data_dir.join("careerforges.db");
 
-    log::info!(
-        "Initializing database at {:?}",
-        db_path
-    );
+            let pool = tauri::async_runtime::block_on(async {
+                log::info!("Initializing database at {:?}", db_path);
+                let pool = init_db(&db_path).await.map_err(|e| {
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?;
+                log::info!("Database initialized successfully");
 
-    let pool = init_db(&db_path)
-        .map_err(|e| {
-            Box::new(e)
-                as Box<
-                    dyn std::error::Error
-                >
-        })?;
+                /*
+                    RUN MIGRATIONS
+                */
+                let migrations = get_migrations();
+                let result = MigrationRunner::run_migrations(&pool, migrations).await;
 
-    log::info!(
-        "Database initialized successfully"
-    );
+                if let Err(e) = result {
+                    log::warn!(
+                        "Migrations failed: {}. Attempting database reset for fresh schema.",
+                        e
+                    );
+                    // Hard reset for early development as requested by user
+                    MigrationRunner::reset_database(&pool).await.map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                    MigrationRunner::run_migrations(&pool, get_migrations()).await.map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                }
 
-    /*
-        RUN MIGRATIONS
-    */
-    {
-        let migrations =
-            get_migrations();
-
-        tauri::async_runtime::block_on(
-            async {
-                MigrationRunner::run_migrations(
-                    &pool,
-                    migrations,
-                )
-                .await
-            },
-        )
-        .map_err(|e| {
-            Box::new(e)
-                as Box<
-                    dyn std::error::Error
-                >
-        })?;
-
-        log::info!(
-            "Migrations completed successfully"
-        );
-    }
-
-    /*
-        SQLITE TEST
-    */
-    {
-        tauri::async_runtime::block_on(
-            async {
-                let conn =
-                    db::get_connection(
+                // Ensure local user exists after migrations
+                log::info!("Ensuring local user exists...");
+                let user_result = crate::db::UserRepository::get_by_email(&pool, "localuser@careerforges.local").await;
+                if let Ok(None) = user_result {
+                    let _ = crate::db::UserRepository::create(
                         &pool,
+                        "localuser@careerforges.local",
+                        Some("Local User".to_string()),
                     )
-                    .await?;
+                    .await;
+                }
+
+                log::info!("Migrations completed successfully");
+
+                /*
+                    SQLITE TEST
+                */
+                let conn = db::get_connection(&pool).await.map_err(|e| {
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?;
 
                 conn.interact(|conn| {
                     conn.execute(
                         "
-                        INSERT OR IGNORE INTO app_state (
-                            key,
-                            value,
-                            created_at,
-                            updated_at
-                        )
-                        VALUES (
-                            'db_test',
-                            'working',
-                            datetime('now'),
-                            datetime('now')
-                        )
-                        ",
+                    INSERT OR IGNORE INTO app_state (
+                        key,
+                        value,
+                        created_at,
+                        updated_at
+                    )
+                    VALUES (
+                        'db_test',
+                        'working',
+                        datetime('now'),
+                        datetime('now')
+                    )
+                    ",
                         [],
                     )
                 })
-                .await??;
+                .await.map_err(|e| {
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?.map_err(|e| {
+                    Box::new(e) as Box<dyn std::error::Error>
+                })?;
 
-                Ok::<(), db::DbError>(
-                    (),
-                )
-            },
-        )
-        .map_err(|e| {
-            Box::new(e)
-                as Box<
-                    dyn std::error::Error
-                >
-        })?;
+                println!("====================");
+                println!("DB PATH: {:?}", db_path);
+                println!("====================");
+                println!("SQLITE TEST INSERT SUCCESS");
 
-        println!(
-            "===================="
-        );
+                Ok::<DbPool, Box<dyn std::error::Error>>(pool)
+            })?;
 
-        println!(
-            "DB PATH: {:?}",
-            db_path
-        );
+            app.manage(pool.clone());
 
-        println!(
-            "===================="
-        );
+            // Initialize Job Scheduler in background
+            let scheduler_pool = Arc::new(pool.clone());
+            let scheduler_app = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let scheduler = crate::services::job::JobScheduler::new(scheduler_pool, scheduler_app);
+                scheduler.start().await;
+            });
 
-        println!(
-            "SQLITE TEST INSERT SUCCESS"
-        );
-    }
-
-    app.manage(pool.clone());
-
-    // Initialize Job Scheduler in background
-    let scheduler_pool = Arc::new(pool.clone());
-    let scheduler_app = app.handle().clone();
-    tauri::async_runtime::spawn(async move {
-        let scheduler = crate::services::job::JobScheduler::new(scheduler_pool, scheduler_app);
-        scheduler.start().await;
-    });
-
-    Ok(())
-})
+            Ok(())
+        })
 .invoke_handler(tauri::generate_handler![
     // Legacy commands
     greet,
@@ -940,7 +904,7 @@ pub fn run() {
     db_set_app_state,
     db_get_app_state_bool,
     db_get_app_state_string,
-    // db_list_app_state,
+    db_list_app_state,
     db_delete_app_state,
     db_is_onboarding_completed,
     db_complete_onboarding,
@@ -1057,6 +1021,19 @@ pub fn run() {
     mark_job_as_applied,
     db_list_applications,
     db_get_application_by_job,
+
+    // Interview Commands
+    db_create_interview_session,
+    db_get_interview_session,
+    db_list_interview_sessions,
+    db_update_interview_score,
+    db_delete_interview_session,
+
+    // Email Commands
+    db_list_emails,
+    db_mark_email_as_read,
+    db_delete_email,
+    generate_email_reply,
 ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

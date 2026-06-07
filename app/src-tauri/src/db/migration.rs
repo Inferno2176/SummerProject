@@ -1,17 +1,7 @@
-use chrono::Utc;
-
+use std::sync::Arc;
 use rusqlite::Connection;
-
-use crate::db::{
-    connection::{
-        get_connection,
-        DbPool,
-    },
-    error::{
-        DbError,
-        DbResult,
-    },
-};
+use crate::db::connection::{DbPool, get_connection};
+use crate::db::error::{DbError, DbResult};
 
 #[derive(Debug, Clone)]
 pub struct Migration {
@@ -75,102 +65,73 @@ impl MigrationRunner {
         conn: &mut Connection,
         migrations: Vec<Migration>,
     ) -> DbResult<()> {
-        log::info!(
-            "Starting migration runner..."
-        );
-
         Self::init_migrations_table(
             conn,
         )?;
 
-        let executed =
-            Self::get_executed_migrations(
-                conn,
+        for migration in migrations {
+            let already_run: bool = conn.query_row(
+                "SELECT EXISTS(SELECT 1 FROM _migrations WHERE name = ?)",
+                [&migration.name],
+                |row| row.get(0),
             )?;
 
-        for migration in migrations {
-            if executed.contains(
-                &migration.name,
-            ) {
-                log::debug!(
-                    "Migration already executed: {}",
+            if !already_run {
+                log::info!(
+                    "Running migration: {}",
                     migration.name
                 );
 
-                continue;
-            }
-
-            log::info!(
-                "Running migration: {}",
-                migration.name
-            );
-
-            let tx = conn
-                .transaction()
-                .map_err(|e| {
-                    DbError::MigrationError(
-                        format!(
-                            "Failed to start transaction: {}",
-                            e
-                        ),
-                    )
-                })?;
-
-            match tx.execute_batch(
-                &migration.sql,
-            ) {
-                Ok(_) => {
-                    tx.execute(
-                        "
-                        INSERT INTO _migrations (
-                            name,
-                            executed_at
+                let tx = conn
+                    .transaction()
+                    .map_err(|e| {
+                        DbError::QueryError(
+                            format!(
+                                "Failed to start transaction: {}",
+                                e
+                            ),
                         )
-                        VALUES (?, ?)
-                        ",
-                        [
-                            &migration.name,
-                            &Utc::now()
-                                .to_rfc3339(),
-                        ],
-                    )?;
+                    })?;
 
-                    tx.commit().map_err(
-                        |e| {
-                            DbError::MigrationError(
+                match tx.execute_batch(
+                    &migration.sql,
+                ) {
+                    Ok(_) => {
+                        tx.execute(
+                            "INSERT INTO _migrations (name, executed_at) VALUES (?, datetime('now'))",
+                            [&migration.name],
+                        ).map_err(|e| DbError::QueryError(format!("Failed to record migration: {}", e)))?;
+                        
+                        tx.commit().map_err(
+                            |e| {
+                                DbError::QueryError(
+                                    format!(
+                                        "Failed to commit migration: {}",
+                                        e
+                                    ),
+                                )
+                            },
+                        )?;
+                        log::info!("Migration {} completed successfully", migration.name);
+                    }
+                    Err(e) => {
+                        log::error!("Migration {} failed: {}", migration.name, e);
+                        tx.rollback().ok();
+                        return Err(
+                            DbError::QueryError(
                                 format!(
-                                    "Failed to commit migration: {}",
+                                    "Migration {} failed: {}",
+                                    migration.name,
                                     e
                                 ),
                             )
-                        },
-                    )?;
-
-                    log::info!(
-                        "Migration completed: {}",
-                        migration.name
-                    );
+                        );
+                    }
                 }
-
-                Err(e) => {
-                    tx.rollback().ok();
-
-                    return Err(
-                        DbError::MigrationError(
-                            format!(
-                                "Migration failed {}: {}",
-                                migration.name,
-                                e
-                            ),
-                        ),
-                    );
-                }
+            } else {
+                log::debug!("Migration {} already run", migration.name);
             }
         }
-
-        log::info!(
-            "All migrations completed successfully"
-        );
 
         Ok(())
     }

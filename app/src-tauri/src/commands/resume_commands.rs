@@ -1,7 +1,7 @@
 use tauri::{AppHandle, Manager};
 use crate::db::{Resume, ResumeRepository, DbPool, UserRepository};
 use crate::services::resume::extractor::extract_resume_text;
-use crate::services::resume::parser::{parse_resume_text, parse_resume_text_regex};
+use crate::services::resume::parser::parse_resume_text_regex;
 use std::fs;
 
 #[tauri::command]
@@ -257,6 +257,8 @@ pub async fn view_resume(path: String) -> Result<(), String> {
     Ok(())
 }
 
+
+
 #[tauri::command]
 pub async fn parse_and_store_resume(
     app: AppHandle,
@@ -288,6 +290,11 @@ pub async fn parse_and_store_resume(
     let parsed = parse_resume_text_regex(&raw_text);
     let parsed_json = serde_json::to_string(&parsed).map_err(|e| e.to_string())?;
 
+    // Generate ATS score and analysis using AI (with fallback)
+    let model = "llama3.2:1b";
+    let ats_analysis = generate_ats_score(&parsed, model).await.map_err(|e| e.to_string())?;
+    let master_json = generate_master_resume_json(&parsed, &ats_analysis);
+
     // Store in DB
     let resume = ResumeRepository::create(
         &pool,
@@ -306,10 +313,29 @@ pub async fn parse_and_store_resume(
         .await
         .map_err(|e| e.to_string())?;
 
+    // Update extended info (including master_resume_json)
+    ResumeRepository::update_extended_info(
+        &pool,
+        &resume.id,
+        &master_json,
+        ats_analysis.score,
+        &ats_analysis.strengths.join("\n"),
+        &ats_analysis.weaknesses.join("\n"),
+        &ats_analysis.recommendations.join("\n"),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
     // Set as default
     ResumeRepository::set_default(&pool, &resume.id, &user.id)
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(resume)
+    // Retrieve the fully populated resume object
+    let updated = ResumeRepository::get_by_id(&pool, &resume.id)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("Failed to retrieve updated resume")?;
+
+    Ok(updated)
 }

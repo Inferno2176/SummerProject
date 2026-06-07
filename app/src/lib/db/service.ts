@@ -20,6 +20,8 @@ import type {
   GeneratedResume,
   GeneratedCoverLetter,
   JobApplication,
+  InterviewSession,
+  Email,
 } from './models';
 
 class DatabaseService {
@@ -413,6 +415,69 @@ class DatabaseService {
 
   async getApplicationByJob(job_id: string): Promise<JobApplication | null> {
     return dbInvoke.ats.getApplicationByJob(job_id);
+  }
+
+  // ============ Interview Operations ============
+
+  async createInterviewSession(
+    session_type: string,
+    job_title?: string,
+    company?: string,
+    job_id?: string,
+    job_description?: string,
+    experience_level?: string,
+    personality?: string,
+    resume_context?: string
+  ): Promise<InterviewSession> {
+    return dbInvoke.interview.create(
+      session_type,
+      job_title,
+      company,
+      job_id,
+      job_description,
+      experience_level,
+      personality,
+      resume_context
+    );
+  }
+
+  async getInterviewSession(id: string): Promise<InterviewSession | null> {
+    return dbInvoke.interview.get(id);
+  }
+
+  async listInterviewSessions(): Promise<InterviewSession[]> {
+    return dbInvoke.interview.listAll();
+  }
+
+  async updateInterviewScore(
+    id: string,
+    score: number,
+    feedback: string,
+    duration_seconds: number
+  ): Promise<void> {
+    return dbInvoke.interview.updateScore(id, score, feedback, duration_seconds);
+  }
+
+  async deleteInterviewSession(id: string): Promise<void> {
+    return dbInvoke.interview.delete(id);
+  }
+
+  // ============ Email Operations ============
+
+  async listEmails(): Promise<Email[]> {
+    return dbInvoke.email.listAll();
+  }
+
+  async markEmailAsRead(id: string): Promise<void> {
+    return dbInvoke.email.markAsRead(id);
+  }
+
+  async deleteEmail(id: string): Promise<void> {
+    return dbInvoke.email.delete(id);
+  }
+
+  async generateEmailReply(emailId: string): Promise<string> {
+    return dbInvoke.email.generateReply(emailId);
   }
 }
 

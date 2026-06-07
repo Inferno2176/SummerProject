@@ -21,7 +21,7 @@ pub type DbPool = Pool;
 /*
     INIT DATABASE
 */
-pub fn init_db(
+pub async fn init_db(
     db_path: &Path,
 ) -> DbResult<DbPool> {
     log::info!(
@@ -67,41 +67,35 @@ pub fn init_db(
     {
         let pool_clone = pool.clone();
 
-        tauri::async_runtime::block_on(
-            async {
-                let conn = pool_clone
-                    .get()
-                    .await
-                    .map_err(|e| {
-                        DbError::ConnectionError(
-                            e.to_string(),
-                        )
-                    })?;
+        let conn = pool_clone
+            .get()
+            .await
+            .map_err(|e| {
+                DbError::ConnectionError(
+                    e.to_string(),
+                )
+            })?;
 
-                conn.interact(|conn| {
-                    conn.execute_batch(
-                        "
-                        PRAGMA journal_mode = WAL;
-                        PRAGMA synchronous = NORMAL;
-                        PRAGMA foreign_keys = ON;
-                        ",
-                    )
-                })
-                .await
-                .map_err(|e| {
-                    DbError::QueryError(
-                        format!(
-                            "Pragma interact failed: {}",
-                            e
-                        ),
-                    )
-                })?
-                .map_err(
-                    DbError::SqliteError,
-                )?;
-
-                Ok::<(), DbError>(())
-            },
+        conn.interact(|conn| {
+            conn.execute_batch(
+                "
+                PRAGMA journal_mode = WAL;
+                PRAGMA synchronous = NORMAL;
+                PRAGMA foreign_keys = ON;
+                ",
+            )
+        })
+        .await
+        .map_err(|e| {
+            DbError::QueryError(
+                format!(
+                    "Pragma interact failed: {}",
+                    e
+                ),
+            )
+        })?
+        .map_err(
+            DbError::SqliteError,
         )?;
     }
 

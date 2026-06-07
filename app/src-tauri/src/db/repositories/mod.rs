@@ -9,6 +9,8 @@ pub mod job_repository;
 pub mod activity_log_repository;
 pub mod generated_document_repository;
 pub mod application_repository;
+pub mod interview_repository;
+pub mod email_repository;
 
 pub use ai_agent_repository::{
     AIAgent,
@@ -64,4 +66,14 @@ pub use generated_document_repository::{
 pub use application_repository::{
     JobApplication,
     ApplicationRepository,
+};
+
+pub use interview_repository::{
+    InterviewSession,
+    InterviewRepository,
+};
+
+pub use email_repository::{
+    Email,
+    EmailRepository,
 };

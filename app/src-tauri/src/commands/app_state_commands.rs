@@ -142,27 +142,28 @@ pub async fn db_get_app_state_string(
 /**
  * List all app state records
  */
-// #[tauri::command]
-// pub async fn db_list_app_state(
-//     app: AppHandle,
-// ) -> Result<Vec<AppState>, String> {
-//     let pool = app.state::<DbPool>();
+#[tauri::command]
+pub async fn db_list_app_state(
+    app: AppHandle,
+) -> Result<Vec<AppState>, String> {
+    let pool = app.state::<DbPool>();
 
-//     log::debug!("Listing all app state");
+    log::debug!("Listing all app state");
 
-//     AppStateRepository::list_installed(&pool)
-//         .map_err(|e| {
-//             log::error!(
-//                 "Failed to list app state: {}",
-//                 e
-//             );
+    AppStateRepository::list_all(&pool)
+        .await
+        .map_err(|e| {
+            log::error!(
+                "Failed to list app state: {}",
+                e
+            );
 
-//             format!(
-//                 "Failed to list app state: {}",
-//                 e
-//             )
-//         })
-// }
+            format!(
+                "Failed to list app state: {}",
+                e
+            )
+        })
+}
 
 /**
  * Delete app state by key

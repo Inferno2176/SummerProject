@@ -18,6 +18,8 @@ import type {
   GeneratedResume,
   GeneratedCoverLetter,
   JobApplication,
+  InterviewSession,
+  Email,
 } from './models';
 
 // Retry configuration
@@ -70,7 +72,7 @@ export const appStateInvoke = {
   },
 
   async set(key: string, value: string, dataType?: string): Promise<AppState> {
-    return invokeWithRetry('db_set_app_state', { key, value, data_type: dataType });
+    return invokeWithRetry('db_set_app_state', { key, value, dataType });
   },
 
   async getBool(key: string): Promise<boolean> {
@@ -146,8 +148,8 @@ export const aiAgentInvoke = {
     return invokeWithRetry('db_create_ai_agent', {
       provider,
       name,
-      display_name: displayName,
-      is_installed: isInstalled,
+      displayName,
+      isInstalled,
     });
   },
 
@@ -174,14 +176,14 @@ export const aiAgentInvoke = {
   async updateInstallStatus(id: string, isInstalled: boolean): Promise<AIAgent> {
     return invokeWithRetry('db_update_ai_agent_install_status', {
       id,
-      is_installed: isInstalled,
+      isInstalled,
     });
   },
 
   async updateAvailability(id: string, isAvailable: boolean): Promise<AIAgent> {
     return invokeWithRetry('db_update_ai_agent_availability', {
       id,
-      is_available: isAvailable,
+      isAvailable,
     });
   },
 
@@ -282,7 +284,7 @@ export const userInvoke = {
   },
 
   async update(id: string, name?: string, avatarUrl?: string): Promise<User> {
-    return invokeWithRetry('db_update_user', { id, name, avatar_url: avatarUrl });
+    return invokeWithRetry('db_update_user', { id, name, avatarUrl });
   },
 
   async delete(id: string): Promise<void> {
@@ -294,24 +296,24 @@ export const userInvoke = {
 
 export const sessionInvoke = {
   async create(
-    user_id: string,
+    userId: string,
     title: string,
     model: string,
     mode: string,
-    job_id?: string,
-    job_description?: string,
+    jobId?: string,
+    jobDescription?: string,
     company?: string,
-    job_title?: string
+    jobTitle?: string
   ): Promise<ChatSession> {
     return invokeWithRetry('db_create_session', {
-      user_id,
+      userId,
       title,
       model,
       mode,
-      job_id,
-      job_description,
+      jobId,
+      jobDescription,
       company,
-      job_title,
+      jobTitle,
     });
   },
 
@@ -319,8 +321,8 @@ export const sessionInvoke = {
     return invokeWithRetry('db_get_session', { id });
   },
 
-  async listByUser(user_id: string): Promise<ChatSession[]> {
-    return invokeWithRetry('db_list_user_sessions', { user_id });
+  async listByUser(userId: string): Promise<ChatSession[]> {
+    return invokeWithRetry('db_list_user_sessions', { userId });
   },
 
   async updateTitle(id: string, title: string): Promise<ChatSession> {
@@ -331,8 +333,8 @@ export const sessionInvoke = {
     return invokeWithRetry('db_delete_session', { id });
   },
 
-  async countByUser(user_id: string): Promise<number> {
-    return invokeWithRetry('db_count_user_sessions', { user_id });
+  async countByUser(userId: string): Promise<number> {
+    return invokeWithRetry('db_count_user_sessions', { userId });
   },
 };
 
@@ -340,18 +342,18 @@ export const sessionInvoke = {
 
 export const messageInvoke = {
   async create(
-    session_id: string,
+    sessionId: string,
     role: string,
     content: string,
     model?: string,
-    tokens_used?: number
+    tokensUsed?: number
   ): Promise<ChatMessage> {
     return invokeWithRetry('db_create_message', {
-      session_id,
+      sessionId,
       role,
       content,
       model,
-      tokens_used,
+      tokensUsed,
     });
   },
 
@@ -359,8 +361,8 @@ export const messageInvoke = {
     return invokeWithRetry('db_get_message', { id });
   },
 
-  async listBySession(session_id: string): Promise<ChatMessage[]> {
-    return invokeWithRetry('db_list_session_messages', { session_id });
+  async listBySession(sessionId: string): Promise<ChatMessage[]> {
+    return invokeWithRetry('db_list_session_messages', { sessionId });
   },
 
   async listRecent(limit: number): Promise<ChatMessage[]> {
@@ -371,8 +373,8 @@ export const messageInvoke = {
     return invokeWithRetry('db_delete_message', { id });
   },
 
-  async countTokens(session_id: string): Promise<number> {
-    return invokeWithRetry('db_count_session_tokens', { session_id });
+  async countTokens(sessionId: string): Promise<number> {
+    return invokeWithRetry('db_count_session_tokens', { sessionId });
   },
 };
 
@@ -380,19 +382,19 @@ export const messageInvoke = {
 
 export const resumeInvoke = {
   async create(
-    user_id: string,
+    userId: string,
     filename: string,
-    file_path: string,
-    file_size?: number,
-    mime_type?: string,
+    filePath: string,
+    fileSize?: number,
+    mimeType?: string,
     hash?: string
   ): Promise<Resume> {
     return invokeWithRetry('db_create_resume', {
-      user_id,
+      userId,
       filename,
-      file_path,
-      file_size,
-      mime_type,
+      filePath,
+      fileSize,
+      mimeType,
       hash,
     });
   },
@@ -401,16 +403,16 @@ export const resumeInvoke = {
     return invokeWithRetry('db_get_resume', { id });
   },
 
-  async listByUser(user_id: string): Promise<Resume[]> {
-    return invokeWithRetry('db_list_resumes', { user_id });
+  async listByUser(userId: string): Promise<Resume[]> {
+    return invokeWithRetry('db_list_resumes', { userId });
   },
 
-  async setDefault(id: string, user_id: string): Promise<void> {
-    return invokeWithRetry('db_set_default_resume', { id, user_id });
+  async setDefault(id: string, userId: string): Promise<void> {
+    return invokeWithRetry('db_set_default_resume', { id, userId });
   },
 
-  async getDefault(user_id: string): Promise<Resume | null> {
-    return invokeWithRetry('db_get_default_resume', { user_id });
+  async getDefault(userId: string): Promise<Resume | null> {
+    return invokeWithRetry('db_get_default_resume', { userId });
   },
 
   async updateContent(id: string, content: string): Promise<void> {
@@ -442,20 +444,20 @@ export const resumeInvoke = {
 
 export const jobInvoke = {
   async create(
-    user_id: string,
+    userId: string,
     title: string,
     company?: string,
     url?: string
   ): Promise<Job> {
-    return invokeWithRetry('db_create_job', { user_id, title, company, url });
+    return invokeWithRetry('db_create_job', { userId, title, company, url });
   },
 
   async get(id: string): Promise<Job | null> {
     return invokeWithRetry('db_get_job', { id });
   },
 
-  async listByUser(user_id: string): Promise<Job[]> {
-    return invokeWithRetry('db_list_jobs', { user_id });
+  async listByUser(userId: string): Promise<Job[]> {
+    return invokeWithRetry('db_list_jobs', { userId });
   },
 
   async updateStatus(id: string, status: string): Promise<void> {
@@ -471,7 +473,7 @@ export const jobInvoke = {
   },
 
   async search(queryText: string): Promise<Job[]> {
-    return invokeWithRetry('search_jobs', { query_text: queryText });
+    return invokeWithRetry('search_jobs', { queryText });
   },
 
   async save(id: string): Promise<void> {
@@ -491,51 +493,51 @@ export const jobInvoke = {
 
 export const activityLogInvoke = {
   async create(
-    user_id: string | null,
+    userId: string | null,
     action: string,
-    entity_type?: string,
-    entity_id?: string,
+    entityType?: string,
+    entityId?: string,
     details?: string
   ): Promise<ActivityLog> {
     return invokeWithRetry('db_create_activity_log', {
-      user_id,
+      userId,
       action,
-      entity_type,
-      entity_id,
+      entityType,
+      entityId,
       details,
     });
   },
 
-  async listByUser(user_id: string, limit: number): Promise<ActivityLog[]> {
-    return invokeWithRetry('db_list_activity_logs', { user_id, limit });
+  async listByUser(userId: string, limit: number): Promise<ActivityLog[]> {
+    return invokeWithRetry('db_list_activity_logs', { userId, limit });
   },
 };
 
 // ============ ATS Invoke Wrappers ============
 
 export const atsInvoke = {
-  async generateResume(job_id: string, resume_id: string): Promise<GeneratedResume> {
-    return invokeWithRetry('generate_ats_resume', { job_id, resume_id });
+  async generateResume(jobId: string, resumeId: string): Promise<GeneratedResume> {
+    return invokeWithRetry('generate_ats_resume', { jobId, resumeId });
   },
 
-  async generateCoverLetter(job_id: string, resume_id: string): Promise<GeneratedCoverLetter> {
-    return invokeWithRetry('generate_cover_letter', { job_id, resume_id });
+  async generateCoverLetter(jobId: string, resumeId: string): Promise<GeneratedCoverLetter> {
+    return invokeWithRetry('generate_cover_letter', { jobId, resumeId });
   },
 
-  async listGeneratedResumes(job_id: string): Promise<GeneratedResume[]> {
-    return invokeWithRetry('db_list_generated_resumes', { job_id });
+  async listGeneratedResumes(jobId: string): Promise<GeneratedResume[]> {
+    return invokeWithRetry('db_list_generated_resumes', { jobId });
   },
 
-  async listGeneratedCoverLetters(job_id: string): Promise<GeneratedCoverLetter[]> {
-    return invokeWithRetry('db_list_generated_cover_letters', { job_id });
+  async listGeneratedCoverLetters(jobId: string): Promise<GeneratedCoverLetter[]> {
+    return invokeWithRetry('db_list_generated_cover_letters', { jobId });
   },
 
-  async listAllGeneratedResumes(user_id: string): Promise<GeneratedResume[]> {
-    return invokeWithRetry('db_list_all_generated_resumes', { user_id });
+  async listAllGeneratedResumes(userId: string): Promise<GeneratedResume[]> {
+    return invokeWithRetry('db_list_all_generated_resumes', { userId });
   },
 
-  async listAllGeneratedCoverLetters(user_id: string): Promise<GeneratedCoverLetter[]> {
-    return invokeWithRetry('db_list_all_generated_cover_letters', { user_id });
+  async listAllGeneratedCoverLetters(userId: string): Promise<GeneratedCoverLetter[]> {
+    return invokeWithRetry('db_list_all_generated_cover_letters', { userId });
   },
 
   async deleteGeneratedResume(id: string): Promise<void> {
@@ -547,23 +549,95 @@ export const atsInvoke = {
   },
 
   async markAsApplied(
-    job_id: string,
-    resume_id?: string,
-    cover_letter_id?: string
+    jobId: string,
+    resumeId?: string,
+    coverLetterId?: string
   ): Promise<JobApplication> {
     return invokeWithRetry('mark_job_as_applied', {
-      job_id,
-      resume_id,
-      cover_letter_id,
+      jobId,
+      resumeId,
+      coverLetterId,
     });
   },
 
-  async listApplications(user_id: string): Promise<JobApplication[]> {
-    return invokeWithRetry('db_list_applications', { user_id });
+  async listApplications(userId: string): Promise<JobApplication[]> {
+    return invokeWithRetry('db_list_applications', { userId });
   },
 
-  async getApplicationByJob(job_id: string): Promise<JobApplication | null> {
-    return invokeWithRetry('db_get_application_by_job', { job_id });
+  async getApplicationByJob(jobId: string): Promise<JobApplication | null> {
+    return invokeWithRetry('db_get_application_by_job', { jobId });
+  },
+};
+
+// ============ Interview Invoke Wrappers ============
+
+export const interviewInvoke = {
+  async create(
+    sessionType: string,
+    jobTitle?: string,
+    company?: string,
+    jobId?: string,
+    jobDescription?: string,
+    experienceLevel?: string,
+    personality?: string,
+    resumeContext?: string
+  ): Promise<InterviewSession> {
+    return invokeWithRetry('db_create_interview_session', {
+      sessionType,
+      jobTitle,
+      company,
+      jobId,
+      jobDescription,
+      experienceLevel,
+      personality,
+      resumeContext,
+    });
+  },
+
+  async get(id: string): Promise<InterviewSession | null> {
+    return invokeWithRetry('db_get_interview_session', { id });
+  },
+
+  async listAll(): Promise<InterviewSession[]> {
+    return invokeWithRetry('db_list_interview_sessions', {});
+  },
+
+  async updateScore(
+    id: string,
+    score: number,
+    feedback: string,
+    durationSeconds: number
+  ): Promise<void> {
+    return invokeWithRetry('db_update_interview_score', {
+      id,
+      score,
+      feedback,
+      durationSeconds,
+    });
+  },
+
+  async delete(id: string): Promise<void> {
+    return invokeWithRetry('db_delete_interview_session', { id });
+  },
+};
+
+// ============ Email Invoke Wrappers ============
+
+export const emailInvoke = {
+  async listAll(): Promise<Email[]> {
+    return invokeWithRetry('db_list_emails', {});
+  },
+
+  async markAsRead(id: string): Promise<void> {
+    return invokeWithRetry('db_mark_email_as_read', { id });
+  },
+
+  async delete(id: string): Promise<void> {
+    return invokeWithRetry('db_delete_email', { id });
+  },
+
+  async generateReply(emailId: string): Promise<string> {
+    return invokeWithRetry('generate_email_reply', { emailId });
   },
 };
 
@@ -598,4 +672,6 @@ export const dbInvoke = {
   activityLog: activityLogInvoke,
   health: dbHealthInvoke,
   ats: atsInvoke,
+  interview: interviewInvoke,
+  email: emailInvoke,
 };
