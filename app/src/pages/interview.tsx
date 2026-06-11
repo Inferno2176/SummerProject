@@ -166,6 +166,9 @@ export default function InterviewPage() {
       null
     );
 
+  const shouldRestartRef =
+    useRef(false);
+
   const [mode, setMode] =
     useState(
       INTERVIEW_MODES[0].id
@@ -278,10 +281,10 @@ export default function InterviewPage() {
     useRef<string>("");
 
   const recognitionRef =
-    useRef<{
-      start: () => void;
-      stop: () => void;
-    } | null>(null);
+    useRef<SpeechRecognitionInstance | null>(null);
+
+  // Track finalized transcript for current turn
+  const finalTranscriptRef = useRef<string>("");
 
   /*
     LOAD AI PREFS
@@ -556,6 +559,36 @@ export default function InterviewPage() {
       []
     );
 
+  const stopSpeechRecognition =
+    useCallback((isManual: boolean = true) => {
+      if (
+        silenceTimeoutRef.current
+      ) {
+        clearTimeout(
+          silenceTimeoutRef.current
+        );
+      }
+
+      recognitionRef.current?.stop();
+
+      recognitionRef.current =
+        null;
+
+      if (isManual) {
+        shouldRestartRef.current = false;
+      }
+
+      setIsListening(
+        false
+      );
+
+      setAiState(
+        "idle"
+      );
+
+      setPrompt("");
+    }, []);
+
   const sendTurn =
     useCallback(
       async (
@@ -583,6 +616,11 @@ export default function InterviewPage() {
           !outgoing
         ) {
           return;
+        }
+
+        // Stop recognition if it's running (e.g. manual send)
+        if (recognitionRef.current) {
+          stopSpeechRecognition(false);
         }
 
         const userMsg: InterviewMessage =
@@ -760,6 +798,7 @@ export default function InterviewPage() {
         model,
         prompt,
         speak,
+        stopSpeechRecognition,
       ]
     );
 
@@ -913,6 +952,8 @@ export default function InterviewPage() {
                   cleaned &&
                   !isLoading
                 ) {
+                  shouldRestartRef.current = true;
+                  stopSpeechRecognition(false);
                   void sendTurn(
                     undefined,
                     cleaned
@@ -964,35 +1005,18 @@ export default function InterviewPage() {
       isListening,
       isLoading,
       sendTurn,
+      stopSpeechRecognition
     ]);
 
-
-
-  const stopSpeechRecognition =
-    useCallback(() => {
-      if (
-        silenceTimeoutRef.current
-      ) {
-        clearTimeout(
-          silenceTimeoutRef.current
-        );
-      }
-
-      recognitionRef.current?.stop();
-
-      recognitionRef.current =
-        null;
-
-      setIsListening(
-        false
-      );
-
-      setAiState(
-        "idle"
-      );
-
-      setPrompt("");
-    }, []);
+  /*
+    AUTO-RESTART RECOGNITION AFTER AI FINISHES
+  */
+  useEffect(() => {
+    if (aiState === "idle" && shouldRestartRef.current && !isLoading && !isSpeaking) {
+      shouldRestartRef.current = false;
+      startSpeechRecognition();
+    }
+  }, [aiState, isLoading, isSpeaking, startSpeechRecognition]);
 
   const startInterview =
     async () => {

@@ -41,6 +41,8 @@ impl InterviewRepository {
         let id = Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
 
+        let clean_session_type = session_type.strip_prefix("interview_").unwrap_or(session_type);
+
         execute_with_params(
             pool,
             "
@@ -54,7 +56,7 @@ impl InterviewRepository {
             (
                 id.clone(),
                 user_id.to_string(),
-                session_type.to_string(),
+                clean_session_type.to_string(),
                 job_title,
                 company,
                 now.clone(),
