@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { db } from "@/lib/db/service";
 import type { Job } from "@/lib/db/models";
 import { 
@@ -14,7 +15,8 @@ import {
   CheckCircle2,
   RefreshCw,
   FileText,
-  Mail
+  Mail,
+  Clock
 } from "lucide-react";
 
 type JobTab = "recommended" | "saved" | "applied" | "rejected";
@@ -45,11 +47,20 @@ export default function JobsPage() {
     loadJobs();
   }, []);
 
+  useEffect(() => {
+    const unlistenJobs = listen<number>("jobs-discovery-completed", async () => {
+      await loadJobs();
+    });
+
+    return () => {
+      unlistenJobs.then((fn) => fn());
+    };
+  }, []);
+
   const handleFetchJobs = async () => {
     try {
       setRefreshing(true);
-      // Fetch based on defaults or simple prompt
-      await db.fetchJobs(); 
+      await db.runSchedulerNow();
       await loadJobs();
     } catch (err) {
       console.error("Failed to fetch jobs", err);
@@ -295,6 +306,19 @@ interface JobCardProps {
   isGenerating: 'resume' | 'cv' | null;
 }
 
+function formatPostedDate(postedDate?: string) {
+  if (!postedDate) return null;
+
+  const date = new Date(postedDate);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function JobCard({ 
   job, 
   isSelected, 
@@ -305,6 +329,8 @@ function JobCard({
   onGenerateCV,
   isGenerating
 }: JobCardProps) {
+  const postedDate = formatPostedDate(job.posted_date);
+
   return (
     <div className={`group relative flex flex-col rounded-3xl border transition p-6 ${
       isSelected 
@@ -346,6 +372,12 @@ function JobCard({
           <MapPin className="h-4 w-4" />
           <span>{job.location || 'Remote'}</span>
         </div>
+        {postedDate && (
+          <div className="flex items-center gap-3 text-sm text-[var(--muted)]">
+            <Clock className="h-4 w-4" />
+            <span>Posted {postedDate}</span>
+          </div>
+        )}
         {job.matched_skills && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {job.matched_skills.split(',').slice(0, 3).map((skill, i) => (

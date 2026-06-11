@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use rusqlite::Connection;
 use crate::db::connection::{DbPool, get_connection};
 use crate::db::error::{DbError, DbResult};

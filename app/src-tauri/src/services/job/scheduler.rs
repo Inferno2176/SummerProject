@@ -93,31 +93,37 @@ impl JobScheduler {
             }
         };
 
-        // Try to get search parameters from default resume
-        let mut query = JobSearchQuery {
-            title: None,
-            location: None,
-            skills: vec![],
-            experience_years: None,
-            remote: false,
-        };
+        // Requirement 6: Global Discovery Strategy
+        // Generate multiple broad search queries based on resume.
+        let mut queries = Vec::new();
+        let mut user_skills = Vec::new();
+        let mut user_location = None;
 
         if let Ok(Some(resume)) = ResumeRepository::get_default(&self.pool, &user.id).await {
             if let Some(json_str) = resume.master_resume_json.as_deref() {
                 if let Ok(master) = serde_json::from_str::<serde_json::Value>(json_str) {
                     let profile = &master["profile"];
+                    user_location = profile["location"].as_str().map(|s| s.to_string());
                     
-                    // Prioritize first experience title as job title for search
+                    // 1. Add queries based on job titles in experience
                     if let Some(exp_list) = profile["experience"].as_array() {
-                        if let Some(first_exp) = exp_list.first() {
-                            query.title = first_exp["title"].as_str().map(|s| s.to_string());
+                        for exp in exp_list.iter().take(3) {
+                            if let Some(title) = exp["title"].as_str() {
+                                queries.push(JobSearchQuery {
+                                    title: Some(title.to_string()),
+                                    location: user_location.clone(),
+                                    skills: vec![],
+                                    experience_years: None,
+                                    remote: false,
+                                });
+                            }
                         }
                     }
 
+                    // 2. Collect skills for broad searches
                     if let Some(skills) = profile["skills"].as_array() {
-                        query.skills = skills.iter()
+                        user_skills = skills.iter()
                             .filter_map(|v| v.as_str())
-                            .take(5)
                             .map(|s| s.to_string())
                             .collect();
                     }
@@ -125,14 +131,45 @@ impl JobScheduler {
             }
         }
 
-        // If still no title, use a generic default to at least fetch something
-        if query.title.is_none() {
-            query.title = Some("Software Engineer".to_string());
+        // 3. Add broad skill-based queries if we have skills
+        if !user_skills.is_empty() {
+            // Pick top 3 skills for broad searches
+            for skill in user_skills.iter().take(3) {
+                queries.push(JobSearchQuery {
+                    title: Some(format!("{} Engineer", skill)),
+                    location: user_location.clone(),
+                    skills: vec![skill.clone()],
+                    experience_years: None,
+                    remote: true, // Try remote for skill-based broad search
+                });
+            }
         }
 
-        let count = engine.fetch_and_match(&user.id, &query)
-            .await
-            .map_err(|e| e.to_string())?;
+        // 4. Fallback if no queries generated
+        if queries.is_empty() {
+            queries.push(JobSearchQuery {
+                title: Some("Software Engineer".to_string()),
+                location: None,
+                skills: vec![],
+                experience_years: None,
+                remote: false,
+            });
+        }
+
+        let mut total_new_jobs = 0;
+        
+        // Run all queries
+        for query in queries {
+            log::info!("Running discovery for query: {:?}", query.title);
+            match engine.fetch_and_match(&user.id, &query).await {
+                Ok(count) => total_new_jobs += count,
+                Err(e) => log::warn!("Discovery failed for query {:?}: {}", query.title, e),
+            }
+        }
+
+        let count = total_new_jobs;
+
+        let _ = self.app_handle.emit("jobs-discovery-completed", count);
 
         if count > 0 {
             let _ = self.app_handle.emit("new-jobs-discovered", count);
@@ -147,7 +184,7 @@ impl JobScheduler {
         let _ = SettingRepository::set(&self.pool, "job_scheduler_last_run", &now).await;
         let _ = SettingRepository::set(&self.pool, "job_scheduler_last_count", &count.to_string()).await;
 
-        log::info!("Scheduler: Finished. Found {} new jobs.", count);
+        log::info!("Scheduler: Finished. Found {} new jobs across all queries.", count);
         
         Ok(count)
     }

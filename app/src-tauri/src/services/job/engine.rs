@@ -1,4 +1,4 @@
-use crate::db::error::DbResult;
+use crate::db::error::{DbError, DbResult};
 use crate::db::{JobRepository, DbPool, ResumeRepository};
 use super::{JobSourceAdapter, JobSearchQuery};
 use super::adapters::{LinkedIn, Indeed, Greenhouse};
@@ -24,12 +24,27 @@ impl JobDiscoveryEngine {
 
     pub async fn fetch_and_match(&self, user_id: &str, query: &JobSearchQuery) -> DbResult<usize> {
         let mut all_discovered = Vec::new();
+        let mut adapter_errors = Vec::new();
         
         // 1. Fetch from all sources
         for adapter in &self.adapters {
-            if let Ok(jobs) = adapter.search(query).await {
-                all_discovered.extend(jobs);
+            match adapter.search(query).await {
+                Ok(jobs) => {
+                    log::info!("{} returned {} discovered jobs", adapter.name(), jobs.len());
+                    all_discovered.extend(jobs);
+                }
+                Err(error) => {
+                    log::warn!("{} job search failed: {}", adapter.name(), error);
+                    adapter_errors.push(format!("{}: {}", adapter.name(), error));
+                }
             }
+        }
+
+        if all_discovered.is_empty() && !adapter_errors.is_empty() {
+            return Err(DbError::QueryError(format!(
+                "All job sources failed. {}",
+                adapter_errors.join("; ")
+            )));
         }
 
         // 2. Get master resume for matching
@@ -48,10 +63,14 @@ impl JobDiscoveryEngine {
         // 3. Process each job (Matching & Deduplication & Storage)
         let mut new_jobs_count = 0;
         for discovered in all_discovered {
+            // Requirement 4: Use URL deduplication as the source of truth.
             // Check for duplicates
             if let Ok(Some(_)) = JobRepository::get_by_url(&self.pool, &discovered.source_url).await {
                 continue; // Skip already existing URL
             }
+
+            // Requirement 1 & 7: Do NOT reject jobs because metadata (posted_date, company, etc.) is missing.
+            // We use resume matching as the primary quality filter.
 
             let match_result = if let Some(resume) = &parsed_resume {
                 Some(JobMatchingEngine::calculate_match(&discovered, resume))
@@ -75,6 +94,7 @@ impl JobDiscoveryEngine {
                 match_result.as_ref().map(|m| m.missing_skills.join(",")),
                 match_result.as_ref().map(|m| m.experience_match),
                 match_result.as_ref().map(|m| m.title_match),
+                discovered.posted_date.clone(),
                 Some("recommended".to_string()),
             ).await?;
 

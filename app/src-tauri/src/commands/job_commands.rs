@@ -1,6 +1,6 @@
 use tauri::{AppHandle, Manager};
 use crate::db::{Job, JobRepository, DbPool, UserRepository, SettingRepository};
-use crate::services::job::{JobDiscoveryEngine, JobSearchQuery, JobScheduler, scheduler::SchedulerStatus};
+use crate::services::job::{JobScheduler, scheduler::SchedulerStatus};
 use std::sync::Arc;
 
 #[tauri::command]
@@ -42,24 +42,10 @@ pub async fn fetch_jobs(
     location: Option<String>,
     remote: bool,
 ) -> Result<usize, String> {
+    let _ = (title, location, remote);
     let pool = app.state::<DbPool>();
-    let engine = JobDiscoveryEngine::new(Arc::new(pool.inner().clone()));
-
-    // Get default user
-    let user = match UserRepository::get_by_email(&pool, "localuser@careerforges.local").await {
-        Ok(Some(u)) => u,
-        _ => return Err("Local user not found".to_string()),
-    };
-
-    let query = JobSearchQuery {
-        title,
-        location,
-        skills: vec![], // Engine will pull from resume
-        experience_years: None,
-        remote,
-    };
-
-    engine.fetch_and_match(&user.id, &query).await.map_err(|e| e.to_string())
+    let scheduler = JobScheduler::new(Arc::new(pool.inner().clone()), app);
+    scheduler.run_now().await
 }
 
 #[tauri::command]
@@ -140,7 +126,7 @@ pub async fn db_create_job(
         &title,
         company,
         url,
-        None, None, None, None, None, None, None, None, None, None
+        None, None, None, None, None, None, None, None, None, None, None
     )
     .await
     .map_err(|e| e.to_string())

@@ -54,6 +54,7 @@ impl JobRepository {
         missing_skills: Option<String>,
         experience_match: Option<bool>,
         title_match: Option<bool>,
+        posted_date: Option<String>,
         status: Option<String>,
     ) -> DbResult<Job> {
         let id = Uuid::new_v4().to_string();
@@ -101,8 +102,9 @@ impl JobRepository {
                 missing_skills = ?9,
                 experience_match = ?10,
                 title_match = ?11,
-                discovered_at = ?12
-            WHERE id = ?13
+                posted_date = ?12,
+                discovered_at = ?13
+            WHERE id = ?14
             ",
             (
                 company.clone(),
@@ -116,6 +118,7 @@ impl JobRepository {
                 missing_skills.clone(),
                 experience_match,
                 title_match,
+                posted_date.clone(),
                 Some(now.clone()),
                 id.clone(),
             ),
@@ -134,7 +137,7 @@ impl JobRepository {
             salary_max: None,
             location,
             job_type: None,
-            posted_date: None,
+            posted_date,
             status: status_val,
             match_score,
             notes: None,
@@ -167,7 +170,7 @@ impl JobRepository {
                 source, source_url, matched_skills, missing_skills,
                 experience_match, title_match, discovered_at
             FROM jobs
-            WHERE url = ?1 AND deleted_at IS NULL
+            WHERE (url = ?1 OR source_url = ?1) AND deleted_at IS NULL
             ",
             (url.to_string(),),
             |row| {

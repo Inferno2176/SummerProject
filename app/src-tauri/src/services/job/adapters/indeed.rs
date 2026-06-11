@@ -10,6 +10,6 @@ impl JobSourceAdapter for IndeedAdapter {
     fn name(&self) -> &'static str { "Indeed" }
     
     async fn search(&self, query: &JobSearchQuery) -> DbResult<Vec<DiscoveredJob>> {
-        fetch_duckduckgo_jobs("site:indeed.com/viewjob OR site:indeed.com/rc/clk", query).await
+        fetch_duckduckgo_jobs("site:indeed.com/viewjob OR site:indeed.com/rc/clk OR site:indeed.com/jobs", query).await
     }
 }
