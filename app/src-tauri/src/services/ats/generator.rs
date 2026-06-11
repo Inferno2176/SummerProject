@@ -8,6 +8,10 @@ pub struct OptimizedResumeContent {
     pub summary: String,
     pub skills: Vec<String>,
     pub experience_bullets: Vec<String>,
+    pub ats_score: f64,
+    pub strengths: Vec<String>,
+    pub weaknesses: Vec<String>,
+    pub recommendations: Vec<String>,
 }
 
 pub struct AtsGenerator;
@@ -31,6 +35,10 @@ impl AtsGenerator {
             - "summary": A 3-4 sentence professional summary optimized for the job.
             - "skills": A list of relevant skills from the master resume that match the job description.
             - "experience_bullets": A list of 5-8 optimized achievement bullets based on the master resume's experience that highlight relevant accomplishments for this specific job.
+            - "ats_score": A number from 0-100 estimating job match after optimization.
+            - "strengths": A list of ATS strengths in this optimized version.
+            - "weaknesses": A list of remaining ATS gaps.
+            - "recommendations": A list of specific next improvements.
             
             Format your response as valid JSON only.
         "#;
@@ -87,12 +95,26 @@ impl AtsGenerator {
                 "Optimized existing systems for improved performance, reliability, and maintainability.".to_string(),
                 "Mentored junior developers and contributed to the overall growth of the engineering team.".to_string()
             ],
+            ats_score: 72.0,
+            strengths: vec![
+                "Relevant technical experience is highlighted for the role.".to_string(),
+                "Core collaboration and delivery signals are clear.".to_string(),
+            ],
+            weaknesses: vec![
+                "Some job-specific keywords may still be missing.".to_string(),
+                "Quantified achievements should be strengthened where possible.".to_string(),
+            ],
+            recommendations: vec![
+                "Add measurable impact metrics from the master resume.".to_string(),
+                "Mirror the most important job-description keywords truthfully.".to_string(),
+            ],
         })
     }
 
     pub async fn generate_cover_letter(
         master_resume_json: &str,
         job_description: &str,
+        company_name: Option<&str>,
         model: &str,
     ) -> DbResult<String> {
         let system_prompt = r#"
@@ -102,6 +124,7 @@ impl AtsGenerator {
             Input:
             1. Master Resume JSON
             2. Job Description
+            3. Company Name when available
             
             Output:
             A professional cover letter (text only, no markdown formatting like bold/italics unless necessary for headers).
@@ -109,8 +132,10 @@ impl AtsGenerator {
         "#;
 
         let user_prompt = format!(
-            "Master Resume: {}\n\nJob Description: {}",
-            master_resume_json, job_description
+            "Master Resume: {}\n\nJob Description: {}\n\nCompany Name: {}",
+            master_resume_json,
+            job_description,
+            company_name.unwrap_or("Unknown company")
         );
 
         let client = Client::new();

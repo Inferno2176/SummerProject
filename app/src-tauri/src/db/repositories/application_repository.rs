@@ -12,6 +12,8 @@ pub struct JobApplication {
     pub job_id: String,
     pub resume_id: Option<String>,
     pub cover_letter_id: Option<String>,
+    pub generated_resume_id: Option<String>,
+    pub generated_cover_letter_id: Option<String>,
     pub applied_at: String,
     pub status: String,
     pub created_at: String,
@@ -27,6 +29,8 @@ impl ApplicationRepository {
         job_id: &str,
         resume_id: Option<String>,
         cover_letter_id: Option<String>,
+        generated_resume_id: Option<String>,
+        generated_cover_letter_id: Option<String>,
     ) -> DbResult<JobApplication> {
         let id = Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
@@ -40,12 +44,22 @@ impl ApplicationRepository {
                 job_id,
                 resume_id,
                 cover_letter_id,
+                generated_resume_id,
+                generated_cover_letter_id,
                 applied_at,
                 status,
                 created_at,
                 updated_at
             )
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+            ON CONFLICT(job_id) DO UPDATE SET
+                resume_id = excluded.resume_id,
+                cover_letter_id = excluded.cover_letter_id,
+                generated_resume_id = excluded.generated_resume_id,
+                generated_cover_letter_id = excluded.generated_cover_letter_id,
+                applied_at = excluded.applied_at,
+                status = excluded.status,
+                updated_at = excluded.updated_at
             ",
             (
                 id.clone(),
@@ -53,6 +67,8 @@ impl ApplicationRepository {
                 job_id.to_string(),
                 resume_id,
                 cover_letter_id,
+                generated_resume_id,
+                generated_cover_letter_id,
                 now.clone(),
                 "applied".to_string(),
                 now.clone(),
@@ -61,7 +77,7 @@ impl ApplicationRepository {
         )
         .await?;
 
-        Self::get_by_id(pool, &id)
+        Self::get_by_job_id(pool, job_id)
             .await?
             .ok_or(DbError::NotFound)
     }
@@ -75,6 +91,7 @@ impl ApplicationRepository {
             "
             SELECT
                 id, user_id, job_id, resume_id, cover_letter_id,
+                generated_resume_id, generated_cover_letter_id,
                 applied_at, status, created_at, updated_at
             FROM job_applications
             WHERE id = ?1
@@ -87,10 +104,12 @@ impl ApplicationRepository {
                     job_id: row.get(2)?,
                     resume_id: row.get(3)?,
                     cover_letter_id: row.get(4)?,
-                    applied_at: row.get(5)?,
-                    status: row.get(6)?,
-                    created_at: row.get(7)?,
-                    updated_at: row.get(8)?,
+                    generated_resume_id: row.get(5)?,
+                    generated_cover_letter_id: row.get(6)?,
+                    applied_at: row.get(7)?,
+                    status: row.get(8)?,
+                    created_at: row.get(9)?,
+                    updated_at: row.get(10)?,
                 })
             },
         )
@@ -106,6 +125,7 @@ impl ApplicationRepository {
             "
             SELECT
                 id, user_id, job_id, resume_id, cover_letter_id,
+                generated_resume_id, generated_cover_letter_id,
                 applied_at, status, created_at, updated_at
             FROM job_applications
             WHERE job_id = ?1
@@ -118,10 +138,12 @@ impl ApplicationRepository {
                     job_id: row.get(2)?,
                     resume_id: row.get(3)?,
                     cover_letter_id: row.get(4)?,
-                    applied_at: row.get(5)?,
-                    status: row.get(6)?,
-                    created_at: row.get(7)?,
-                    updated_at: row.get(8)?,
+                    generated_resume_id: row.get(5)?,
+                    generated_cover_letter_id: row.get(6)?,
+                    applied_at: row.get(7)?,
+                    status: row.get(8)?,
+                    created_at: row.get(9)?,
+                    updated_at: row.get(10)?,
                 })
             },
         )
@@ -137,6 +159,7 @@ impl ApplicationRepository {
             "
             SELECT
                 id, user_id, job_id, resume_id, cover_letter_id,
+                generated_resume_id, generated_cover_letter_id,
                 applied_at, status, created_at, updated_at
             FROM job_applications
             WHERE user_id = ?1
@@ -150,10 +173,12 @@ impl ApplicationRepository {
                     job_id: row.get(2)?,
                     resume_id: row.get(3)?,
                     cover_letter_id: row.get(4)?,
-                    applied_at: row.get(5)?,
-                    status: row.get(6)?,
-                    created_at: row.get(7)?,
-                    updated_at: row.get(8)?,
+                    generated_resume_id: row.get(5)?,
+                    generated_cover_letter_id: row.get(6)?,
+                    applied_at: row.get(7)?,
+                    status: row.get(8)?,
+                    created_at: row.get(9)?,
+                    updated_at: row.get(10)?,
                 })
             },
         )

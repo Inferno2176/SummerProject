@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { db } from "@/lib/db/service";
-import type { Job } from "@/lib/db/models";
+import type { GeneratedCoverLetter, GeneratedResume, Job } from "@/lib/db/models";
 import { useDialog } from "@/components/ui/dialog";
+import AtsAssetViewer from "@/components/jobs/AtsAssetViewer";
 import { 
   Briefcase, 
   MapPin, 
@@ -16,11 +17,20 @@ import {
   CheckCircle2,
   RefreshCw,
   FileText,
+  Eye,
   Mail,
   Clock
 } from "lucide-react";
 
 type JobTab = "recommended" | "saved" | "applied" | "rejected";
+type JobAssets = {
+  resume?: GeneratedResume;
+  coverLetter?: GeneratedCoverLetter;
+};
+type AssetViewerState = {
+  job: Job;
+  mode: "resume" | "coverLetter" | "application";
+} | null;
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -31,6 +41,8 @@ export default function JobsPage() {
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState<string | null>(null); // 'resume' | 'cv' | null
   const [genJobId, setGenJobId] = useState<string | null>(null);
+  const [jobAssets, setJobAssets] = useState<Record<string, JobAssets>>({});
+  const [assetViewer, setAssetViewer] = useState<AssetViewerState>(null);
   const dialog = useDialog();
 
   const loadJobs = async () => {
@@ -38,6 +50,17 @@ export default function JobsPage() {
       setLoading(true);
       const allJobs = await db.listAllJobs();
       setJobs(allJobs);
+
+      const users = await db.listUsers();
+      if (users.length > 0) {
+        const userId = users[0].id;
+        const [generatedResumes, generatedCoverLetters] = await Promise.all([
+          db.listAllGeneratedResumes(userId),
+          db.listAllGeneratedCoverLetters(userId),
+        ]);
+
+        setJobAssets(buildJobAssets(generatedResumes, generatedCoverLetters));
+      }
     } catch (err) {
       console.error("Failed to load jobs", err);
     } finally {
@@ -102,9 +125,10 @@ export default function JobsPage() {
       }
 
       await db.generateAtsResume(jobId, defaultResume.id);
+      await loadJobs();
       await dialog.success({
         title: "ATS resume generated",
-        description: "Your ATS resume is ready. You can view it from the ATS page.",
+        description: "Your ATS resume is attached to this job and ready from the Jobs page.",
       });
     } catch (err) {
       console.error("Failed to generate ATS resume", err);
@@ -139,9 +163,10 @@ export default function JobsPage() {
       }
 
       await db.generateCoverLetter(jobId, defaultResume.id);
+      await loadJobs();
       await dialog.success({
         title: "Cover letter generated",
-        description: "Your cover letter is ready. You can view it from the ATS page.",
+        description: "Your cover letter is attached to this job and ready from the Jobs page.",
       });
     } catch (err) {
       console.error("Failed to generate cover letter", err);
@@ -210,6 +235,24 @@ export default function JobsPage() {
     });
 
     if (!confirmed) return;
+  };
+
+  const handleUseForApplication = async () => {
+    if (!assetViewer) return;
+
+    const assets = jobAssets[assetViewer.job.id] ?? {};
+
+    await db.markAsApplied(
+      assetViewer.job.id,
+      assets.resume?.resume_id,
+      assets.coverLetter?.id,
+    );
+    await loadJobs();
+    setAssetViewer(null);
+
+    if (assetViewer.job.url) {
+      window.open(assetViewer.job.url, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -304,6 +347,11 @@ export default function JobsPage() {
                 onDelete={handleDeleteJob}
                 onGenerateAts={() => handleGenerateAts(job.id)}
                 onGenerateCV={() => handleGenerateCoverLetter(job.id)}
+                generatedResume={jobAssets[job.id]?.resume}
+                generatedCoverLetter={jobAssets[job.id]?.coverLetter}
+                onViewResume={() => setAssetViewer({ job, mode: "resume" })}
+                onViewCoverLetter={() => setAssetViewer({ job, mode: "coverLetter" })}
+                onApply={() => setAssetViewer({ job, mode: "application" })}
                 isGenerating={genJobId === job.id ? (generating as 'resume' | 'cv' | null) : null}
               />
             ))
@@ -320,6 +368,19 @@ export default function JobsPage() {
           )}
         </div>
       )}
+      {assetViewer && (
+        <AtsAssetViewer
+          job={assetViewer.job}
+          resume={jobAssets[assetViewer.job.id]?.resume}
+          coverLetter={jobAssets[assetViewer.job.id]?.coverLetter}
+          mode={assetViewer.mode}
+          regenerating={genJobId === assetViewer.job.id ? (generating as "resume" | "cv" | null) : null}
+          onClose={() => setAssetViewer(null)}
+          onRegenerateResume={() => handleGenerateAts(assetViewer.job.id)}
+          onRegenerateCoverLetter={() => handleGenerateCoverLetter(assetViewer.job.id)}
+          onUseForApplication={handleUseForApplication}
+        />
+      )}
     </div>
   );
 }
@@ -332,6 +393,11 @@ interface JobCardProps {
   onDelete: (id: string) => void;
   onGenerateAts: () => void;
   onGenerateCV: () => void;
+  generatedResume?: GeneratedResume;
+  generatedCoverLetter?: GeneratedCoverLetter;
+  onViewResume: () => void;
+  onViewCoverLetter: () => void;
+  onApply: () => void;
   isGenerating: 'resume' | 'cv' | null;
 }
 
@@ -348,6 +414,29 @@ function formatPostedDate(postedDate?: string) {
   });
 }
 
+function buildJobAssets(
+  generatedResumes: GeneratedResume[],
+  generatedCoverLetters: GeneratedCoverLetter[],
+) {
+  const assets: Record<string, JobAssets> = {};
+
+  for (const resume of generatedResumes) {
+    assets[resume.job_id] ??= {};
+    if (!assets[resume.job_id].resume) {
+      assets[resume.job_id].resume = resume;
+    }
+  }
+
+  for (const coverLetter of generatedCoverLetters) {
+    assets[coverLetter.job_id] ??= {};
+    if (!assets[coverLetter.job_id].coverLetter) {
+      assets[coverLetter.job_id].coverLetter = coverLetter;
+    }
+  }
+
+  return assets;
+}
+
 function JobCard({ 
   job, 
   isSelected, 
@@ -356,6 +445,11 @@ function JobCard({
   onDelete,
   onGenerateAts,
   onGenerateCV,
+  generatedResume,
+  generatedCoverLetter,
+  onViewResume,
+  onViewCoverLetter,
+  onApply,
   isGenerating
 }: JobCardProps) {
   const postedDate = formatPostedDate(job.posted_date);
@@ -423,34 +517,31 @@ function JobCard({
 
       <div className="mt-auto pt-8 space-y-3">
         <div className="flex items-center gap-2">
-          {job.url && (
-            <a 
-              href={job.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-xs font-bold text-black transition hover:opacity-90"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Apply Now
-            </a>
-          )}
+          <button
+            type="button"
+            onClick={onApply}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-xs font-bold text-black transition hover:opacity-90"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Apply Now
+          </button>
           
-          <div className="flex gap-2">
+          <div className="grid flex-1 grid-cols-1 gap-2">
             <button 
-              onClick={onGenerateAts}
+              onClick={generatedResume ? onViewResume : onGenerateAts}
               disabled={isGenerating !== null}
-              className="p-2.5 rounded-xl bg-white/5 text-[var(--muted)] hover:text-white transition relative"
-              title="Generate ATS Resume"
+              className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 text-xs font-bold text-[var(--muted)] transition hover:text-white disabled:opacity-50"
             >
-              {isGenerating === 'resume' ? <RefreshCw size={18} className="animate-spin text-orange-400" /> : <FileText size={18} />}
+              {isGenerating === 'resume' ? <RefreshCw size={16} className="animate-spin text-orange-400" /> : generatedResume ? <Eye size={16} /> : <FileText size={16} />}
+              {generatedResume ? "View Resume" : "Generate ATS Resume"}
             </button>
             <button 
-              onClick={onGenerateCV}
+              onClick={generatedCoverLetter ? onViewCoverLetter : onGenerateCV}
               disabled={isGenerating !== null}
-              className="p-2.5 rounded-xl bg-white/5 text-[var(--muted)] hover:text-white transition relative"
-              title="Generate Cover Letter"
+              className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 text-xs font-bold text-[var(--muted)] transition hover:text-white disabled:opacity-50"
             >
-              {isGenerating === 'cv' ? <RefreshCw size={18} className="animate-spin text-orange-400" /> : <Mail size={18} />}
+              {isGenerating === 'cv' ? <RefreshCw size={16} className="animate-spin text-orange-400" /> : generatedCoverLetter ? <Eye size={16} /> : <Mail size={16} />}
+              {generatedCoverLetter ? "View Cover Letter" : "Generate Cover Letter"}
             </button>
           </div>
           

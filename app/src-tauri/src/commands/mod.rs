@@ -14,7 +14,6 @@ pub mod job_commands;
 pub mod activity_log_commands;
 pub mod ats_commands;
 pub mod interview_commands;
-pub mod email_commands;
 
 pub use ai_agent_commands::*;
 pub use app_state_commands::*;
@@ -27,4 +26,3 @@ pub use job_commands::*;
 pub use activity_log_commands::*;
 pub use ats_commands::*;
 pub use interview_commands::*;
-pub use email_commands::*;

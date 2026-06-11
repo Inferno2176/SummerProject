@@ -34,4 +34,3 @@ pub use repositories::activity_log_repository::{ActivityLog, ActivityLogReposito
 pub use repositories::generated_document_repository::{GeneratedResume, GeneratedCoverLetter, GeneratedDocumentRepository};
 pub use repositories::application_repository::{JobApplication, ApplicationRepository};
 pub use repositories::interview_repository::{InterviewSession, InterviewRepository};
-pub use repositories::email_repository::{Email, EmailRepository};

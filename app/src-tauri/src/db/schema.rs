@@ -265,26 +265,6 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
                 FOREIGN KEY (cover_letter_id) REFERENCES generated_cover_letters(id) ON DELETE SET NULL
             );
 
-            -- 16. Emails
-            CREATE TABLE IF NOT EXISTS emails (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                sender TEXT NOT NULL,
-                recipient TEXT NOT NULL,
-                subject TEXT,
-                body TEXT,
-                received_at TIMESTAMP NOT NULL,
-                is_read BOOLEAN DEFAULT 0,
-                is_job_related BOOLEAN DEFAULT 0,
-                job_id TEXT,
-                ai_suggested_reply TEXT,
-                created_at TIMESTAMP NOT NULL,
-                updated_at TIMESTAMP NOT NULL,
-                deleted_at TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
-            );
-
             -- Indices
             CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
             CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
@@ -300,9 +280,6 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
             CREATE INDEX IF NOT EXISTS idx_gen_resumes_job_id ON generated_resumes(job_id);
             CREATE INDEX IF NOT EXISTS idx_gen_cv_job_id ON generated_cover_letters(job_id);
             CREATE INDEX IF NOT EXISTS idx_job_apps_job_id ON job_applications(job_id);
-            CREATE INDEX IF NOT EXISTS idx_emails_user_id ON emails(user_id);
-            CREATE INDEX IF NOT EXISTS idx_emails_job_id ON emails(job_id);
-            CREATE INDEX IF NOT EXISTS idx_emails_received_at ON emails(received_at);
 
             -- Initial Data
             INSERT OR IGNORE INTO users (id, email, name, created_at, updated_at) 
@@ -333,6 +310,31 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
             ('8', 'ai_response_streaming', 'true', 'boolean', 'Stream AI responses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('9', 'job_scheduler_enabled', 'true', 'boolean', 'Enable background job search', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('10', 'job_scheduler_frequency', '60', 'number', 'Job search frequency in minutes', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            "
+        ),
+        migration!(
+            "002_job_application_assets",
+            "
+            ALTER TABLE generated_resumes ADD COLUMN job_title TEXT;
+            ALTER TABLE generated_resumes ADD COLUMN original_resume_json TEXT;
+            ALTER TABLE generated_resumes ADD COLUMN generated_resume_json TEXT;
+            ALTER TABLE generated_resumes ADD COLUMN ats_score REAL;
+            ALTER TABLE generated_resumes ADD COLUMN ats_strengths TEXT;
+            ALTER TABLE generated_resumes ADD COLUMN ats_weaknesses TEXT;
+            ALTER TABLE generated_resumes ADD COLUMN ats_recommendations TEXT;
+            ALTER TABLE generated_resumes ADD COLUMN generated_at TIMESTAMP;
+
+            ALTER TABLE generated_cover_letters ADD COLUMN resume_id TEXT;
+            ALTER TABLE generated_cover_letters ADD COLUMN job_title TEXT;
+            ALTER TABLE generated_cover_letters ADD COLUMN company_name TEXT;
+            ALTER TABLE generated_cover_letters ADD COLUMN original_resume_json TEXT;
+            ALTER TABLE generated_cover_letters ADD COLUMN generated_at TIMESTAMP;
+
+            ALTER TABLE job_applications ADD COLUMN generated_resume_id TEXT;
+            ALTER TABLE job_applications ADD COLUMN generated_cover_letter_id TEXT;
+
+            CREATE INDEX IF NOT EXISTS idx_gen_resumes_user_job ON generated_resumes(user_id, job_id);
+            CREATE INDEX IF NOT EXISTS idx_gen_cover_letters_user_job ON generated_cover_letters(user_id, job_id);
             "
         ),
     ]

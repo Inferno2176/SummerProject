@@ -10,7 +10,6 @@ pub mod activity_log_repository;
 pub mod generated_document_repository;
 pub mod application_repository;
 pub mod interview_repository;
-pub mod email_repository;
 
 pub use ai_agent_repository::{
     AIAgent,
@@ -71,9 +70,4 @@ pub use application_repository::{
 pub use interview_repository::{
     InterviewSession,
     InterviewRepository,
-};
-
-pub use email_repository::{
-    Email,
-    EmailRepository,
 };

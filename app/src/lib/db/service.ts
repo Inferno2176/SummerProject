@@ -21,7 +21,6 @@ import type {
   GeneratedCoverLetter,
   JobApplication,
   InterviewSession,
-  Email,
 } from './models';
 
 class DatabaseService {
@@ -460,24 +459,6 @@ class DatabaseService {
 
   async deleteInterviewSession(id: string): Promise<void> {
     return dbInvoke.interview.delete(id);
-  }
-
-  // ============ Email Operations ============
-
-  async listEmails(): Promise<Email[]> {
-    return dbInvoke.email.listAll();
-  }
-
-  async markEmailAsRead(id: string): Promise<void> {
-    return dbInvoke.email.markAsRead(id);
-  }
-
-  async deleteEmail(id: string): Promise<void> {
-    return dbInvoke.email.delete(id);
-  }
-
-  async generateEmailReply(emailId: string): Promise<string> {
-    return dbInvoke.email.generateReply(emailId);
   }
 }
 

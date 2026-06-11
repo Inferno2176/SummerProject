@@ -19,7 +19,6 @@ import type {
   GeneratedCoverLetter,
   JobApplication,
   InterviewSession,
-  Email,
 } from './models';
 
 // Retry configuration
@@ -621,26 +620,6 @@ export const interviewInvoke = {
   },
 };
 
-// ============ Email Invoke Wrappers ============
-
-export const emailInvoke = {
-  async listAll(): Promise<Email[]> {
-    return invokeWithRetry('db_list_emails', {});
-  },
-
-  async markAsRead(id: string): Promise<void> {
-    return invokeWithRetry('db_mark_email_as_read', { id });
-  },
-
-  async delete(id: string): Promise<void> {
-    return invokeWithRetry('db_delete_email', { id });
-  },
-
-  async generateReply(emailId: string): Promise<string> {
-    return invokeWithRetry('generate_email_reply', { emailId });
-  },
-};
-
 // ============ Database Health Invoke Wrappers ============
 
 export const dbHealthInvoke = {
@@ -657,9 +636,6 @@ export const dbHealthInvoke = {
   },
 };
 
-/**
- * Master invoke namespace combining all wrappers
- */
 export const dbInvoke = {
   appState: appStateInvoke,
   aiAgent: aiAgentInvoke,
@@ -673,5 +649,4 @@ export const dbInvoke = {
   health: dbHealthInvoke,
   ats: atsInvoke,
   interview: interviewInvoke,
-  email: emailInvoke,
 };

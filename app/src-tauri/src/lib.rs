@@ -1028,12 +1028,6 @@ pub fn run() {
     db_list_interview_sessions,
     db_update_interview_score,
     db_delete_interview_session,
-
-    // Email Commands
-    db_list_emails,
-    db_mark_email_as_read,
-    db_delete_email,
-    generate_email_reply,
 ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

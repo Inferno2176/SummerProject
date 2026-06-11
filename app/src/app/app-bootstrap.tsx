@@ -7,7 +7,6 @@ import { router } from "./router";
 
 import LaunchLoader from "../components/launch-loader";
 import { DialogProvider } from "../components/ui/dialog";
-import type { Email } from "@/lib/db/models";
 
 export default function AppBootstrap() {
   const [loading, setLoading] =
@@ -31,23 +30,6 @@ export default function AppBootstrap() {
       }
     });
 
-    // Listen for new emails
-    const unlistenEmails = listen<Email>("new-email-received", async (event) => {
-      const email = event.payload;
-      
-      let permission = await isPermissionGranted();
-      if (!permission) {
-        permission = await requestPermission() === 'granted';
-      }
-
-      if (permission) {
-        sendNotification({
-          title: 'New Career Email',
-          body: `Recruiter from ${email.sender} reached out regarding "${email.subject}"`,
-        });
-      }
-    });
-
     const timer = setTimeout(() => {
       setLoading(false);
     }, 1800);
@@ -55,7 +37,6 @@ export default function AppBootstrap() {
     return () => {
       clearTimeout(timer);
       unlistenJobs.then(u => u());
-      unlistenEmails.then(u => u());
     };
   }, []);
 

@@ -109,21 +109,7 @@ export interface InterviewSession {
   resume_context?: string;
 }
 
-export interface Email {
-  id: string;
-  user_id: string;
-  sender: string;
-  recipient: string;
-  subject?: string;
-  body?: string;
-  received_at: string;
-  is_read: boolean;
-  is_job_related: boolean;
-  job_id?: string;
-  ai_suggested_reply?: string;
-  created_at: string;
-  updated_at: string;
-}
+
 
 export interface JobApplication {
   id: string;
@@ -131,6 +117,8 @@ export interface JobApplication {
   job_id: string;
   resume_id?: string;
   cover_letter_id?: string;
+  generated_resume_id?: string;
+  generated_cover_letter_id?: string;
   applied_at: string;
   status: string;
   created_at: string;
@@ -142,9 +130,17 @@ export interface GeneratedResume {
   user_id: string;
   job_id: string;
   resume_id: string;
+  job_title?: string;
+  original_resume_json?: string;
+  generated_resume_json?: string;
+  ats_score?: number;
+  ats_strengths?: string;
+  ats_weaknesses?: string;
+  ats_recommendations?: string;
   optimized_summary?: string;
   optimized_skills?: string;
   optimized_experience?: string;
+  generated_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -153,7 +149,12 @@ export interface GeneratedCoverLetter {
   id: string;
   user_id: string;
   job_id: string;
+  resume_id?: string;
+  job_title?: string;
+  company_name?: string;
+  original_resume_json?: string;
   content: string;
+  generated_at?: string;
   created_at: string;
   updated_at: string;
 }
