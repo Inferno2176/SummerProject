@@ -9,7 +9,6 @@ import UploadResumePage from "../pages/onboarding/upload-resume";
 import DashboardPage from "../pages/dashboard";
 import ATSPage from "../pages/ats";
 import JobsPage from "../pages/jobs";
-import AppliedPage from "../pages/applied";
 import InterviewPage from "../pages/interview";
 import EmailsPage from "../pages/emails";
 import CommunityPage from "../pages/community";
@@ -63,10 +62,6 @@ export const router = createBrowserRouter([
           {
             path: "jobs",
             element: <JobsPage />,
-          },
-          {
-            path: "applied",
-            element: <AppliedPage />,
           },
           {
             path: "interview",

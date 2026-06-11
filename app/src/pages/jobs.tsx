@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { db } from "@/lib/db/service";
 import type { Job } from "@/lib/db/models";
+import { useDialog } from "@/components/ui/dialog";
 import { 
   Briefcase, 
   MapPin, 
@@ -30,6 +31,7 @@ export default function JobsPage() {
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState<string | null>(null); // 'resume' | 'cv' | null
   const [genJobId, setGenJobId] = useState<string | null>(null);
+  const dialog = useDialog();
 
   const loadJobs = async () => {
     try {
@@ -92,15 +94,24 @@ export default function JobsPage() {
       const defaultResume = resumes.find(r => r.is_default) || resumes[0];
       
       if (!defaultResume) {
-        alert("Please upload a resume first.");
+        await dialog.warning({
+          title: "Resume required",
+          description: "Please upload a resume before generating an ATS resume.",
+        });
         return;
       }
 
       await db.generateAtsResume(jobId, defaultResume.id);
-      alert("ATS Resume generated successfully! View it in the ATS page.");
+      await dialog.success({
+        title: "ATS resume generated",
+        description: "Your ATS resume is ready. You can view it from the ATS page.",
+      });
     } catch (err) {
       console.error("Failed to generate ATS resume", err);
-      alert("Failed to generate ATS resume. Make sure Ollama is running.");
+      await dialog.error({
+        title: "Resume generation failed",
+        description: "Make sure Ollama is running, then try again.",
+      });
     } finally {
       setGenerating(null);
       setGenJobId(null);
@@ -120,15 +131,24 @@ export default function JobsPage() {
       const defaultResume = resumes.find(r => r.is_default) || resumes[0];
       
       if (!defaultResume) {
-        alert("Please upload a resume first.");
+        await dialog.warning({
+          title: "Resume required",
+          description: "Please upload a resume before generating a cover letter.",
+        });
         return;
       }
 
       await db.generateCoverLetter(jobId, defaultResume.id);
-      alert("Cover letter generated successfully! View it in the ATS page.");
+      await dialog.success({
+        title: "Cover letter generated",
+        description: "Your cover letter is ready. You can view it from the ATS page.",
+      });
     } catch (err) {
       console.error("Failed to generate cover letter", err);
-      alert("Failed to generate cover letter. Make sure Ollama is running.");
+      await dialog.error({
+        title: "Cover letter generation failed",
+        description: "Make sure Ollama is running, then try again.",
+      });
     } finally {
       setGenerating(null);
       setGenJobId(null);
@@ -139,7 +159,13 @@ export default function JobsPage() {
     const ids = Array.from(selectedJobIds);
     if (ids.length === 0) return;
 
-    if (!confirm(`Generate ${type === 'resume' ? 'ATS Resumes' : 'Cover Letters'} for ${ids.length} jobs? This may take a while.`)) {
+    const confirmed = await dialog.confirmation({
+      title: `Generate ${type === 'resume' ? 'ATS resumes' : 'cover letters'}?`,
+      description: `This will generate ${type === 'resume' ? 'ATS resumes' : 'cover letters'} for ${ids.length} selected jobs and may take a while.`,
+      confirmLabel: "Generate",
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -173,14 +199,17 @@ export default function JobsPage() {
   };
 
   const handleDeleteJob = async (id: string) => {
-    if (confirm("Are you sure you want to delete this job?")) {
-      try {
+    const confirmed = await dialog.confirmation({
+      title: "Delete job?",
+      description: "This job will be permanently removed from your tracker.",
+      confirmLabel: "Delete",
+      onConfirm: async () => {
         await db.deleteJob(id);
         await loadJobs();
-      } catch (err) {
-        console.error("Failed to delete job", err);
-      }
-    }
+      },
+    });
+
+    if (!confirmed) return;
   };
 
   return (

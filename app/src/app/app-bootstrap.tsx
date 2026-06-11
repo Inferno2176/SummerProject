@@ -6,6 +6,7 @@ import { isPermissionGranted, requestPermission, sendNotification } from '@tauri
 import { router } from "./router";
 
 import LaunchLoader from "../components/launch-loader";
+import { DialogProvider } from "../components/ui/dialog";
 import type { Email } from "@/lib/db/models";
 
 export default function AppBootstrap() {
@@ -67,6 +68,8 @@ export default function AppBootstrap() {
   }
 
   return (
-    <RouterProvider router={router} />
+    <DialogProvider>
+      <RouterProvider router={router} />
+    </DialogProvider>
   );
 }

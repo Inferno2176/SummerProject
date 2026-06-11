@@ -3,6 +3,7 @@ import { db } from "@/lib/db/service";
 import { invoke } from "@tauri-apps/api/core";
 import type { Resume, GeneratedResume, GeneratedCoverLetter, Job } from "@/lib/db/models";
 import ResumeViewer from "@/components/resume/ResumeViewer";
+import { useDialog } from "@/components/ui/dialog";
 import { 
   FileText, 
   Search, 
@@ -33,6 +34,7 @@ export default function ATSPage() {
   const [activeTab, setActiveTab] = useState<"analysis" | "profile" | "history">("analysis");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialog = useDialog();
 
   const [result, setResult] = useState<{
     score: number;
@@ -154,19 +156,23 @@ export default function ATSPage() {
   };
 
   const handleDeleteGenerated = async (id: string, type: 'resume' | 'cv') => {
-    if (!confirm("Are you sure you want to delete this version?")) return;
-    
-    try {
-      if (type === 'resume') {
-        await db.deleteGeneratedResume(id);
-      } else {
-        await db.deleteGeneratedCoverLetter(id);
-      }
-      await loadData();
-      if (previewDoc?.data.id === id) setPreviewDoc(null);
-    } catch (err) {
-      console.error("Failed to delete", err);
-    }
+    const confirmed = await dialog.confirmation({
+      title: "Delete generated version?",
+      description: "This generated document version will be permanently removed.",
+      confirmLabel: "Delete",
+      onConfirm: async () => {
+        if (type === 'resume') {
+          await db.deleteGeneratedResume(id);
+        } else {
+          await db.deleteGeneratedCoverLetter(id);
+        }
+        await loadData();
+      },
+    });
+
+    if (!confirmed) return;
+
+    if (previewDoc?.data.id === id) setPreviewDoc(null);
   };
 
   const handleDownload = (doc: any, type: 'resume' | 'cv') => {

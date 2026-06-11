@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { FileText, Download, Trash2, ExternalLink } from "lucide-react";
 import type { Resume } from "@/lib/db/models";
+import { useDialog } from "@/components/ui/dialog";
 
 interface ResumeViewerProps {
   resume: Resume;
@@ -8,6 +9,8 @@ interface ResumeViewerProps {
 }
 
 export default function ResumeViewer({ resume, onDelete }: ResumeViewerProps) {
+  const dialog = useDialog();
+
   const handleView = async () => {
     try {
       // For local files, we use the system opener.
@@ -20,13 +23,17 @@ export default function ResumeViewer({ resume, onDelete }: ResumeViewerProps) {
   };
 
   const handleDelete = async () => {
-    if (confirm(`Are you sure you want to delete ${resume.filename}?`)) {
-      try {
+    const confirmed = await dialog.confirmation({
+      title: "Delete resume?",
+      description: `${resume.filename} will be permanently removed from CareerForges.`,
+      confirmLabel: "Delete",
+      onConfirm: async () => {
         await invoke("delete_resume", { id: resume.id });
-        onDelete?.(resume.id);
-      } catch (err) {
-        console.error("Failed to delete resume", err);
-      }
+      },
+    });
+
+    if (confirmed) {
+      onDelete?.(resume.id);
     }
   };
 

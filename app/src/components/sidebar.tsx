@@ -35,11 +35,6 @@ const items = [
     path: "/app/jobs",
   },
   {
-    label: "Applied",
-    icon: UserCheck,
-    path: "/app/applied",
-  },
-  {
     label: "Interview",
     icon: FileText,
     path: "/app/interview",
