@@ -516,11 +516,11 @@ function JobCard({
       </div>
 
       <div className="mt-auto pt-8 space-y-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-4">
           <button
             type="button"
             onClick={onApply}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-xs font-bold text-black transition hover:opacity-90"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-xs font-bold text-black transition hover:opacity-90"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Apply Now
@@ -544,16 +544,6 @@ function JobCard({
               {generatedCoverLetter ? "View Cover Letter" : "Generate Cover Letter"}
             </button>
           </div>
-          
-          {job.status === "recommended" && (
-            <button 
-              onClick={() => onStatusUpdate(job.id, "saved")}
-              className="p-2.5 rounded-xl bg-white/5 text-[var(--muted)] hover:text-white transition"
-              title="Save Job"
-            >
-              <Save size={18} />
-            </button>
-          )}
         </div>
 
         <div className="flex items-center justify-between border-t border-white/5 pt-3">
@@ -575,12 +565,23 @@ function JobCard({
               Rejected
             </button>
           </div>
+          <div className="flex gap-2">
+          {job.status === "recommended" && (
+            <button
+              onClick={() => onStatusUpdate(job.id, "saved")}
+              className="p-2.5 rounded-xl bg-white/5 text-[var(--muted)] hover:text-white transition"
+              title="Save Job"
+            >
+              <Save size={18} />
+            </button>
+          )}
           <button 
             onClick={() => onDelete(job.id)}
             className="text-[var(--muted)] hover:text-red-400 transition"
           >
             <Trash2 size={14} />
           </button>
+          </div>
         </div>
       </div>
     </div>
