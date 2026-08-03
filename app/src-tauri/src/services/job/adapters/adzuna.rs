@@ -163,7 +163,7 @@ impl JobSourceAdapter for AdzunaAdapter {
             }
 
             // Filter: Results per page
-            let limit = query.results_per_page.unwrap_or(20);
+            let limit = query.results_per_page.unwrap_or(50);
             query_pairs.append_pair("results_per_page", &limit.to_string());
 
             // Filter: Salary Minimum & Maximum

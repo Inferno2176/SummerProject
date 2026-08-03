@@ -143,14 +143,24 @@ impl JobScheduler {
 
         // 4. Fallback if no queries generated
         if queries.is_empty() {
-            queries.push(JobSearchQuery {
-                title: Some("Software Engineer".to_string()),
-                location: None,
-                skills: vec![],
-                experience_years: None,
-                remote: false,
-                ..Default::default()
-            });
+            let fallback_titles = vec![
+                "Software Engineer",
+                "React Developer",
+                "Python Developer",
+                "Full Stack Developer",
+                "Backend Engineer",
+                "DevOps Engineer",
+            ];
+            for title in fallback_titles {
+                queries.push(JobSearchQuery {
+                    title: Some(title.to_string()),
+                    location: Some("India".to_string()),
+                    skills: vec![],
+                    experience_years: None,
+                    remote: false,
+                    ..Default::default()
+                });
+            }
         }
 
         let mut total_new_jobs = 0;
