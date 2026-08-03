@@ -7,10 +7,11 @@ CareerForges is a privacy-first, local AI career operating system built with **T
 ## 🛠️ System Overview
 
 ### **Technology Stack**
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite, Lucide Icons.
+- **Frontend**: React 19, TypeScript, Tailwind CSS, Vite, Lucide Icons.
 - **Backend**: Rust, Tauri 2.0.
 - **Database**: SQLite (via `rusqlite` and `deadpool-sqlite` for connection pooling).
 - **AI Engine**: Ollama (local execution of LLMs like Llama 3.2, Qwen 2.5, DeepSeek R1).
+- **Job Search Engines**: Adzuna Jobs API (Primary, India-only) with fallback to DuckDuckGo scrapers (LinkedIn, Indeed, Greenhouse).
 - **Communication**: Tauri IPC (Invoke) for Frontend-to-Backend; Tauri Events for Backend-to-Frontend.
 
 ---
@@ -21,8 +22,9 @@ The backend is organized into functional modules:
 
 ### **1. Database Layer (`db/`)**
 - `connection.rs`: Manages the SQLite connection pool.
-- `schema.rs`: Defines the database schema and migrations.
+- `schema.rs`: Defines the database schema and migrations (including default Adzuna settings configuration).
 - `repositories/`: contains logic for specific entities.
+- `settings_repository.rs`: Manages configuration properties, including Adzuna credentials (`adzuna_app_id` and `adzuna_app_key`).
     - `resume_repository.rs`: Master resume and parsed content storage.
     - `job_repository.rs`: Scraped jobs and matching scores.
     - `email_repository.rs`: Simulation and storage of recruiter communications.
@@ -31,9 +33,11 @@ The backend is organized into functional modules:
 ### **2. Service Layer (`services/`)**
 - `resume/`: Text extraction (PDF) and hybrid parsing (Regex + AI).
 - `job/`: 
-    - `engine.rs`: Coordinates fetching from adapters and matching against the resume.
+    - `engine.rs`: Coordinates fetching from adapters and matching against the resume. Automatically runs Adzuna if configured, falling back to other scrapers if zero results are returned.
     - `scheduler.rs`: Background task that triggers job searches and email simulations.
-    - `adapters/`: Scrapers for specific sources (LinkedIn, Indeed, Greenhouse via DuckDuckGo).
+    - `adapters/`: 
+        - `adzuna.rs`: Connects to Adzuna's India search API with query constraints (keyword, salary range, contract/job type, sort order).
+        - `linkedin.rs`, `indeed.rs`, `greenhouse.rs`: Scrapers using DuckDuckGo search queries as backup providers.
 - `ats/`: Logic for generating optimized resumes and cover letters.
 
 ### **3. Command Layer (`commands/`)**
@@ -46,7 +50,7 @@ The backend is organized into functional modules:
 ### **Job Discovery Flow**
 1. **Trigger**: `JobScheduler` runs every N minutes (or user clicks "Refresh").
 2. **Context**: Scheduler fetches the `default` resume to extract the user's current job title and top 5 skills.
-3. **Search**: `JobDiscoveryEngine` calls adapters. Adapters use DuckDuckGo with site-specific filters (e.g., `site:linkedin.com/jobs/view/`) and a "past week" time filter (`df=w`).
+3. **Search**: `JobDiscoveryEngine` calls adapters. If Adzuna credentials are set (in environment or settings), it runs Adzuna search first. If Adzuna is disabled, fails, or returns no results, it falls back to the scraping adapters. Scraping adapters use DuckDuckGo with site-specific filters (e.g., `site:linkedin.com/jobs/view/`) and a "past week" time filter (`df=w`).
 4. **Matching**: `JobMatchingEngine` compares job keywords against the master resume and calculates a score.
 5. **Persistence**: New jobs are saved to SQLite. Unique constraints on URL prevent duplicates.
 6. **Notification**: If new jobs are found, a Tauri event is emitted to show a desktop notification.
@@ -75,16 +79,17 @@ The backend is organized into functional modules:
 4. **Invoke**: Use `dbInvoke` in `src/lib/db/invoke.ts` and `dbService` in `src/lib/db/service.ts` to expose it to React.
 
 ### **Updating Job Search Logic**
-- To change how jobs are found, modify `src-tauri/src/services/job/adapters/mod.rs`.
+- To change how jobs are found from the Adzuna API, modify `src-tauri/src/services/job/adapters/adzuna.rs`.
+- To modify backup scraper logic, edit `src-tauri/src/services/job/adapters/mod.rs` or specific files (e.g. `linkedin.rs`).
 - To change the matching algorithm, modify `src-tauri/src/services/job/matching.rs`.
 
 ---
 
 ## 💡 Development Tips for LLMs
 *When working with this codebase, keep these principles in mind:*
-- **Local First**: Never assume an internet connection or external API (except DuckDuckGo/Ollama).
+- **Local First**: Never assume an internet connection or external API (except DuckDuckGo/Ollama/Adzuna).
 - **Privacy**: User data must stay in the SQLite DB or the local filesystem.
-- **Resilience**: Always provide fallbacks for AI generation tasks.
+- **Resilience**: Always provide fallbacks for AI generation and external APIs.
 - **Repository Pattern**: Always use the repository layer for DB access; never write raw SQL in commands.
 - **Type Safety**: Keep Rust structs and TypeScript interfaces in sync.
 

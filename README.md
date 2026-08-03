@@ -122,29 +122,31 @@ CareerForges aims to become:
 
 ---
 
-## 🏗️ Planned Tech Stack
+## 🏗️ Tech Stack
 
 | Area              | Technology                      |
 | ----------------- | ------------------------------- |
-| Frontend          | Electron / Tauri                |
-| UI                | React + Tailwind                |
-| AI Runtime        | Claude CLI, Ollama              |
-| Backend           | Local Node.js / Rust services   |
-| Automation        | Playwright / Browser Automation |
-| Database          | Local SQLite                    |
-| Resume Processing | PDF/Text Parsing                |
+| Frontend          | Tauri 2.0                       |
+| UI                | React 19 + Tailwind CSS + shadcn/ui |
+| AI Runtime        | Ollama (local model execution)  |
+| Backend           | Rust (Tokio async runtime)      |
+| Database          | Local SQLite (pooled via Deadpool) |
+| Job Search API    | Adzuna Jobs API (India)        |
+| Fallback Search   | DuckDuckGo-based Web Scrapers   |
+| Resume Processing | PDF Parsing / Text Extraction   |
 
 ---
 
 ## 📌 Roadmap
 
-### MVP
+### MVP (Completed)
 
-* [ ] Local AI integration
-* [ ] Resume upload
-* [ ] ATS resume generation
-* [ ] Job search
-* [ ] Dashboard UI
+* [x] Local AI integration (Ollama)
+* [x] Resume upload & parsing
+* [x] ATS resume & cover letter generation
+* [x] Job search discovery (Adzuna API + Scrapers)
+* [x] Dashboard UI & Application tracking
+* [x] Local authentication & routing system
 
 ### Future Features
 
