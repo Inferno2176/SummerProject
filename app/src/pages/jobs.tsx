@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { db } from "@/lib/db/service";
 import type { GeneratedCoverLetter, GeneratedResume, Job } from "@/lib/db/models";
