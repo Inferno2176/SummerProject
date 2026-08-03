@@ -25,7 +25,7 @@ export default function AppBootstrap() {
       if (permission) {
         sendNotification({
           title: 'New Opportunities Found!',
-          body: `CareerForges found ${count} new jobs matching your profile.`,
+          body: `LandMyJob found ${count} new jobs matching your profile.`,
         });
       }
     });

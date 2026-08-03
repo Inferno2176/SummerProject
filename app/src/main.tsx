@@ -13,7 +13,7 @@ document.documentElement.setAttribute(
   savedTheme,
 );
 
-void checkForUpdatesInBackground();
+// void checkForUpdatesInBackground();
 
 ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,

@@ -25,7 +25,7 @@ export default function ResumeViewer({ resume, onDelete }: ResumeViewerProps) {
   const handleDelete = async () => {
     const confirmed = await dialog.confirmation({
       title: "Delete resume?",
-      description: `${resume.filename} will be permanently removed from CareerForges.`,
+      description: `${resume.filename} will be permanently removed from LandMyJob.`,
       confirmLabel: "Delete",
       onConfirm: async () => {
         await invoke("delete_resume", { id: resume.id });

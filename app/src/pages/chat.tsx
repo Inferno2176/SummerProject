@@ -457,13 +457,13 @@ export default function ChatPage() {
     };
 
   return (
-    <section className="mx-auto flex h-[calc(100vh-140px)] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] chat-surface shadow-2xl backdrop-blur-xl">
+    <section className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-xl chat-surface p-4">
       {/* HEADER */}
       <div className="border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4 backdrop-blur-xl">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-[var(--text)]">
-              CareerForges Chat
+              LandMyJob Chat
             </h1>
 
             <p className="mt-1 text-xs text-[var(--muted)]">
@@ -822,7 +822,7 @@ export default function ChatPage() {
             focus:bg-white/[0.06]
             focus:shadow-[0_0_0_4px_rgba(249,115,22,0.08)]
             "
-            placeholder="Message CareerForges..."
+            placeholder="Message LandMyJob..."
           />
 
           <button

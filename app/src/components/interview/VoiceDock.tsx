@@ -25,7 +25,7 @@ export default function VoiceDock({
   toggleListening,
 }: Props) {
   return (
-    <div className="flex items-center gap-2 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-2">
+    <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2">
 
       {/* MIC */}
       <button
@@ -34,7 +34,7 @@ export default function VoiceDock({
         }
         className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
           listening
-            ? "bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.35)]"
+            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
             : "bg-[var(--surface-2)] text-[var(--muted)]"
         }`}
       >
@@ -61,7 +61,7 @@ export default function VoiceDock({
             )
           }
           placeholder="Respond to the interviewer..."
-          className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 text-sm text-[var(--text)] outline-none placeholder:text-[var(--muted)]"
+          className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 text-sm text-[var(--text)] outline-none placeholder:text-[var(--muted)] focus:border-blue-500"
         />
 
       </div>
@@ -69,7 +69,7 @@ export default function VoiceDock({
       {/* SEND */}
       <button
         onClick={onSend}
-        className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.28)] transition hover:scale-[1.02]"
+        className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700"
       >
 
         <Send size={17} />

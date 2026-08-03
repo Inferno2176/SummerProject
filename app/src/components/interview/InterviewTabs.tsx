@@ -97,7 +97,7 @@ export default function InterviewTabs({
   ] as const;
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface)]">
+    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
 
       {/* TAB BAR */}
       <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
@@ -117,7 +117,7 @@ export default function InterviewTabs({
                   setTab(item.id)
                 }
                 className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${active
-                  ? "border-orange-500/20 bg-orange-500/15 text-orange-400"
+                  ? "border-blue-500/20 bg-blue-500/15 text-blue-400"
                   : "border-transparent text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
                   }`}
               >
@@ -136,7 +136,7 @@ export default function InterviewTabs({
           <div
             className={`h-2.5 w-2.5 rounded-full ${aiState ===
               "speaking"
-              ? "bg-orange-400 animate-pulse"
+              ? "bg-blue-400 animate-pulse"
               : aiState ===
                 "listening"
                 ? "bg-emerald-400 animate-pulse"

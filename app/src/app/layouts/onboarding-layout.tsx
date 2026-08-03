@@ -24,30 +24,18 @@ export default function OnboardingLayout() {
 
     const load = async () => {
       try {
-        console.log(
-          "[Onboarding] bootstrap",
-        );
-
-        const completed =
-          await invoke<boolean>(
-            "db_is_onboarding_completed",
-          );
+        const isLocalCompleted = localStorage.getItem("onboarding_completed") === "true";
+        const completed = await invoke<boolean>("db_is_onboarding_completed").catch(() => isLocalCompleted);
 
         if (!mounted) return;
 
-        setOnboardingCompleted(
-          completed,
-        );
-
-        console.log(
-          "[Onboarding] completed:",
-          completed,
-        );
+        setOnboardingCompleted(completed || isLocalCompleted);
       } catch (err) {
-        console.error(
-          "[Onboarding] bootstrap failed",
-          err,
-        );
+        console.error("[Onboarding] bootstrap failed", err);
+        const isLocalCompleted = localStorage.getItem("onboarding_completed") === "true";
+        if (mounted) {
+          setOnboardingCompleted(isLocalCompleted);
+        }
       } finally {
         if (mounted) {
           setLoading(false);
@@ -60,7 +48,7 @@ export default function OnboardingLayout() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [location.pathname]);
 
   /*
     LOADING

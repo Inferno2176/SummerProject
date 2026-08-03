@@ -1,0 +1,23 @@
+ALEX MERCER
+Senior Full-Stack Engineer
+Email: alex.mercer@example.com | Location: San Francisco, CA
+
+PROFESSIONAL SUMMARY:
+Accomplished Full-Stack Software Engineer with 6+ years of experience designing and scaling web & desktop applications. Expert in React, TypeScript, Rust, Node.js, and AI integrations.
+
+TECHNICAL SKILLS:
+- Frontend: React, TypeScript, Vite, Tailwind CSS, Next.js, Redux, Zustand
+- Backend: Rust, Node.js, Python, Express, FastAPI, REST APIs, GraphQL
+- Databases & Tools: PostgreSQL, SQLite, Docker, Git, CI/CD, AWS, Tauri
+
+WORK EXPERIENCE:
+Senior Software Engineer | TechCorp Inc. (2022 - Present)
+- Architected high-performance desktop tools using Tauri, Rust, and React, serving 50k+ daily users.
+- Optimized frontend rendering and web workers, reducing overall bundle load times by 40%.
+
+Frontend Engineer | WebCraft Labs (2020 - 2022)
+- Built interactive dashboard UI components with React, TypeScript, and Tailwind CSS.
+- Developed real-time data visualization charts and automated unit testing pipelines.
+
+EDUCATION:
+B.S. in Computer Science — University of California, Berkeley (2016 - 2020)

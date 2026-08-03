@@ -29,6 +29,13 @@ export default function Topbar() {
   const { toggleSidebar } =
     useSidebarStore();
 
+  const userProfile = JSON.parse(localStorage.getItem("user_profile") || '{"name":"User"}');
+  const nameParts = userProfile.name.split(" ");
+  const firstName = nameParts[0];
+  const initials = nameParts.length > 1 
+    ? `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase() 
+    : firstName.slice(0, 2).toUpperCase();
+
   const [model, setModel] =
     useState("");
 
@@ -298,7 +305,7 @@ export default function Topbar() {
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
               theme ===
               "light"
-                ? "bg-[var(--accent)] text-white shadow-lg shadow-orange-500/20"
+                ? "bg-[var(--accent)] text-white shadow-md shadow-blue-500/20"
                 : "text-[var(--muted)] hover:bg-[var(--surface-2)]"
             }`}
           >
@@ -314,7 +321,7 @@ export default function Topbar() {
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
               theme ===
               "dark"
-                ? "bg-[var(--accent)] text-white shadow-lg shadow-orange-500/20"
+                ? "bg-[var(--accent)] text-white shadow-md shadow-blue-500/20"
                 : "text-[var(--muted)] hover:bg-[var(--surface-2)]"
             }`}
           >
@@ -324,14 +331,14 @@ export default function Topbar() {
         </div>
 
         {/* PROFILE */}
-        <div className="topbar-chip flex h-12 items-center gap-3 rounded-2xl px-3">
+        <div className="topbar-chip flex h-11 items-center gap-3 rounded-xl px-3">
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-black">
-            MJ
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-white">
+            {initials}
           </div>
 
           <p className="text-sm font-medium text-[var(--text)]">
-            Joshi
+            {firstName}
           </p>
 
         </div>

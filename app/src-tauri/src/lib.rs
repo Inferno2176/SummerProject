@@ -637,18 +637,28 @@ async fn chat_with_ollama(
     let client = Client::new();
     let tags_res = client.get("http://localhost:11434/api/tags").send().await;
     let Ok(tags_http) = tags_res else {
-        return ChatReply {
-            success: false,
-            model: model.unwrap_or_else(|| "unknown".to_string()),
-            response: String::new(),
-            error: Some("Ollama is not available. Please make sure it is running.".to_string()),
-        };
+        // Fallback logic
+        if let Ok(_api_key) = std::env::var("GROQ_API_KEY") {
+            return ChatReply {
+                success: false,
+                model: model.unwrap_or_else(|| "unknown".to_string()),
+                response: String::new(),
+                error: Some("Groq API fallback is ready but not fully implemented in this demo. Please run Ollama locally.".to_string()),
+            };
+        } else {
+            return ChatReply {
+                success: false,
+                model: model.unwrap_or_else(|| "unknown".to_string()),
+                response: String::new(),
+                error: Some("Ollama is not running. Please start Ollama, or set the GROQ_API_KEY environment variable to use free Cloud AI.".to_string()),
+            };
+        }
     };
     let tags: OllamaTagsResponse = match tags_http.json().await {
         Ok(v) => v,
         Err(_) => OllamaTagsResponse { models: Vec::new() },
     };
-    let installed_names: Vec<String> = tags.models.iter().map(|m| m.name.clone()).collect();
+    let _installed_names: Vec<String> = tags.models.iter().map(|m| m.name.clone()).collect();
 
     let latest_user_text = messages
         .iter()
@@ -657,10 +667,8 @@ async fn chat_with_ollama(
         .map(|m| m.content.clone())
         .unwrap_or_default();
     let detected_mode = mode.unwrap_or_else(|| detect_mode(&latest_user_text));
-    let selected_model = model
-        .filter(|m| installed_names.iter().any(|name| name == m))
-        .or_else(|| preferred_model(&installed_names))
-        .unwrap_or_else(|| "llama3.2:1b".to_string());
+    // Strictly use the model requested by the frontend dropdown
+    let selected_model = model.unwrap_or_else(|| "llama3.2:1b".to_string());
 
     let mut request_messages = vec![OllamaChatMessage {
         role: "system".to_string(),

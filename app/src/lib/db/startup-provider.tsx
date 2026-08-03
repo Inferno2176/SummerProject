@@ -131,7 +131,7 @@ export function StartupSplash() {
       <div className="flex flex-col items-center gap-4">
         {/* Logo or Brand */}
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">CareerForges</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">LandMyJob</h1>
           <p className="text-slate-400">Initializing...</p>
         </div>
 

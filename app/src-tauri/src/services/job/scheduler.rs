@@ -102,6 +102,9 @@ impl JobScheduler {
                 if let Ok(master) = serde_json::from_str::<serde_json::Value>(json_str) {
                     let profile = &master["profile"];
                     user_location = profile["location"].as_str().map(|s| s.to_string());
+                    if user_location.is_none() {
+                        user_location = Some("India".to_string());
+                    }
                     
                     // 1. Add queries based on job titles in experience
                     if let Some(exp_list) = profile["experience"].as_array() {

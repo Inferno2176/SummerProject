@@ -221,7 +221,7 @@ export default function ATSPage() {
           <div className="lg:col-span-1 space-y-6">
             <div className="rounded-3xl border border-white/5 bg-white/[0.02] p-6 space-y-6">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <History className="h-5 w-5 text-orange-400" />
+                <History className="h-5 w-5 text-blue-400" />
                 History
               </h2>
               
@@ -234,16 +234,16 @@ export default function ATSPage() {
                       <div 
                         key={doc.id}
                         onClick={() => setPreviewDoc({ type: 'resume', data: doc })}
-                        className={`group cursor-pointer rounded-2xl border p-4 transition ${
+                        className={`group cursor-pointer rounded-xl border p-4 transition ${
                           previewDoc?.data.id === doc.id 
-                            ? "border-orange-500/50 bg-orange-500/[0.05]" 
+                            ? "border-blue-500/50 bg-blue-500/[0.05]" 
                             : "border-white/5 bg-white/5 hover:bg-white/10"
                         }`}
                       >
                         <div className="flex items-start justify-between">
                           <div>
                             <p className="text-sm font-bold truncate max-w-[150px]">{doc.job?.title || "Unknown Job"}</p>
-                            <p className="text-[10px] text-orange-400/80 mt-0.5">{doc.job?.company || "Unknown Company"}</p>
+                            <p className="text-[10px] text-blue-400/80 mt-0.5">{doc.job?.company || "Unknown Company"}</p>
                           </div>
                           <FileText size={14} className="text-[var(--muted)]" />
                         </div>
@@ -273,16 +273,16 @@ export default function ATSPage() {
                       <div 
                         key={doc.id}
                         onClick={() => setPreviewDoc({ type: 'cv', data: doc })}
-                        className={`group cursor-pointer rounded-2xl border p-4 transition ${
+                        className={`group cursor-pointer rounded-xl border p-4 transition ${
                           previewDoc?.data.id === doc.id 
-                            ? "border-orange-500/50 bg-orange-500/[0.05]" 
+                            ? "border-blue-500/50 bg-blue-500/[0.05]" 
                             : "border-white/5 bg-white/5 hover:bg-white/10"
                         }`}
                       >
                         <div className="flex items-start justify-between">
                           <div>
                             <p className="text-sm font-bold truncate max-w-[150px]">{doc.job?.title || "Unknown Job"}</p>
-                            <p className="text-[10px] text-orange-400/80 mt-0.5">{doc.job?.company || "Unknown Company"}</p>
+                            <p className="text-[10px] text-blue-400/80 mt-0.5">{doc.job?.company || "Unknown Company"}</p>
                           </div>
                           <Mail size={14} className="text-[var(--muted)]" />
                         </div>
@@ -314,34 +314,44 @@ export default function ATSPage() {
                 <div className="flex items-center justify-between border-b border-white/5 pb-6">
                   <div>
                     <h2 className="text-2xl font-bold flex items-center gap-3">
-                      {previewDoc.type === 'resume' ? <FileText className="text-orange-400" /> : <Mail className="text-orange-400" />}
+                      {previewDoc.type === 'resume' ? <FileText className="text-blue-400" /> : <Mail className="text-blue-400" />}
                       {previewDoc.type === 'resume' ? 'Optimized Resume' : 'Cover Letter'}
                     </h2>
                     <p className="text-[var(--muted)] mt-1">
-                      For <span className="text-white font-medium">{previewDoc.data.job?.title}</span> at <span className="text-orange-400">{previewDoc.data.job?.company}</span>
+                      For <span className="text-white font-medium">{previewDoc.data.job?.title}</span> at <span className="text-blue-400">{previewDoc.data.job?.company}</span>
                     </p>
                   </div>
                   <div className="flex gap-3">
                     <button 
-                      onClick={() => handleDownload(previewDoc.data, previewDoc.type)}
-                      className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm font-bold hover:bg-white/10 transition"
+                      onClick={() => {
+                        exportToPDF({
+                          title: `${previewDoc.data.job?.title || 'Document'} - ${previewDoc.type === 'resume' ? 'ATS Resume' : 'Cover Letter'}`,
+                          type: previewDoc.type,
+                          jobTitle: previewDoc.data.job?.title,
+                          company: previewDoc.data.job?.company,
+                          summary: previewDoc.data.optimized_summary,
+                          skills: previewDoc.data.optimized_skills?.split(','),
+                          content: previewDoc.data.content
+                        });
+                      }}
+                      className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md shadow-blue-500/20"
                     >
                       <Download size={16} />
-                      Download
+                      Export PDF
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-[var(--surface)] rounded-2xl p-8 font-serif text-white/90 leading-relaxed shadow-inner max-h-[600px] overflow-y-auto whitespace-pre-wrap">
+                <div className="bg-[var(--surface)] rounded-xl p-8 font-sans text-white/90 leading-relaxed shadow-inner max-h-[600px] overflow-y-auto whitespace-pre-wrap">
                   {previewDoc.type === 'resume' ? (
                     <div className="space-y-8 font-sans">
                       <div>
-                        <h3 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-4">Professional Summary</h3>
+                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Professional Summary</h3>
                         <p className="text-sm leading-relaxed">{previewDoc.data.optimized_summary}</p>
                       </div>
                       
                       <div>
-                        <h3 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-4">Key Skills</h3>
+                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Key Skills</h3>
                         <div className="flex flex-wrap gap-2">
                           {previewDoc.data.optimized_skills?.split(',').map((s: string, i: number) => (
                             <span key={i} className="px-3 py-1 bg-white/5 rounded-lg border border-white/5 text-xs">
@@ -352,14 +362,14 @@ export default function ATSPage() {
                       </div>
 
                       <div>
-                        <h3 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-4">Optimized Achievements</h3>
+                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Optimized Achievements</h3>
                         <ul className="space-y-3">
                           {(() => {
                             try {
                               const bullets = JSON.parse(previewDoc.data.optimized_experience || "[]");
                               return bullets.map((b: string, i: number) => (
                                 <li key={i} className="text-sm flex gap-3">
-                                  <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" />
+                                  <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                                   {b}
                                 </li>
                               ));
@@ -396,7 +406,7 @@ export default function ATSPage() {
                 <button 
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="flex items-center gap-2 text-xs font-bold text-orange-400 hover:text-orange-300 transition"
+                  className="flex items-center gap-2 text-xs font-bold text-blue-400 hover:text-blue-300 transition"
                 >
                   {uploading ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                   Upload New
@@ -412,7 +422,7 @@ export default function ATSPage() {
 
               <div className="flex flex-col gap-2">
                 <select 
-                  className="w-full rounded-xl border border-white/5 bg-[var(--surface)] p-3 outline-none focus:border-orange-500/50"
+                  className="w-full rounded-xl border border-white/5 bg-[var(--surface)] p-3 outline-none focus:border-blue-500/50"
                   value={selectedResumeId}
                   onChange={(e) => setSelectedResumeId(e.target.value)}
                 >
@@ -424,7 +434,7 @@ export default function ATSPage() {
                 {selectedResume && !selectedResume.is_default && (
                   <button 
                     onClick={() => handleSetMaster(selectedResume.id)}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-orange-500/10 border border-orange-500/20 py-2 text-xs font-bold text-orange-400 hover:bg-orange-500/20 transition"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 py-2 text-xs font-bold text-blue-400 hover:bg-blue-500/20 transition"
                   >
                     <CheckCircle2 size={14} />
                     Set as Master Piece
@@ -482,23 +492,23 @@ export default function ATSPage() {
               <button 
                 onClick={() => setActiveTab("analysis")}
                 className={`pb-3 text-sm font-medium transition-colors relative ${
-                  activeTab === "analysis" ? "text-orange-500" : "text-[var(--muted)] hover:text-white"
+                  activeTab === "analysis" ? "text-blue-500" : "text-[var(--muted)] hover:text-white"
                 }`}
               >
                 ATS Analysis
                 {activeTab === "analysis" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
                 )}
               </button>
               <button 
                 onClick={() => setActiveTab("profile")}
                 className={`pb-3 text-sm font-medium transition-colors relative ${
-                  activeTab === "profile" ? "text-orange-500" : "text-[var(--muted)] hover:text-white"
+                  activeTab === "profile" ? "text-blue-500" : "text-[var(--muted)] hover:text-white"
                 }`}
               >
                 Master Piece (Profile)
                 {activeTab === "profile" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
                 )}
               </button>
             </div>

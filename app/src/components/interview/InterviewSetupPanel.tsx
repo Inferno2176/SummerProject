@@ -75,14 +75,14 @@ export default function InterviewSetupPanel({
   ] = useState(false);
 
   return (
-    <aside className="flex w-[340px] flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface)]">
+    <aside className="flex w-[320px] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
 
       {/* HEADER */}
       <div className="border-b border-[var(--border)] p-5">
 
         <div className="flex items-center gap-3">
 
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-[0_0_25px_rgba(249,115,22,0.35)]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
 
             <Brain size={20} />
 
@@ -398,7 +398,7 @@ export default function InterviewSetupPanel({
             onClick={
               startInterview
             }
-            className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-orange-500 text-sm font-semibold text-white shadow-[0_0_30px_rgba(249,115,22,0.35)] transition hover:scale-[1.01]"
+            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700"
           >
 
             <Play size={16} />
@@ -411,7 +411,7 @@ export default function InterviewSetupPanel({
             onClick={
               finishInterview
             }
-            className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--surface)]"
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--surface)]"
           >
 
             <Square size={15} />

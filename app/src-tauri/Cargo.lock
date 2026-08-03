@@ -488,36 +488,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "careerforges"
-version = "0.1.7"
-dependencies = [
- "anyhow",
- "async-trait",
- "chrono",
- "deadpool-sqlite",
- "env_logger",
- "futures-util",
- "log",
- "pdf-extract",
- "regex",
- "reqwest 0.12.28",
- "rusqlite",
- "rusqlite_migration",
- "serde",
- "serde_json",
- "sysinfo",
- "tauri",
- "tauri-build",
- "tauri-plugin-notification",
- "tauri-plugin-opener",
- "tauri-plugin-updater",
- "thiserror 1.0.69",
- "tokio",
- "uuid",
- "zip 2.4.2",
-]
-
-[[package]]
 name = "cargo-platform"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2321,6 +2291,36 @@ dependencies = [
  "bitflags 2.11.1",
  "serde",
  "unicode-segmentation",
+]
+
+[[package]]
+name = "landmyjob"
+version = "0.1.7"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "deadpool-sqlite",
+ "env_logger",
+ "futures-util",
+ "log",
+ "pdf-extract",
+ "regex",
+ "reqwest 0.12.28",
+ "rusqlite",
+ "rusqlite_migration",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-notification",
+ "tauri-plugin-opener",
+ "tauri-plugin-updater",
+ "thiserror 1.0.69",
+ "tokio",
+ "uuid",
+ "zip 2.4.2",
 ]
 
 [[package]]

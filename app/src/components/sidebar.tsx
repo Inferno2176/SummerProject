@@ -14,8 +14,7 @@ import {
 import { NavLink } from "react-router-dom";
 
 import { useSidebarStore } from "../store/sidebar-store";
-
-import logo from "../assets/logo.png";
+import LandMyJobLogo from "./logo";
 
 const items = [
   {
@@ -74,16 +73,12 @@ export default function Sidebar() {
 
         <div className="flex min-w-0 items-center gap-3">
 
-          <img
-            src={logo}
-            alt="CareerForges"
-            className="h-10 w-10 shrink-0 object-contain"
-          />
+          <LandMyJobLogo size={36} />
 
           {!isCollapsed && (
             <div className="min-w-0 flex-1">
               <h1 className="truncate font-display text-[20px] font-bold tracking-tight text-[var(--text)]">
-                CareerForges
+                LandMyJob
               </h1>
 
               <p className="truncate text-xs text-[var(--muted)]">
@@ -128,13 +123,13 @@ export default function Sidebar() {
               className={({
                 isActive,
               }) =>
-                `group flex items-center gap-3 rounded-2xl text-sm font-medium transition-all ${
+                `group flex items-center gap-3 rounded-xl text-sm font-medium transition-all ${
                   isCollapsed
-                    ? "h-12 w-12 justify-center"
-                    : "px-4 py-3"
+                    ? "h-11 w-11 justify-center"
+                    : "px-4 py-2.5"
                 } ${
                   isActive
-                    ? "bg-[var(--accent)] text-white shadow-lg shadow-orange-500/10"
+                    ? "bg-[var(--accent)] text-white shadow-md shadow-blue-500/15"
                     : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
                 }`
               }
@@ -158,10 +153,10 @@ export default function Sidebar() {
       <div className="p-4">
 
         <div
-          className={`topbar-chip rounded-3xl ${
+          className={`topbar-chip rounded-xl ${
             isCollapsed
               ? "flex items-center justify-center p-3"
-              : "p-4"
+              : "p-3.5"
           }`}
         >
           {!isCollapsed ? (

@@ -110,17 +110,17 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="h-full space-y-6 p-6 overflow-y-auto">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
-        <p className="mt-2 text-[var(--muted)]">Manage your local AI assistant preferences and background tasks.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-[var(--muted)]">Manage your local AI assistant preferences and background tasks.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Job Discovery Scheduler */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 text-orange-500">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400">
               <RefreshCw size={20} />
             </div>
             <div>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 space-y-6">
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="font-medium">Background Scheduling</p>
@@ -138,7 +138,7 @@ export default function SettingsPage() {
               <button 
                 onClick={() => handleToggleScheduler(!scheduler?.enabled)}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  scheduler?.enabled ? 'bg-orange-500' : 'bg-white/10'
+                  scheduler?.enabled ? 'bg-blue-600' : 'bg-white/10'
                 }`}
               >
                 <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                     onClick={() => handleFrequencyChange(f.value)}
                     className={`rounded-xl border px-4 py-2.5 text-xs font-medium transition ${
                       scheduler?.frequency_mins === f.value
-                        ? 'border-orange-500/50 bg-orange-500/10 text-orange-500'
+                        ? 'border-blue-500/50 bg-blue-500/10 text-blue-500'
                         : 'border-white/5 bg-white/5 text-[var(--muted)] hover:bg-white/10'
                     }`}
                   >

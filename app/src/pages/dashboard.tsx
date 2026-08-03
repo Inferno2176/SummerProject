@@ -62,16 +62,16 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="h-full space-y-6 p-6 overflow-y-auto">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Welcome back!</h1>
-        <p className="mt-2 text-[var(--muted)]">Here's what's happening with your job search.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
+        <p className="mt-1 text-sm text-[var(--muted)]">Here's what's happening with your job search in India.</p>
       </div>
 
       {/* Stats Grid */}
@@ -97,7 +97,7 @@ export default function DashboardPage() {
         <StatCard 
           title="Interviews" 
           value={stats.interviews} 
-          icon={<Clock className="h-5 w-5 text-orange-400" />} 
+          icon={<Clock className="h-5 w-5 text-blue-400" />} 
           trend="Next: Tomorrow"
         />
       </div>
@@ -107,12 +107,12 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Recent Job Opportunities</h2>
-            <button className="text-sm text-orange-400 hover:underline">View all</button>
+            <button className="text-sm text-blue-400 hover:underline">View all</button>
           </div>
           <div className="space-y-4">
             {recentJobs.length > 0 ? (
               recentJobs.map(job => (
-                <div key={job.id} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-4 transition hover:bg-white/[0.04]">
+                <div key={job.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] p-4 transition hover:bg-white/[0.04]">
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5">
                       <Briefcase className="h-6 w-6 text-[var(--muted)]" />

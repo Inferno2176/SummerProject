@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "CareerForges",
+  "productName": "LandMyJob",
   "version": "0.1.7",
-  "identifier": "com.careerforges.app",
+  "identifier": "com.landmyjob.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "CareerForges",
+        "title": "LandMyJob",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,

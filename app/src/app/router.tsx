@@ -14,6 +14,9 @@ import CommunityPage from "../pages/community";
 import ChatPage from "../pages/chat";
 import SettingsPage from "../pages/settings";
 import ErrorBoundary from "../components/ErrorBoundary";
+import LoginPage from "../pages/onboarding/login";
+import SignupPage from "../pages/onboarding/signup";
+import AuthGuard from "../components/auth-guard";
 
 export const router = createBrowserRouter([
   {
@@ -29,13 +32,23 @@ export const router = createBrowserRouter([
         element: <WelcomePage />,
       },
       {
-        path: "upload-resume",
-        element: <UploadResumePage />,
+        path: "login",
+        element: <LoginPage />,
       },
-
-      /*
-        APP
-      */
+      {
+        path: "signup",
+        element: <SignupPage />,
+      },
+      {
+        element: <AuthGuard />,
+        children: [
+          {
+            path: "upload-resume",
+            element: <UploadResumePage />,
+          },
+          /*
+            APP
+          */
       {
         path: "app",
         element: <AppLayout />,
@@ -79,6 +92,8 @@ export const router = createBrowserRouter([
             element: <SettingsPage />,
           },
         ],
+      },
+      ],
       },
     ],
   },

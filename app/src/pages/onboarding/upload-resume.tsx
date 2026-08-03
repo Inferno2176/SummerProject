@@ -58,6 +58,8 @@ export default function UploadResumePage() {
     if (!resumeUploaded) return;
 
     try {
+      localStorage.setItem("onboarding_completed", "true");
+
       const selectedProvider = await invoke<string>("db_get_selected_provider").catch(() => "ollama");
       const selectedModel = await invoke<string>("db_get_selected_model").catch(() => "llama3.2:1b");
 
@@ -65,22 +67,19 @@ export default function UploadResumePage() {
         key: "resume_uploaded",
         value: "true",
         dataType: "boolean",
-      });
+      }).catch(() => {});
 
-      await invoke("db_set_onboarding_step", { step: "completed" });
+      await invoke("db_set_onboarding_step", { step: "completed" }).catch(() => {});
 
       await invoke("db_complete_onboarding", {
         provider: selectedProvider,
         model: selectedModel,
-      });
-
-      navigate("/app/dashboard", { replace: true });
-      if (window?.location?.pathname !== "/app/dashboard") {
-        window.location.href = "/app/dashboard";
-      }
+      }).catch(() => {});
     } catch (err) {
       console.error("[Onboarding] Complete failed", err);
-      setError(String(err));
+    } finally {
+      localStorage.setItem("onboarding_completed", "true");
+      navigate("/app/dashboard", { replace: true });
     }
   };
 

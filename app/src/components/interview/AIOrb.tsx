@@ -31,7 +31,7 @@ export default function AIOrb({
             ? 1.2
             : 3,
         }}
-        className="absolute h-40 w-40 rounded-full bg-orange-500 blur-3xl"
+        className="absolute h-40 w-40 rounded-full bg-blue-600 blur-3xl"
       />
 
       {/* MIDDLE RING */}
@@ -45,7 +45,7 @@ export default function AIOrb({
           repeat: Infinity,
           duration: 1.5,
         }}
-        className="absolute h-32 w-32 rounded-full border border-orange-400/20"
+        className="absolute h-32 w-32 rounded-full border border-blue-400/20"
       />
 
       {/* MAIN ORB */}
@@ -59,7 +59,7 @@ export default function AIOrb({
           repeat: Infinity,
           duration: 2,
         }}
-        className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_0_50px_rgba(249,115,22,0.4)]"
+        className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-[0_0_50px_rgba(37,99,235,0.4)]"
       >
 
         <div className="h-7 w-7 rounded-full bg-white/30 backdrop-blur-xl" />

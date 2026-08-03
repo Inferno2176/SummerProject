@@ -9,7 +9,7 @@ export default function WelcomePage() {
   const navigate = useNavigate();
   const handleLearnMore = async () => {
     try {
-      await openUrl("https://careerforges.app");
+      await openUrl("https://landmyjob.app");
     } catch (error) {
       console.error("Failed to open Learn More URL:", error);
     }
@@ -37,7 +37,7 @@ export default function WelcomePage() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-              CareerForges helps you build ATS-friendly resumes,
+              LandMyJob helps you build ATS-friendly resumes,
               analyze jobs, prepare for interviews,
               and manage applications privately on your machine.
             </p>
@@ -52,13 +52,13 @@ export default function WelcomePage() {
                         step: "resume_upload",
                       },
                     );
-
-                    navigate("/upload-resume");
                   } catch (err) {
                     console.error(
                       "Failed to start onboarding",
                       err,
                     );
+                  } finally {
+                    navigate("/signup");
                   }
                 }}
                 className="flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-6 py-4 font-medium text-white transition hover:scale-[1.02]"
