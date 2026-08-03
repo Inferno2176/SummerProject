@@ -211,7 +211,7 @@ If you like the idea:
 
 ## 🙌 Acknowledgements
 
-This project, originally created by **Joshi** under the name *CareerForges*, has been modified by:
+This project, originally created by **JoshiNaidu** under the name *CareerForges*, has been modified by:
 - **Shalom Jadhav**
 - **Shalom Koshy**
 - **Blesson Belly**
