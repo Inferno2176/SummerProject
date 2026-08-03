@@ -1,14 +1,14 @@
-# CareerForges Release Guidelines
+# hyrd. Release Guidelines
 
 ## Overview
 
-CareerForges uses semantic versioning and maintains a clear prerelease/release strategy to communicate product maturity to users. This document outlines best practices for managing releases and keeping the landing page synchronized.
+hyrd. uses semantic versioning and maintains a clear prerelease/release strategy to communicate product maturity to users. This document outlines best practices for managing releases and keeping the landing page synchronized.
 
 ---
 
 ## Semantic Versioning
 
-CareerForges follows [Semantic Versioning 2.0.0](https://semver.org/):
+hyrd. follows [Semantic Versioning 2.0.0](https://semver.org/):
 
 ```
 MAJOR.MINOR.PATCH
@@ -54,7 +54,7 @@ Located at: [app/package.json](../app/package.json)
 
 ### Step 2: Create GitHub Release
 
-1. Go to: [GitHub Releases](https://github.com/JoshiNaidu/career-forges/releases)
+1. Go to: [GitHub Releases](https://github.com/JoshiNaidu/hyrd/releases)
 2. Click "Draft a new release"
 3. Tag version: `v0.2.0` (include `v` prefix)
 4. Title: `v0.2.0 - [Feature Description]`
@@ -84,7 +84,7 @@ Located at: [app/package.json](../app/package.json)
 - [Linux](link)
 
 ---
-Built with ❤️ by the CareerForges community
+Built with ❤️ by the hyrd. community
 ```
 
 ### Step 3: Update Landing Page
@@ -105,7 +105,7 @@ When releasing a new version, update:
 
 2. **Footer** (around line 1010):
 ```html
-<p>© 2026 CareerForges • v0.2.0 Prerelease • Built by <a href="https://mattajoshi.in" target="_blank">Matta Joshi</a> • <a href="https://github.com/JoshiNaidu/career-forges/releases" target="_blank">Release Notes</a></p>
+<p>© 2026 hyrd. • v0.2.0 Prerelease • Built by <a href="https://mattajoshi.in" target="_blank">Matta Joshi</a> • <a href="https://github.com/JoshiNaidu/hyrd/releases" target="_blank">Release Notes</a></p>
 ```
 
 ---
@@ -114,7 +114,7 @@ When releasing a new version, update:
 
 ### 1. **Download Prerelease Button** (Hero Section)
 - **Text:** `📥 Download Prerelease`
-- **Link:** `https://github.com/JoshiNaidu/career-forges/releases`
+- **Link:** `https://github.com/JoshiNaidu/hyrd/releases`
 - **Location:** Primary CTA in hero buttons
 - **Purpose:** Direct users to latest prerelease builds
 
@@ -127,7 +127,7 @@ When releasing a new version, update:
 
 ### 3. **Release Notes Link** (Footer)
 - **Text:** `Release Notes`
-- **Link:** `https://github.com/JoshiNaidu/career-forges/releases`
+- **Link:** `https://github.com/JoshiNaidu/hyrd/releases`
 - **Location:** Footer beside creator attribution
 - **Purpose:** Quick access to changelog and download history
 
@@ -168,7 +168,7 @@ When releasing v1.0.0:
 
 The main download button redirects to:
 ```
-https://github.com/JoshiNaidu/career-forges/releases
+https://github.com/JoshiNaidu/hyrd/releases
 ```
 
 Users can select the appropriate binary for their OS (Windows, macOS, Linux).
@@ -177,7 +177,7 @@ Users can select the appropriate binary for their OS (Windows, macOS, Linux).
 
 Consider adding version-specific links in the future:
 ```
-https://github.com/JoshiNaidu/career-forges/releases/tag/v0.2.0 Alpha
+https://github.com/JoshiNaidu/hyrd/releases/tag/v0.2.0 Alpha
 ```
 
 ---
@@ -199,7 +199,7 @@ When the project reaches stability:
 - [app/package.json](../app/package.json) - Version definition
 - [landing/index.html](../landing/index.html) - Landing page (version display)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contributing guidelines
-- GitHub Releases: https://github.com/JoshiNaidu/career-forges/releases
+- GitHub Releases: https://github.com/JoshiNaidu/hyrd/releases
 
 ---
 

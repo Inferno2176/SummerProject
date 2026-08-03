@@ -110,9 +110,9 @@ pub async fn upload_resume(app: AppHandle, path: String) -> Result<Resume, Strin
     let pool = app.state::<DbPool>();
 
     // Get or create default user
-    let user = match UserRepository::get_by_email(&pool, "localuser@careerforges.local").await {
+    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
         Ok(Some(u)) => u,
-        _ => UserRepository::create(&pool, "localuser@careerforges.local", Some("Local User".to_string())).await
+        _ => UserRepository::create(&pool, "localuser@hyrd.local", Some("Local User".to_string())).await
             .map_err(|e| format!("Failed to create local user: {}", e))?,
     };
 
@@ -268,9 +268,9 @@ pub async fn parse_and_store_resume(
     let pool = app.state::<DbPool>();
 
     // Get or create default user
-    let user = match UserRepository::get_by_email(&pool, "localuser@careerforges.local").await {
+    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
         Ok(Some(u)) => u,
-        _ => UserRepository::create(&pool, "localuser@careerforges.local", Some("Local User".to_string())).await
+        _ => UserRepository::create(&pool, "localuser@hyrd.local", Some("Local User".to_string())).await
             .map_err(|e| format!("Failed to create local user: {}", e))?,
     };
 

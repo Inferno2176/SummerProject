@@ -8,17 +8,17 @@ Complete checklist for validating the persistence system end-to-end.
 - [ ] Rust backend compiles without errors
 - [ ] TypeScript frontend compiles without errors
 - [ ] Tauri dev server runs: `cargo tauri dev`
-- [ ] Database file exists: `~/.config/careerforges/careerforges.db`
+- [ ] Database file exists: `~/.config/hyrd/hyrd.db`
 - [ ] Console logs visible (F12 dev tools)
 
 ### Database Verification
 ```bash
 # Check database exists and has tables
-sqlite3 ~/.config/careerforges/careerforges.db ".tables"
+sqlite3 ~/.config/hyrd/hyrd.db ".tables"
 # Should show: _migrations, app_state, ai_agents, settings, ...
 
 # Check app_state table
-sqlite3 ~/.config/careerforges/careerforges.db "SELECT * FROM app_state;"
+sqlite3 ~/.config/hyrd/hyrd.db "SELECT * FROM app_state;"
 # Should show default records
 ```
 
@@ -27,7 +27,7 @@ sqlite3 ~/.config/careerforges/careerforges.db "SELECT * FROM app_state;"
 **Goal:** Verify first-time setup flow
 
 **Steps:**
-1. Delete database: `rm ~/.config/careerforges/careerforges.db`
+1. Delete database: `rm ~/.config/hyrd/hyrd.db`
 2. Launch app: `cargo tauri dev`
 3. Observe splash screen (should appear)
 4. Observe routing to `/onboarding` (should be automatic)
@@ -81,7 +81,7 @@ JSON.parse(localStorage.getItem('app-state-store')) // Should have persisted dat
 
 **SQL Query to Verify:**
 ```sql
-sqlite3 ~/.config/careerforges/careerforges.db
+sqlite3 ~/.config/hyrd/hyrd.db
 SELECT key, value FROM app_state 
   WHERE key IN ('onboarding_completed', 'selected_provider', 'selected_model');
 ```
@@ -160,7 +160,7 @@ console.log('Auto-save:', settings.autoSaveSessions)  // Should be true
 JSON.parse(localStorage.getItem('settings-store'))
 
 // Check database
-sqlite3 ~/.config/careerforges/careerforges.db
+sqlite3 ~/.config/hyrd/hyrd.db
 SELECT key, value FROM settings WHERE key IN ('theme', 'auto_save_sessions');
 ```
 
@@ -236,7 +236,7 @@ console.log('Default persisted:', defaultAgent?.display_name)  // Should match
 ```typescript
 // Simulate by removing database file while app is running
 // In another terminal:
-rm ~/.config/careerforges/careerforges.db
+rm ~/.config/hyrd/hyrd.db
 
 // In app
 const { db } = await import('@/lib/db')
@@ -313,10 +313,10 @@ window.location.reload()
 **Goal:** Verify app works with localStorage as fallback
 
 **Steps:**
-1. Delete database: `rm ~/.config/careerforges/careerforges.db`
+1. Delete database: `rm ~/.config/hyrd/hyrd.db`
 2. Launch app and complete onboarding
 3. Close browser dev tools
-4. Force clear database: `rm ~/.config/careerforges/careerforges.db`
+4. Force clear database: `rm ~/.config/hyrd/hyrd.db`
 5. Relaunch app (localStorage should provide fallback)
 
 **Validation:**
@@ -342,7 +342,7 @@ Enable debug logging to trace initialization:
 
 ```typescript
 // In browser console, add before app startup
-localStorage.setItem('debug', 'careerforges:*')
+localStorage.setItem('debug', 'hyrd:*')
 
 // Check logs
 console.log('Debug logs enabled')
@@ -392,9 +392,9 @@ console.log('Startup time:', measure.duration, 'ms')  // Should be < 2000ms
 
 ```bash
 # Clear all test data
-rm ~/.config/careerforges/careerforges.db
-rm ~/.config/careerforges/careerforges.db-shm
-rm ~/.config/careerforges/careerforges.db-wal
+rm ~/.config/hyrd/hyrd.db
+rm ~/.config/hyrd/hyrd.db-shm
+rm ~/.config/hyrd/hyrd.db-wal
 
 # Clear localStorage (in app)
 # Or programmatically:
@@ -435,7 +435,7 @@ console.log('Completed:', completed)  // Should be true
 ```
 
 **Fix:**
-- Clear database: `rm ~/.config/careerforges/careerforges.db`
+- Clear database: `rm ~/.config/hyrd/hyrd.db`
 - Verify command handlers registered
 - Check Rust logs: `RUST_LOG=debug cargo tauri dev`
 
@@ -446,7 +446,7 @@ console.log('Completed:', completed)  // Should be true
 console.log(localStorage.getItem('settings-store'))
 
 // Check database
-sqlite3 ~/.config/careerforges/careerforges.db "SELECT * FROM settings;"
+sqlite3 ~/.config/hyrd/hyrd.db "SELECT * FROM settings;"
 ```
 
 **Fix:**
@@ -474,14 +474,14 @@ console.log('Init time:', measure.duration, 'ms')
 **Diagnosis:**
 ```bash
 # Check database integrity
-sqlite3 ~/.config/careerforges/careerforges.db "PRAGMA integrity_check;"
+sqlite3 ~/.config/hyrd/hyrd.db "PRAGMA integrity_check;"
 
 # Check for locked database
-fuser ~/.config/careerforges/careerforges.db
+fuser ~/.config/hyrd/hyrd.db
 ```
 
 **Fix:**
-- Delete database: `rm ~/.config/careerforges/careerforges.db*`
+- Delete database: `rm ~/.config/hyrd/hyrd.db*`
 - Restart app
 - Check for multiple instances running
 

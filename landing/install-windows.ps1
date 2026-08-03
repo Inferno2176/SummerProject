@@ -4,19 +4,19 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 $ErrorActionPreference = "Stop"
 
-$TempDir = Join-Path $env:TEMP "CareerForgesInstall"
+$TempDir = Join-Path $env:TEMP "hyrd.Install"
 
 # ==========================================
-# CareerForges Model Configuration
+# hyrd. Model Configuration
 # ==========================================
-$CareerForgesConfigDir  = Join-Path $env:ProgramData "CareerForges"
-$CareerForgesConfigFile = Join-Path $CareerForgesConfigDir "config.json"
+$hyrd.ConfigDir  = Join-Path $env:ProgramData "hyrd."
+$hyrd.ConfigFile = Join-Path $hyrd.ConfigDir "config.json"
 
 # ==========================================
 # Available Models (no emojis - plain ASCII)
 # ==========================================
 $AvailableModels = @(
-    @{ Id = 1; Model = "llama3.2:1b";     Label = "[Fastest][Recommended]     Llama 3.2 1B"; Size = "1.3 GB"; Description = "Recommended for CareerForges" }
+    @{ Id = 1; Model = "llama3.2:1b";     Label = "[Fastest][Recommended]     Llama 3.2 1B"; Size = "1.3 GB"; Description = "Recommended for hyrd." }
     @{ Id = 2; Model = "gemma3:4b";       Label = "[Fast]        Gemma 3 4B";   Size = "3 GB";   Description = "Lightweight and fast" },
     @{ Id = 3; Model = "qwen3:8b";        Label = "[Recommended] Qwen 3 8B";    Size = "5.2 GB"; Description = "Faster Option" },
     @{ Id = 4; Model = "qwen3.5:latest";  Label = "[Reasoning]   Qwen 3.5";     Size = "6.6 GB"; Description = "Better reasoning" },
@@ -72,7 +72,7 @@ function Get-InstalledOllamaModels {
 # Model Selection
 # Returns a model name string (never $null)
 # ==========================================
-function Select-CareerForgesModel {
+function Select-hyrd.Model {
 
     $installed = Get-InstalledOllamaModels
 
@@ -155,14 +155,14 @@ function Read-CustomModelName {
     return $name
 }
 
-function Save-CareerForgesModelConfig {
+function Save-hyrd.ModelConfig {
     param([Parameter(Mandatory)][string]$Model)
     try {
-        New-Item -ItemType Directory -Path $CareerForgesConfigDir -Force | Out-Null
+        New-Item -ItemType Directory -Path $hyrd.ConfigDir -Force | Out-Null
         $config = @{ selectedModel = $Model; configuredAt = (Get-Date).ToString("o") }
-        $config | ConvertTo-Json -Depth 5 | Set-Content -Path $CareerForgesConfigFile -Encoding UTF8
-        Write-Success "Saved CareerForges model configuration."
-        Write-Host "Config: $CareerForgesConfigFile"
+        $config | ConvertTo-Json -Depth 5 | Set-Content -Path $hyrd.ConfigFile -Encoding UTF8
+        Write-Success "Saved hyrd. model configuration."
+        Write-Host "Config: $hyrd.ConfigFile"
     } catch {
         Write-Warn "Unable to save model configuration: $($_.Exception.Message)"
     }
@@ -175,14 +175,14 @@ function Save-CareerForgesModelConfig {
 if (Test-Path $TempDir) { Remove-Item $TempDir -Recurse -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
 
-$CareerForgesInstaller = Join-Path $TempDir "CareerForgesSetup.exe"
+$hyrd.Installer = Join-Path $TempDir "hyrd.Setup.exe"
 $SelectedModel = $null
 
 try {
 
     Write-Host ""
     Write-Host "===================================="
-    Write-Host "      CareerForges Installer"
+    Write-Host "      hyrd. Installer"
     Write-Host "===================================="
     Write-Host ""
 
@@ -235,7 +235,7 @@ try {
     Write-Host "        Model Selection"
     Write-Host "===================================="
 
-    $SelectedModel = Select-CareerForgesModel
+    $SelectedModel = Select-hyrd.Model
 
     if ([string]::IsNullOrWhiteSpace($SelectedModel)) {
         throw "No model selected."
@@ -257,41 +257,41 @@ try {
         }
     }
 
-    # --- Download CareerForges ---
+    # --- Download hyrd. ---
     Write-Host ""
-    Write-Info "Finding latest CareerForges release..."
+    Write-Info "Finding latest hyrd. release..."
     try {
-        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/JoshiNaidu/career-forges/releases/latest"
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/JoshiNaidu/hyrd/releases/latest"
         $asset = $release.assets | Where-Object { $_.name -like "*_x64-setup.exe" } | Select-Object -First 1
         if (-not $asset) { throw "Windows installer asset not found in the latest release." }
     } catch {
-        throw "Unable to locate latest CareerForges release. $($_.Exception.Message)"
+        throw "Unable to locate latest hyrd. release. $($_.Exception.Message)"
     }
 
-    Write-Info "Downloading CareerForges..."
+    Write-Info "Downloading hyrd...."
     try {
-        Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $CareerForgesInstaller
-        if (-not (Test-Path $CareerForgesInstaller)) { throw "Installer file not found after download." }
+        Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $hyrd.Installer
+        if (-not (Test-Path $hyrd.Installer)) { throw "Installer file not found after download." }
         Write-Success "Download completed."
     } catch {
-        throw "Failed to download CareerForges installer. $($_.Exception.Message)"
+        throw "Failed to download hyrd. installer. $($_.Exception.Message)"
     }
 
-    # --- Install CareerForges ---
-    Write-Info "Installing CareerForges..."
+    # --- Install hyrd. ---
+    Write-Info "Installing hyrd...."
     try {
-        Start-Process -FilePath $CareerForgesInstaller -ArgumentList "/S" -Wait -ErrorAction Stop
-        Write-Success "CareerForges installed successfully."
+        Start-Process -FilePath $hyrd.Installer -ArgumentList "/S" -Wait -ErrorAction Stop
+        Write-Success "hyrd. installed successfully."
     } catch {
-        throw "CareerForges installation failed. $($_.Exception.Message)"
+        throw "hyrd. installation failed. $($_.Exception.Message)"
     }
 
     # --- Save Config ---
-    Write-Info "Saving CareerForges configuration..."
-    Save-CareerForgesModelConfig -Model $SelectedModel
+    Write-Info "Saving hyrd. configuration..."
+    Save-hyrd.ModelConfig -Model $SelectedModel
 
     Write-Host ""
-    Write-Success "CareerForges installed successfully!"
+    Write-Success "hyrd. installed successfully!"
     Write-Host ""
     Write-Host "Selected Model : $SelectedModel"
     Write-Host ""

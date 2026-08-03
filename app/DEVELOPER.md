@@ -1,8 +1,8 @@
-# CareerForges — Development Environment Setup Guide
+# hyrd. — Development Environment Setup Guide
 
 ## Overview
 
-CareerForges is a **local-first AI desktop application** built using:
+hyrd. is a **local-first AI desktop application** built using:
 
 * Tauri
 * React
@@ -305,7 +305,7 @@ cargo --version
 # Repository Structure
 
 ```txt
-career-forges/
+hyrd/
  ├── app/          ← Tauri desktop application
  ├── landing/      ← Marketing website
  ├── docs/
@@ -462,7 +462,7 @@ extension.
 
 # Development Philosophy
 
-CareerForges is designed as:
+hyrd. is designed as:
 
 ```txt
 Local-first

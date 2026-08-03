@@ -1,4 +1,4 @@
-# How CareerForges Updates Work - Complete Flow
+# How hyrd. Updates Work - Complete Flow
 
 ## 📊 The Complete Update Flow (Detailed)
 
@@ -24,9 +24,9 @@
 │    Step 1: Checkout code                               │
 │    Step 2: Restore private key from GitHub Secrets     │
 │    Step 3: npm run tauri build                         │
-│             └→ Builds CareerForges_0.2.3_x64.exe      │
+│             └→ Builds hyrd._0.2.3_x64.exe      │
 │             └→ Signs with PRIVATE KEY                 │
-│             └→ Creates CareerForges_0.2.3_x64.exe.sig │
+│             └→ Creates hyrd._0.2.3_x64.exe.sig │
 │    Step 4: Generate latest.json                        │
 │             {                                           │
 │               "version": "0.2.3",                       │
@@ -37,8 +37,8 @@
 └─────────────────────────────────────────────────────────┘
                           ↓
             Files now on GitHub Release:
-    - CareerForges_0.2.3_x64-setup.exe
-    - CareerForges_0.2.3_x64-setup.exe.sig
+    - hyrd._0.2.3_x64-setup.exe
+    - hyrd._0.2.3_x64-setup.exe.sig
     - latest.json  ← This is what apps check!
 ```
 
@@ -48,7 +48,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ User launches CareerForges v0.2.2                    │
+│ User launches hyrd. v0.2.2                    │
 │                                                      │
 │ App startup calls: await check()                     │
 │ └→ From: src/lib/updater.ts                         │
@@ -116,7 +116,7 @@
 ┌──────────────────────────────────────────────────────┐
 │ Action 4: Download New Installer                    │
 │                                                      │
-│ URL: https://github.../CareerForges_0.2.3_x64.exe  │
+│ URL: https://github.../hyrd._0.2.3_x64.exe  │
 │                                                      │
 │ Downloads ~50MB to temporary location                │
 │ Shows progress bar in app                            │

@@ -1,5 +1,5 @@
 /**
- * PDF Exporter Utility for LandMyJob
+ * PDF Exporter Utility for hyrd.
  * Generates ATS-friendly printable PDF documents for Resumes and Cover Letters
  */
 

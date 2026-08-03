@@ -176,7 +176,7 @@ export default function JobsPage() {
   };
 
   const handleStatusUpdate = async (id: string, status: string) => {
-    await db.updateJobStatus(id, status);
+    await db.updateJobStatus(id, status as any);
     await loadJobs();
   };
 
@@ -305,12 +305,13 @@ export default function JobsPage() {
       {assetViewer && (
         <AtsAssetViewer
           job={assetViewer.job}
-          initialTab={assetViewer.mode}
+          mode={assetViewer.mode}
           resume={jobAssets[assetViewer.job.id]?.resume}
           coverLetter={jobAssets[assetViewer.job.id]?.coverLetter}
           onClose={() => setAssetViewer(null)}
           onRegenerateResume={() => handleGenerateAts(assetViewer.job.id)}
           onRegenerateCoverLetter={() => handleGenerateCoverLetter(assetViewer.job.id)}
+          onUseForApplication={() => {}}
         />
       )}
     </div>

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "LandMyJob",
+  "productName": "hyrd.",
   "version": "0.1.7",
-  "identifier": "com.landmyjob.app",
+  "identifier": "com.hyrd.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "LandMyJob",
+        "title": "hyrd.",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,
@@ -33,9 +33,9 @@
     "active": true,
     "targets": "all",
     "shortDescription": "AI-powered career growth platform",
-    "longDescription": "CareerForges helps developers track career growth, projects, learning progress, and professional goals through a modern desktop experience.",
+    "longDescription": "hyrd. helps developers track career growth, projects, learning progress, and professional goals through a modern desktop experience.",
     "category": "Productivity",
-    "copyright": "© 2026 CareerForges",
+    "copyright": "© 2026 hyrd.",
     "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
@@ -55,7 +55,7 @@
       "dialog": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRCMEZFMkU2M0JGOTJCOEYKUldTUEsvazc1dUlQU3lTZ1VlWm9aY2dnbTIvYVFuSnRTRTJ2eXdrT1owendpbzEvOWFKMUorWXEK",
       "endpoints": [
-        "https://github.com/JoshiNaidu/career-forges/releases/latest/download/latest.json"
+        "https://github.com/JoshiNaidu/hyrd/releases/latest/download/latest.json"
       ]
     }
   }

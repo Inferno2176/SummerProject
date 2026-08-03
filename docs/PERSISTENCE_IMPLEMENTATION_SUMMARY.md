@@ -2,7 +2,7 @@
 
 ## Summary
 
-**CareerForges now has a complete persistent storage system for:**
+**hyrd. now has a complete persistent storage system for:**
 - ✅ Onboarding status & progress tracking
 - ✅ AI agent management & installation status
 - ✅ User preferences & app settings

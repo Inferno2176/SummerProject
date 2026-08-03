@@ -6,7 +6,7 @@
 
 ## Summary
 
-This document describes the production-grade SQLite database architecture for CareerForges. The implementation provides:
+This document describes the production-grade SQLite database architecture for hyrd.. The implementation provides:
 
 - ✅ Migration-based schema versioning
 - ✅ Repository pattern for data access
@@ -31,7 +31,7 @@ Repositories (UserRepository, etc.)
         ↓
 Connection Pool (Arc<Mutex<Connection>>)
         ↓
-SQLite Database (careerforges.db)
+SQLite Database (hyrd.db)
 ```
 
 ## Folder Structure
@@ -239,7 +239,7 @@ await db.logActivity('message_sent', 'message', messageId, userId);
 ```
 1. Initialize logger (env_logger)
 2. Get app data directory
-3. Open/create database file at ~/.local/share/careerforges/
+3. Open/create database file at ~/.local/share/hyrd/
 4. Initialize connection pool
 5. Run migrations (only pending ones)
 6. Make pool available to Tauri commands
@@ -293,7 +293,7 @@ std::fs::copy(&db_path, backup_dir.join(format!("db-{}.backup", Utc::now().forma
 
 ### Manual Recovery
 ```bash
-cp ~/.local/share/CareerForges/careerforges.db.backup ~/.local/share/CareerForges/careerforges.db
+cp ~/.local/share/hyrd./hyrd.db.backup ~/.local/share/hyrd./hyrd.db
 ```
 
 ## Dependencies
@@ -315,7 +315,7 @@ thiserror = "1.0"
 
 ### Enable Debug Logging
 ```bash
-export RUST_LOG=debug,careerforges=debug
+export RUST_LOG=debug,hyrd=debug
 cargo tauri dev
 ```
 
@@ -409,7 +409,7 @@ ActivityRepository::log(
 
 ## File Locations
 
-- **Database**: `~/.local/share/CareerForges/careerforges.db`
+- **Database**: `~/.local/share/hyrd./hyrd.db`
 - **Source**: `app/src-tauri/src/db/`
 - **TypeScript**: `app/src/lib/db/`
 - **Documentation**: `app/src-tauri/src/db/README.md`
@@ -424,4 +424,4 @@ ActivityRepository::log(
 ---
 
 **Last Updated**: May 2026  
-**Maintainer**: CareerForges Development Team
+**Maintainer**: hyrd. Development Team

@@ -2,7 +2,7 @@
 
 ## Installation Complete ✅
 
-Your CareerForges app now has a production-ready SQLite database! Here's how to use it.
+Your hyrd. app now has a production-ready SQLite database! Here's how to use it.
 
 ## Quick Start
 
@@ -219,8 +219,8 @@ try {
 
 ## Database Files
 
-- **Location**: `~/.local/share/CareerForges/careerforges.db`
-- **Backup**: Automatically created in `~/.local/share/CareerForges/backups/`
+- **Location**: `~/.local/share/hyrd./hyrd.db`
+- **Backup**: Automatically created in `~/.local/share/hyrd./backups/`
 - **Size**: Starts ~100KB, grows with usage
 
 ## Enable Logging

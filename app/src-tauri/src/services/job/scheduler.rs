@@ -82,11 +82,11 @@ impl JobScheduler {
         let engine = JobDiscoveryEngine::new(self.pool.clone());
         
         // Get default user or create if not exists
-        let user = match UserRepository::get_by_email(&self.pool, "localuser@careerforges.local").await {
+        let user = match UserRepository::get_by_email(&self.pool, "localuser@hyrd.local").await {
             Ok(Some(u)) => u,
             _ => {
                 log::info!("Scheduler: Creating local user...");
-                UserRepository::create(&self.pool, "localuser@careerforges.local", Some("Local User".to_string())).await
+                UserRepository::create(&self.pool, "localuser@hyrd.local", Some("Local User".to_string())).await
                     .map_err(|e| format!("Failed to create local user: {}", e))?
             }
         };

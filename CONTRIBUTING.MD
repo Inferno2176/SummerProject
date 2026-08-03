@@ -1,4 +1,4 @@
-# Contributing to Career Forges
+# Contributing to hyrd.
 
 Thank you for your interest in contributing!
 
@@ -15,4 +15,4 @@ We welcome:
 2. Clone your fork
 
 ```bash
-git clone https://github.com/JoshiNaidu/career-forges.git
+git clone https://github.com/JoshiNaidu/hyrd.git

@@ -190,7 +190,7 @@ Everything is handled by .github/workflows/publish-release.yml
 Why: GitHub Actions needs it to sign releases
 
 Steps:
-1. Go to: https://github.com/JoshiNaidu/career-forges/settings/secrets/actions
+1. Go to: https://github.com/JoshiNaidu/hyrd/settings/secrets/actions
 2. Click: "New repository secret"
 3. Create:
    Name: TAURI_SIGNING_PRIVATE_KEY
@@ -217,7 +217,7 @@ DON'T save to:
 
 **Thing 3: Commit Everything to Git** (5 minutes)
 ```bash
-cd c:\Personal\CareerForges\career-forges
+cd c:\Personal\hyrd.\hyrd
 
 # Add all changes
 git add -A
@@ -282,7 +282,7 @@ Check that latest.json appears in assets ✅
 
 ```bash
 # Navigate to project root
-cd c:\Personal\CareerForges\career-forges
+cd c:\Personal\hyrd.\hyrd
 
 # Add everything (except .key files)
 git add -A

@@ -1,4 +1,4 @@
-# CareerForges Auto-Update System - Setup Complete! ✅
+# hyrd. Auto-Update System - Setup Complete! ✅
 
 ## What's Been Done
 
@@ -37,7 +37,7 @@
 
 ### Step 1: Add Private Key to GitHub Secrets (5 minutes)
 
-1. Go to: `https://github.com/JoshiNaidu/career-forges/settings/secrets/actions`
+1. Go to: `https://github.com/JoshiNaidu/hyrd/settings/secrets/actions`
 2. Click: **"New repository secret"**
 3. Create this secret:
    ```

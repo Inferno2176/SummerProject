@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { Resume, GeneratedResume, GeneratedCoverLetter, Job } from "@/lib/db/models";
 import ResumeViewer from "@/components/resume/ResumeViewer";
 import { useDialog } from "@/components/ui/dialog";
+import { exportToPDF } from "@/lib/pdf-exporter";
 import { 
   FileText, 
   Search, 
@@ -326,7 +327,7 @@ export default function ATSPage() {
                       onClick={() => {
                         exportToPDF({
                           title: `${previewDoc.data.job?.title || 'Document'} - ${previewDoc.type === 'resume' ? 'ATS Resume' : 'Cover Letter'}`,
-                          type: previewDoc.type,
+                          type: previewDoc.type === 'cv' ? 'cover_letter' : 'resume',
                           jobTitle: previewDoc.data.job?.title,
                           company: previewDoc.data.job?.company,
                           summary: previewDoc.data.optimized_summary,

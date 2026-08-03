@@ -1,8 +1,8 @@
-# CareerForges - Local Setup & Run Plan
+# hyrd. - Local Setup & Run Plan
 
 ## Overview
 
-This plan walks through getting the CareerForges Tauri desktop app running locally with the SQLite database, fixing any errors along the way.
+This plan walks through getting the hyrd. Tauri desktop app running locally with the SQLite database, fixing any errors along the way.
 
 ## Architecture Reminder
 

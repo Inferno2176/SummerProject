@@ -1,6 +1,6 @@
 use crate::migration;
 
-/// All migrations for CareerForges database
+/// All migrations for hyrd. database
 pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
     vec![
         migration!(
@@ -283,7 +283,7 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
 
             -- Initial Data
             INSERT OR IGNORE INTO users (id, email, name, created_at, updated_at) 
-            VALUES ('local-user-id', 'localuser@careerforges.local', 'Local User', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            VALUES ('local-user-id', 'localuser@hyrd.local', 'Local User', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
             INSERT OR IGNORE INTO app_config (id, key, value, type, created_at, updated_at) VALUES
             ('1', 'db_version', '1', 'string', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),

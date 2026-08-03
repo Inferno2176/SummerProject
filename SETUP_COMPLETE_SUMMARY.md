@@ -2,7 +2,7 @@
 
 ## 🎉 What Just Happened
 
-You now have a **complete, professional-grade auto-update system** for CareerForges!
+You now have a **complete, professional-grade auto-update system** for hyrd.!
 
 ### ✅ Successfully Committed (Just Now)
 ```
@@ -11,7 +11,7 @@ Message: Setup: Add complete auto-update system
 Date: Today
 Files: 22 changed, 3446 insertions(+)
 
-GitHub URL: https://github.com/JoshiNaidu/career-forges/commit/701d322
+GitHub URL: https://github.com/JoshiNaidu/hyrd/commit/701d322
 ```
 
 ---
@@ -55,7 +55,7 @@ GitHub URL: https://github.com/JoshiNaidu/career-forges/commit/701d322
 **Why:** GitHub Actions needs your private key to sign releases
 
 **Steps:**
-1. Go to: `https://github.com/JoshiNaidu/career-forges/settings/secrets/actions`
+1. Go to: `https://github.com/JoshiNaidu/hyrd/settings/secrets/actions`
 2. Click: **"New repository secret"**
 3. Create this secret:
    ```

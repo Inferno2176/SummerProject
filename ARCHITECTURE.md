@@ -1,6 +1,6 @@
-# 🏗️ CareerForges: Technical Architecture & Development Guide
+# 🏗️ hyrd.: Technical Architecture & Development Guide
 
-CareerForges is a privacy-first, local AI career operating system built with **Tauri**, **Rust**, and **React**. This document provides a deep dive into the system architecture, data flow, and a guide for adding or updating features.
+hyrd. is a privacy-first, local AI career operating system built with **Tauri**, **Rust**, and **React**. This document provides a deep dive into the system architecture, data flow, and a guide for adding or updating features.
 
 ---
 
@@ -98,4 +98,4 @@ The backend is organized into functional modules:
 ## 🚀 Deployment & Build
 - **Dev**: `npm run tauri dev`
 - **Build**: `npm run tauri build`
-- **Storage**: Data is stored in the system's AppData folder (e.g., `AppData/Roaming/careerforges`).
+- **Storage**: Data is stored in the system's AppData folder (e.g., `AppData/Roaming/hyrd`).

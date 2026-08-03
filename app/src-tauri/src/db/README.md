@@ -1,4 +1,4 @@
-# CareerForges SQLite Database Architecture
+# hyrd. SQLite Database Architecture
 
 ## Overview
 
@@ -304,7 +304,7 @@ async createMyEntity(...): Promise<MyEntity> {
 RUST_LOG=debug cargo tauri dev
 
 # Check database file
-ls -lh ~/.local/share/CareerForges/careerforges.db
+ls -lh ~/.local/share/hyrd./hyrd.db
 ```
 
 ### Reset Database (Development Only)
@@ -321,7 +321,7 @@ if cfg!(debug_assertions) {
 ### Enable Detailed Logging
 
 ```bash
-export RUST_LOG=debug,careerforges=debug
+export RUST_LOG=debug,hyrd=debug
 cargo tauri dev
 ```
 
@@ -344,14 +344,14 @@ const isHealthy = await db.ping();        // Health check
 
 Add to app startup:
 ```rust
-let backup_path = app_data_dir.join("backups").join(format!("careerforges-{}.db", Utc::now().format("%Y%m%d-%H%M%S")));
+let backup_path = app_data_dir.join("backups").join(format!("hyrd-{}.db", Utc::now().format("%Y%m%d-%H%M%S")));
 std::fs::copy(&db_path, &backup_path)?;
 ```
 
 ### Manual Restore
 
 ```bash
-cp ~/.local/share/CareerForges/careerforges.db.backup ~/.local/share/CareerForges/careerforges.db
+cp ~/.local/share/hyrd./hyrd.db.backup ~/.local/share/hyrd./hyrd.db
 ```
 
 ## Production Checklist

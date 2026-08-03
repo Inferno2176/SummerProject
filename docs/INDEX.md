@@ -1,4 +1,4 @@
-# CareerForges Auto-Update System - Documentation Index
+# hyrd. Auto-Update System - Documentation Index
 
 ## 📚 Complete Documentation (Start Here!)
 
@@ -63,7 +63,7 @@
 ### Step 1: TODAY (12 minutes)
 ```bash
 # A) Add private key to GitHub Secrets (5 min)
-# Go to: https://github.com/JoshiNaidu/career-forges/settings/secrets/actions
+# Go to: https://github.com/JoshiNaidu/hyrd/settings/secrets/actions
 # Create: Name: TAURI_SIGNING_PRIVATE_KEY
 #         Value: (contents of app/src-tauri/tauri.key)
 
@@ -71,7 +71,7 @@
 # Save app/src-tauri/tauri.key to password manager
 
 # C) Commit everything (5 min)
-cd c:\Personal\CareerForges\career-forges
+cd c:\Personal\hyrd.\hyrd
 git add -A
 git commit -m "Setup: Add auto-update system"
 git push origin main

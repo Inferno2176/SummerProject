@@ -2,7 +2,7 @@
 
 ## Session Objective ✅ ACHIEVED
 
-**Goal:** Implement persistent onboarding and AI agent configuration storage for CareerForges
+**Goal:** Implement persistent onboarding and AI agent configuration storage for hyrd.
 
 **Status:** ✅ **COMPLETE** - All frontend and backend persistence layers ready
 
@@ -237,7 +237,7 @@ function OnboardingFlow() {
 
   return (
     <div>
-      <h1>Welcome to CareerForges</h1>
+      <h1>Welcome to hyrd.</h1>
       <p>Step: {currentStep}</p>
       
       <select onChange={e => handleSelectModel(e.target.value)}>

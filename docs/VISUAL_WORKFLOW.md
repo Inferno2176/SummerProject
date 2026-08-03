@@ -56,7 +56,7 @@
 │  ─────────────────────────────────────────────────────  │
 │  Go to release page                                      │
 │  Check Assets section:                                   │
-│    ✅ CareerForges_0.2.3_x64-setup.exe                  │
+│    ✅ hyrd._0.2.3_x64-setup.exe                  │
 │    ✅ latest.json                                        │
 │  Download latest.json and verify:                        │
 │    {                                                     │
@@ -207,7 +207,7 @@ URGENCY: 🔴 CRITICAL - DO TODAY
 THIS WEEK - 10 MINUTE COMMIT:
 ┌─────────────────────────────────────────────────┐
 [ ] 3. Commit everything to git
-      cd c:\Personal\CareerForges\career-forges
+      cd c:\Personal\hyrd.\hyrd
       git add -A
       git commit -m "Setup: Add auto-update system"
       git push origin main

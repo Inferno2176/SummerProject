@@ -1,8 +1,8 @@
-# CareerForges Backend Architecture Guide
+# hyrd. Backend Architecture Guide
 
 ## Overview
 
-CareerForges uses:
+hyrd. uses:
 
 * Tauri v2
 * Rust
@@ -257,13 +257,13 @@ App automatically:
 ## Windows
 
 ```txt
-AppData/Roaming/com.careerforges.app/
+AppData/Roaming/com.hyrd.app/
 ```
 
 Database file:
 
 ```txt
-careerforges.db
+hyrd.db
 ```
 
 ---
@@ -614,7 +614,7 @@ npm run tauri build
 
 # Current Backend Strengths
 
-CareerForges already includes:
+hyrd. already includes:
 
 * migration system
 * repository architecture
@@ -657,4 +657,4 @@ SQLite = local storage
 Migrations = DB upgrades
 ```
 
-That is the complete CareerForges backend architecture.
+That is the complete hyrd. backend architecture.

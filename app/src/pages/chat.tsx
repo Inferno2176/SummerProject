@@ -463,7 +463,7 @@ export default function ChatPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-[var(--text)]">
-              LandMyJob Chat
+              hyrd. Chat
             </h1>
 
             <p className="mt-1 text-xs text-[var(--muted)]">
@@ -822,7 +822,7 @@ export default function ChatPage() {
             focus:bg-white/[0.06]
             focus:shadow-[0_0_0_4px_rgba(249,115,22,0.08)]
             "
-            placeholder="Message LandMyJob..."
+            placeholder="Message hyrd...."
           />
 
           <button

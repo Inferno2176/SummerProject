@@ -1,10 +1,10 @@
-# 🎯 QUICK START - CareerForges Auto-Update System
+# 🎯 QUICK START - hyrd. Auto-Update System
 
 ## ✅ Everything is SET UP - Here's What to Do
 
 ### 1️⃣ Add Private Key to GitHub (DO THIS FIRST!)
 ```
-1. Go to: https://github.com/JoshiNaidu/career-forges/settings/secrets/actions
+1. Go to: https://github.com/JoshiNaidu/hyrd/settings/secrets/actions
 2. Click "New repository secret"
 3. Create secret:
    Name: TAURI_SIGNING_PRIVATE_KEY

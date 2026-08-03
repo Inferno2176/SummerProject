@@ -5,7 +5,7 @@ type LogoProps = {
   className?: string;
 };
 
-export default function LandMyJobLogo({ size = 32, className = '' }: LogoProps) {
+export default function HyrdLogo({ size = 32, className = '' }: LogoProps) {
   return (
     <div
       style={{ width: size, height: size }}

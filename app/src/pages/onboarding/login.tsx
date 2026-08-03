@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-3xl border border-white/5 bg-[var(--surface)] p-8 shadow-2xl">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">Sign in to your LandMyJob account</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">Sign in to your hyrd. account</p>
         </div>
 
         {error && (

@@ -94,7 +94,7 @@ git push origin main
 
 #### Phase 3: GitHub Release (You Do This - 2 minutes)
 ```
-1. Go to: https://github.com/JoshiNaidu/career-forges/releases
+1. Go to: https://github.com/JoshiNaidu/hyrd/releases
 2. Click: "Draft a new release"
 3. Fill in:
    Tag: v0.2.3
@@ -127,7 +127,7 @@ git push origin main
 1. Go to release page
 2. Scroll down to "Assets"
 3. Check:
-   ✅ CareerForges_0.2.3_x64-setup.exe exists
+   ✅ hyrd._0.2.3_x64-setup.exe exists
    ✅ latest.json exists
 4. Click latest.json to verify it contains:
    {
@@ -364,7 +364,7 @@ Should have:
 Why: GitHub Actions needs it to sign releases
 
 Steps:
-1. Go to: https://github.com/JoshiNaidu/career-forges/settings/secrets/actions
+1. Go to: https://github.com/JoshiNaidu/hyrd/settings/secrets/actions
 2. Click: "New repository secret"
 3. Create:
    Name: TAURI_SIGNING_PRIVATE_KEY
@@ -485,7 +485,7 @@ Total: ~15 minutes per release
 # Build locally (for testing - doesn't sign for release)
 cd app
 npm run tauri build
-# Creates: app/src-tauri/target/release/bundle/nsis/CareerForges_X.X.X_x64-setup.exe
+# Creates: app/src-tauri/target/release/bundle/nsis/hyrd._X.X.X_x64-setup.exe
 
 # Kill-switch: block all updates
 node update-control.js disable

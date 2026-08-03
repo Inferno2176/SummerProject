@@ -1,4 +1,4 @@
-# CareerForges Auto-Update System Documentation
+# hyrd. Auto-Update System Documentation
 
 ## 📋 Overview
 
@@ -109,7 +109,7 @@ git push
 {
   "version": "0.2.3",
   "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXk...",
-  "url": "https://github.com/.../CareerForges_0.2.3_x64-setup.exe"
+  "url": "https://github.com/.../hyrd._0.2.3_x64-setup.exe"
 }
 ```
 
@@ -118,7 +118,7 @@ git push
 ## 📱 What Happens When Users Install
 
 ### First Time Installation
-- User downloads `CareerForges_0.2.3_x64-setup.exe` from GitHub
+- User downloads `hyrd._0.2.3_x64-setup.exe` from GitHub
 - Installs to their machine
 - App runs with version 0.2.3
 
@@ -192,7 +192,7 @@ node update-control.js disable
 # Edit latest.json to have:
 {
   "version": "0.2.3",  // Points back to old version
-  "url": "https://github.com/.../CareerForges_0.2.3_x64-setup.exe"
+  "url": "https://github.com/.../hyrd._0.2.3_x64-setup.exe"
 }
 ```
 

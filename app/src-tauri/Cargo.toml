@@ -1,16 +1,16 @@
 [package]
-name = "landmyjob"
+name = "hyrd"
 version = "0.1.7"
 description = "Privacy-first local AI career operating system"
 authors = ["Matta Joshi"]
 license = "Proprietary"
-repository = "https://github.com/JoshiNaidu/career-forges"
-homepage = "https://careerforges.app"
-documentation = "https://careerforges.app"
+repository = "https://github.com/JoshiNaidu/hyrd"
+homepage = "https://hyrd.app"
+documentation = "https://hyrd.app"
 edition = "2021"
 
 [lib]
-name = "careerforges_lib"
+name = "hyrd_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

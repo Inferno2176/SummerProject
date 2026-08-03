@@ -1,4 +1,4 @@
-# 🔐 CareerForges Update System - Security & Keys Explained
+# 🔐 hyrd. Update System - Security & Keys Explained
 
 ## CRITICAL: Your Keys Have Been Generated!
 
@@ -107,7 +107,7 @@ cat app/src-tauri/tauri.key
 ### Step 3: Add Private Key to GitHub Secrets
 **This allows GitHub Actions to sign releases:**
 
-1. Go to: `https://github.com/JoshiNaidu/career-forges/settings/secrets/actions`
+1. Go to: `https://github.com/JoshiNaidu/hyrd/settings/secrets/actions`
 2. Click: **"New repository secret"**
 3. Create Secret #1:
    ```
@@ -173,7 +173,7 @@ Built application at: ...
 ## 📝 Folder Structure (After Setup)
 
 ```
-career-forges/
+hyrd/
 ├── app/
 │   └── src-tauri/
 │       ├── tauri.conf.json          ← Updated with PUBLIC key
@@ -218,7 +218,7 @@ npm run tauri build
 {
   "version": "0.2.3",
   "signature": "dU50cnVzdGVkIGNvbW1lbnQ6IHNpZ25h...",
-  "url": "https://github.com/.../CareerForges_0.2.3_x64-setup.exe"
+  "url": "https://github.com/.../hyrd._0.2.3_x64-setup.exe"
 }
 ```
 

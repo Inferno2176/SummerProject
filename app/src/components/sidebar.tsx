@@ -14,7 +14,7 @@ import {
 import { NavLink } from "react-router-dom";
 
 import { useSidebarStore } from "../store/sidebar-store";
-import LandMyJobLogo from "./logo";
+import HyrdLogo from "./logo";
 
 const items = [
   {
@@ -73,12 +73,12 @@ export default function Sidebar() {
 
         <div className="flex min-w-0 items-center gap-3">
 
-          <LandMyJobLogo size={36} />
+          <HyrdLogo size={36} />
 
           {!isCollapsed && (
             <div className="min-w-0 flex-1">
               <h1 className="truncate font-display text-[20px] font-bold tracking-tight text-[var(--text)]">
-                LandMyJob
+                hyrd.
               </h1>
 
               <p className="truncate text-xs text-[var(--muted)]">

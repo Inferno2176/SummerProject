@@ -66,7 +66,7 @@ const config: Config = {
             "hsl(var(--card-foreground))",
         },
 
-        /* CareerForges Brand */
+        /* hyrd. Brand */
 
         brand: {
           DEFAULT: "#f97316",

@@ -1,10 +1,10 @@
 # Persistent Onboarding & Configuration Guide
 
-Complete guide to using the new onboarding and AI agent configuration system in CareerForges.
+Complete guide to using the new onboarding and AI agent configuration system in hyrd..
 
 ## Overview
 
-CareerForges now persists:
+hyrd. now persists:
 - ✅ Onboarding completion status
 - ✅ Installed AI agents (Ollama, Claude, etc.)
 - ✅ Selected default model

@@ -1,12 +1,12 @@
-# CareerForges 🚀
+# hyrd. 🚀
 
 **Your AI-Powered Local Job Application Assistant**
 
 ![alt text](image.png)
 
-CareerForges is an open-source desktop application designed to help job seekers automate and optimize their job application process using AI agents running completely on their local machine.
+hyrd. is an open-source desktop application designed to help job seekers automate and optimize their job application process using AI agents running completely on their local machine.
 
-Instead of requiring coding knowledge or cloud subscriptions, CareerForges allows users to use pre-installed AI agents like Claude CLI, Ollama, or other local AI tools directly from a simple desktop interface.
+Instead of requiring coding knowledge or cloud subscriptions, hyrd. allows users to use pre-installed AI agents like Claude CLI, Ollama, or other local AI tools directly from a simple desktop interface.
 
 The goal is simple:
 
@@ -67,7 +67,7 @@ Planned automation features:
 
 If full robotic automation isn't possible:
 
-* CareerForges will still provide:
+* hyrd. will still provide:
 
   * Optimized resume
   * Matching job links
@@ -96,7 +96,7 @@ The app includes a dashboard where users can:
 
 ---
 
-## 🎯 Why CareerForges?
+## 🎯 Why hyrd.?
 
 Most job seekers:
 
@@ -105,7 +105,7 @@ Most job seekers:
 * Don't want complicated CLI tools
 * Care about privacy
 
-CareerForges bridges that gap by turning powerful local AI agents into an easy-to-use desktop application.
+hyrd. bridges that gap by turning powerful local AI agents into an easy-to-use desktop application.
 
 ---
 
@@ -113,7 +113,7 @@ CareerForges bridges that gap by turning powerful local AI agents into an easy-t
 
 We believe AI should help everyone access better career opportunities — not just developers.
 
-CareerForges aims to become:
+hyrd. aims to become:
 
 * A personal AI career assistant
 * Fully local and privacy-focused
@@ -192,7 +192,7 @@ This project will be released under the MIT License.
 
 ## 🌍 Open Source Mission
 
-CareerForges is being built to empower millions of job seekers worldwide with free AI-powered career tools that respect privacy and run locally.
+hyrd. is being built to empower millions of job seekers worldwide with free AI-powered career tools that respect privacy and run locally.
 
 ---
 

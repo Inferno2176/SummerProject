@@ -153,7 +153,7 @@ impl JobSourceAdapter for AdzunaAdapter {
                 if !loc.trim().is_empty() {
                     if self.is_foreign_location(loc) {
                         log::warn!(
-                            "Location '{}' is outside India. CareerForges is India-only. Location filter ignored.", 
+                            "Location '{}' is outside India. hyrd. is India-only. Location filter ignored.", 
                             loc
                         );
                     } else {

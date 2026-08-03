@@ -30,7 +30,7 @@ Protected (NOT committed):
 
 ```bash
 # Go to project root
-cd c:\Personal\CareerForges\career-forges
+cd c:\Personal\hyrd.\hyrd
 
 # Add everything (except .key files - they're .gitignored)
 git add -A

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import LandMyJobLogo from "./logo";
+import HyrdLogo from "./logo";
 
 type LaunchLoaderProps = {
   title?: string;
@@ -8,7 +8,7 @@ type LaunchLoaderProps = {
   compact?: boolean;
 };
 
-const DEFAULT_TITLE = "LandMyJob";
+const DEFAULT_TITLE = "hyrd.";
 const DEFAULT_TAGLINE = "Forge your future with private local AI";
 
 export default function LaunchLoader({
@@ -35,7 +35,7 @@ export default function LaunchLoader({
           transition={{ duration: 0.55, ease: "easeOut" }}
           className={compact ? "mb-5" : "mb-6"}
         >
-          <LandMyJobLogo size={compact ? 56 : 72} />
+          <HyrdLogo size={compact ? 56 : 72} />
         </motion.div>
 
         <div className="flex items-center">

@@ -3,13 +3,13 @@
 set -e
 
 # ==========================================
-# CareerForges macOS Installer
+# hyrd. macOS Installer
 # ==========================================
 
-APP_NAME="CareerForges"
-GITHUB_REPO="JoshiNaidu/career-forges"
+APP_NAME="hyrd."
+GITHUB_REPO="JoshiNaidu/hyrd"
 
-CONFIG_DIR="$HOME/Library/Application Support/CareerForges"
+CONFIG_DIR="$HOME/Library/Application Support/hyrd."
 CONFIG_FILE="$CONFIG_DIR/config.json"
 
 TMP_DIR=$(mktemp -d)
@@ -53,7 +53,7 @@ PRESET_LABELS=(
 )
 PRESET_SIZES=( "1.3 GB" "3 GB" "5.2 GB" "6.6 GB" "8 GB" "5 GB" "10 GB" )
 PRESET_DESCS=(
-    "Recommended for CareerForges (Instant Onboarding)"
+    "Recommended for hyrd. (Instant Onboarding)"
     "Lightweight and fast"
     "Faster Option"
     "Better reasoning"
@@ -199,7 +199,7 @@ save_config() {
   "configuredAt": "$timestamp"
 }
 EOF
-    success "Saved CareerForges model configuration."
+    success "Saved hyrd. model configuration."
     echo "Config: $CONFIG_FILE"
 }
 
@@ -209,7 +209,7 @@ EOF
 
 echo ""
 echo "===================================="
-echo "      CareerForges Installer"
+echo "      hyrd. Installer"
 echo "===================================="
 echo ""
 
@@ -289,7 +289,7 @@ fi
 
 # --- Find latest release asset ---
 echo ""
-info "Finding latest CareerForges release..."
+info "Finding latest hyrd. release..."
 
 RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest")
 
@@ -304,7 +304,7 @@ if [ -z "$DOWNLOAD_URL" ]; then
     exit 1
 fi
 
-info "Downloading CareerForges..."
+info "Downloading hyrd...."
 curl -L "$DOWNLOAD_URL" -o "$TMP_DIR/app.tar.gz"
 success "Download completed."
 
@@ -328,7 +328,7 @@ info "Applying ad-hoc signature..."
 codesign --force --deep --sign - "/Applications/$APP_NAME.app"
 
 # --- Save config ---
-info "Saving CareerForges configuration..."
+info "Saving hyrd. configuration..."
 save_config "$SELECTED_MODEL"
 
 # --- Launch ---
@@ -336,7 +336,7 @@ info "Launching app..."
 open "/Applications/$APP_NAME.app"
 
 echo ""
-success "CareerForges installed successfully!"
+success "hyrd. installed successfully!"
 echo ""
 echo "Selected Model : $SELECTED_MODEL"
 echo ""

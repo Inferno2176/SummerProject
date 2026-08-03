@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The entire CareerForges persistence system is now **fully operational and production-ready**. All backend, frontend invoke layers, and startup infrastructure are complete. The system only awaits UI component updates to complete integration.
+The entire hyrd. persistence system is now **fully operational and production-ready**. All backend, frontend invoke layers, and startup infrastructure are complete. The system only awaits UI component updates to complete integration.
 
 ---
 
@@ -442,7 +442,7 @@ docs/
 │  └──────────────────────┬────────────────────────────────────┘  │
 │                         │                                      │
 │              SQLite Database                                 │
-│  (~/.config/careerforges/careerforges.db)                    │
+│  (~/.config/hyrd/hyrd.db)                    │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -619,7 +619,7 @@ All documentation is in `docs/` folder:
 
 ## Conclusion
 
-**The CareerForges persistence system is production-ready and fully operational.** 
+**The hyrd. persistence system is production-ready and fully operational.** 
 
 All database operations are wired, all command handlers are registered, all React hooks are functional, and all startup logic is in place. The system only awaits UI component updates to complete full integration.
 

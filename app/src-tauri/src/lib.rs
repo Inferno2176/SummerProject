@@ -19,7 +19,7 @@ use crate::utils::*;
 use crate::db::{init_db, MigrationRunner, get_migrations, DbPool};
 
 // ==========================================
-// UPDATED CAREERFORGES MODEL LIFECYCLE
+// UPDATED HYRD MODEL LIFECYCLE
 // ==========================================
 
 fn preferred_model(installed: &[String]) -> Option<String> {
@@ -48,7 +48,7 @@ fn model_catalog_blueprint() -> Vec<(&'static str, &'static str, f32, &'static s
         ("llama3.2:1b", "1.3 GB", 2.0, "Fastest", "Good", "Fastest low-RAM option", "low"),
         ("gemma3:4b", "3.0 GB", 4.0, "Fast", "Good+", "Lightweight and fast assistant", "low"),
         ("deepseek-r1:8b", "5.0 GB", 8.0, "Slow-Medium", "Exceptional", "Strong chain-of-thought reasoning", "mid"),
-        ("qwen3:8b", "5.2 GB", 8.0, "Medium", "Strong", "Recommended for CareerForges", "mid"),
+        ("qwen3:8b", "5.2 GB", 8.0, "Medium", "Strong", "Recommended for hyrd.", "mid"),
         ("qwen3.5:latest", "6.6 GB", 12.0, "Medium", "Excellent", "Better reasoning capability", "high"),
         ("gemma3:12b", "8.0 GB", 16.0, "Medium", "Very Strong", "Higher quality responses", "high"),
         ("qwen3:14b", "10.0 GB", 24.0, "Slow", "Best Local", "Maximum local execution quality", "high"),
@@ -803,7 +803,7 @@ pub fn run() {
                     Box::new(e) as Box<dyn std::error::Error>
                 })?;
 
-            let db_path = app_data_dir.join("careerforges.db");
+            let db_path = app_data_dir.join("hyrd.db");
 
             let pool = tauri::async_runtime::block_on(async {
                 log::info!("Initializing database at {:?}", db_path);
@@ -830,11 +830,11 @@ pub fn run() {
 
                 // Ensure local user exists after migrations
                 log::info!("Ensuring local user exists...");
-                let user_result = crate::db::UserRepository::get_by_email(&pool, "localuser@careerforges.local").await;
+                let user_result = crate::db::UserRepository::get_by_email(&pool, "localuser@hyrd.local").await;
                 if let Ok(None) = user_result {
                     let _ = crate::db::UserRepository::create(
                         &pool,
-                        "localuser@careerforges.local",
+                        "localuser@hyrd.local",
                         Some("Local User".to_string()),
                     )
                     .await;

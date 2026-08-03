@@ -3,13 +3,13 @@
 set -e
 
 # ==========================================
-# CareerForges Linux Installer
+# hyrd. Linux Installer
 # ==========================================
 
 REPO_OWNER="JoshiNaidu"
-REPO_NAME="career-forges"
+REPO_NAME="hyrd"
 
-CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/CareerForges"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hyrd."
 CONFIG_FILE="$CONFIG_DIR/config.json"
 
 TMP_DIR=$(mktemp -d)
@@ -53,7 +53,7 @@ PRESET_LABELS=(
 )
 PRESET_SIZES=( "1.3 GB" "3 GB" "5.2 GB" "6.6 GB" "8 GB" "5 GB" "10 GB" )
 PRESET_DESCS=(
-    "Recommended for CareerForges (Instant Onboarding)"
+    "Recommended for hyrd. (Instant Onboarding)"
     "Lightweight and fast"
     "Faster Option"
     "Better reasoning"
@@ -198,7 +198,7 @@ save_config() {
   "configuredAt": "$timestamp"
 }
 EOF
-    success "Saved CareerForges model configuration."
+    success "Saved hyrd. model configuration."
     echo "Config: $CONFIG_FILE"
 }
 
@@ -208,7 +208,7 @@ EOF
 
 echo ""
 echo "===================================="
-echo "      CareerForges Installer"
+echo "      hyrd. Installer"
 echo "===================================="
 echo ""
 
@@ -288,7 +288,7 @@ fi
 
 # --- Find latest release AppImage ---
 echo ""
-info "Finding latest CareerForges release..."
+info "Finding latest hyrd. release..."
 
 RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest")
 
@@ -304,19 +304,19 @@ if [ -z "$DOWNLOAD_URL" ]; then
     exit 1
 fi
 
-info "Downloading CareerForges..."
-curl -L "$DOWNLOAD_URL" -o "$TMP_DIR/CareerForges.AppImage"
+info "Downloading hyrd...."
+curl -L "$DOWNLOAD_URL" -o "$TMP_DIR/hyrd..AppImage"
 success "Download completed."
 
 # --- Install AppImage ---
 info "Installing to ~/.local/bin..."
 
 mkdir -p "$HOME/.local/bin"
-rm -f "$HOME/.local/bin/CareerForges"
-mv "$TMP_DIR/CareerForges.AppImage" "$HOME/.local/bin/CareerForges"
-chmod +x "$HOME/.local/bin/CareerForges"
+rm -f "$HOME/.local/bin/hyrd."
+mv "$TMP_DIR/hyrd..AppImage" "$HOME/.local/bin/hyrd."
+chmod +x "$HOME/.local/bin/hyrd."
 
-success "CareerForges installed to ~/.local/bin/CareerForges"
+success "hyrd. installed to ~/.local/bin/hyrd."
 
 # --- Ensure ~/.local/bin is on PATH ---
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
@@ -327,18 +327,18 @@ fi
 
 # --- Create .desktop entry for app launcher ---
 DESKTOP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
-DESKTOP_FILE="$DESKTOP_DIR/careerforges.desktop"
+DESKTOP_FILE="$DESKTOP_DIR/hyrd.desktop"
 
 info "Creating desktop launcher entry..."
 mkdir -p "$DESKTOP_DIR"
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
-Name=CareerForges
-Exec=$HOME/.local/bin/CareerForges
-Icon=careerforges
+Name=hyrd.
+Exec=$HOME/.local/bin/hyrd.
+Icon=hyrd
 Type=Application
 Categories=Utility;
-Comment=CareerForges AI Career Assistant
+Comment=hyrd. AI Career Assistant
 Terminal=false
 EOF
 chmod +x "$DESKTOP_FILE"
@@ -351,17 +351,17 @@ fi
 success "Desktop launcher created."
 
 # --- Save config ---
-info "Saving CareerForges configuration..."
+info "Saving hyrd. configuration..."
 save_config "$SELECTED_MODEL"
 
 # --- Launch ---
-info "Launching CareerForges..."
-"$HOME/.local/bin/CareerForges" &
+info "Launching hyrd...."
+"$HOME/.local/bin/hyrd." &
 
 echo ""
-success "CareerForges installed successfully!"
+success "hyrd. installed successfully!"
 echo ""
 echo "Selected Model : $SELECTED_MODEL"
-echo "Binary         : $HOME/.local/bin/CareerForges"
+echo "Binary         : $HOME/.local/bin/hyrd."
 echo "Config         : $CONFIG_FILE"
 echo ""

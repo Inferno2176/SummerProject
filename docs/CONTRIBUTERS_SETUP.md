@@ -1,7 +1,7 @@
 ````md
 # Developer Setup
 
-This guide helps contributors set up CareerForges locally for development.
+This guide helps contributors set up hyrd. locally for development.
 
 ---
 
@@ -19,8 +19,8 @@ Install:
 # 1. Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/career-forges.git
-cd career-forges/app
+git clone https://github.com/YOUR_USERNAME/hyrd.git
+cd hyrd/app
 ```
 
 ---
@@ -173,7 +173,7 @@ C:\Users\<YOUR_USERNAME>\.rustup
 ```
 
 ```txt
-C:\Personal\CareerForges
+C:\Personal\hyrd.
 ```
 
 Restart VS Code afterwards.
@@ -221,7 +221,7 @@ Some Windows security policies block builds in deeply nested folders.
 Recommended project location:
 
 ```txt
-C:\dev\career-forges
+C:\dev\hyrd
 ```
 
 Avoid:
@@ -413,7 +413,7 @@ Install:
 # Project Structure
 
 ```txt
-career-forges/
+hyrd/
  ├── app/          # Tauri desktop app
  ├── landing/      # Marketing website
  ├── docs/

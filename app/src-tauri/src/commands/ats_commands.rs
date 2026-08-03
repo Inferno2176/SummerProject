@@ -141,7 +141,7 @@ pub async fn generate_ats_resume(
     let master_value = serde_json::from_str::<serde_json::Value>(&master_json)
         .unwrap_or_else(|_| json!({ "raw": master_json }));
     let generated_resume_json = json!({
-        "source": "careerforges_ats",
+        "source": "hyrd_ats",
         "job": {
             "id": job.id.clone(),
             "title": job.title.clone(),

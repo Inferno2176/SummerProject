@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const REPO = 'JoshiNaidu/career-forges';
+const REPO = 'JoshiNaidu/hyrd';
 const RELEASE_API = `https://api.github.com/repos/${REPO}/releases/latest`;
 
 function fetchLatestRelease() {
@@ -44,7 +44,7 @@ async function disableUpdates() {
     platforms: {
       "windows-x86_64": {
         signature: "disabled",
-        url: "https://github.com/JoshiNaidu/career-forges/releases"
+        url: "https://github.com/JoshiNaidu/hyrd/releases"
       }
     }
   };

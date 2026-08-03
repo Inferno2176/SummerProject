@@ -1,6 +1,6 @@
 # ✅ FULL INTEGRATION GUIDE - Persistence System
 
-Complete step-by-step guide to integrate the persistence system into CareerForges.
+Complete step-by-step guide to integrate the persistence system into hyrd..
 
 ## PHASE 1: Backend Setup ✅ COMPLETE
 
@@ -122,7 +122,7 @@ export default function OnboardingPage() {
 
   return (
     <div>
-      <h1>Welcome to CareerForges</h1>
+      <h1>Welcome to hyrd.</h1>
       <p>Step: {currentStep}</p>
 
       <select onChange={e => setSelectedAgent(e.target.value)}>
@@ -241,7 +241,7 @@ export default function SettingsPage() {
 ## Testing Integration
 
 ### Manual Test 1: First Launch
-1. Delete database file: `~/.config/careerforges/careerforges.db`
+1. Delete database file: `~/.config/hyrd/hyrd.db`
 2. Launch app
 3. Verify splash screen appears
 4. Verify onboarding shows
@@ -298,7 +298,7 @@ localStorage.getItem('settings-store')
 localStorage.clear()
 
 // Then in Rust terminal
-rm ~/.config/careerforges/careerforges.db
+rm ~/.config/hyrd/hyrd.db
 ```
 
 ## File Structure After Integration
@@ -343,9 +343,9 @@ app/src-tauri/src/
    ```
 
 2. **Debug Issues:**
-   - Check app logs: `tail -f ~/.config/careerforges/error.log`
+   - Check app logs: `tail -f ~/.config/hyrd/error.log`
    - Check console: F12 in dev, Application tab for localStorage
-   - Check database: Open `~/.config/careerforges/careerforges.db` with SQLite browser
+   - Check database: Open `~/.config/hyrd/hyrd.db` with SQLite browser
 
 3. **Validate Persistence:**
    - Complete onboarding
@@ -363,7 +363,7 @@ If issues occur:
 
 1. **Database Reset:**
    ```bash
-   rm ~/.config/careerforges/careerforges.db
+   rm ~/.config/hyrd/hyrd.db
    ```
 
 2. **Clear All State:**

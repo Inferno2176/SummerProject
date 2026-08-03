@@ -1,5 +1,5 @@
 /**
- * TypeScript models for CareerForges database entities
+ * TypeScript models for hyrd. database entities
  * Auto-generated from Rust schema
  */
 

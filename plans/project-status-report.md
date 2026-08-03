@@ -1,4 +1,4 @@
-# CareerForges - Project Status Report
+# hyrd. - Project Status Report
 
 ## Overall Status: 🟡 Early Development (v0.2.2)
 

@@ -9,7 +9,7 @@ export default function WelcomePage() {
   const navigate = useNavigate();
   const handleLearnMore = async () => {
     try {
-      await openUrl("https://landmyjob.app");
+      await openUrl("https://hyrd.app");
     } catch (error) {
       console.error("Failed to open Learn More URL:", error);
     }
@@ -37,7 +37,7 @@ export default function WelcomePage() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-              LandMyJob helps you build ATS-friendly resumes,
+              hyrd. helps you build ATS-friendly resumes,
               analyze jobs, prepare for interviews,
               and manage applications privately on your machine.
             </p>

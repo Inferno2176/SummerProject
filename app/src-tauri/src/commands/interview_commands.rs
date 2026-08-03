@@ -16,7 +16,7 @@ pub async fn db_create_interview_session(
 ) -> Result<InterviewSession, String> {
     let pool = app.state::<DbPool>();
     
-    let user = match UserRepository::get_by_email(&pool, "localuser@careerforges.local").await {
+    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
         Ok(Some(u)) => u,
         _ => return Err("Local user not found".to_string()),
     };
@@ -54,7 +54,7 @@ pub async fn db_list_interview_sessions(
 ) -> Result<Vec<InterviewSession>, String> {
     let pool = app.state::<DbPool>();
     
-    let user = match UserRepository::get_by_email(&pool, "localuser@careerforges.local").await {
+    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
         Ok(Some(u)) => u,
         _ => return Err("Local user not found".to_string()),
     };

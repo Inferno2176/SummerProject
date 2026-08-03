@@ -69,7 +69,7 @@
 ### Item 1: Add Private Key to GitHub Secrets ⚠️ CRITICAL
 
 ```
-Go to: https://github.com/JoshiNaidu/career-forges/settings/secrets/actions
+Go to: https://github.com/JoshiNaidu/hyrd/settings/secrets/actions
 
 Click: "New repository secret"
 

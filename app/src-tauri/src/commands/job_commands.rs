@@ -55,7 +55,7 @@ pub async fn search_jobs(
 ) -> Result<Vec<Job>, String> {
     let pool = app.state::<DbPool>();
     
-    let user = match UserRepository::get_by_email(&pool, "localuser@careerforges.local").await {
+    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
         Ok(Some(u)) => u,
         _ => return Err("Local user not found".to_string()),
     };
@@ -102,7 +102,7 @@ pub async fn delete_job(app: AppHandle, id: String) -> Result<(), String> {
 pub async fn get_jobs(app: AppHandle) -> Result<Vec<Job>, String> {
     let pool = app.state::<DbPool>();
     
-    let user = match UserRepository::get_by_email(&pool, "localuser@careerforges.local").await {
+    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
         Ok(Some(u)) => u,
         _ => return Err("Local user not found".to_string()),
     };
