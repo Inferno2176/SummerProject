@@ -1,10 +1,12 @@
 pub mod linkedin;
 pub mod indeed;
 pub mod greenhouse;
+pub mod adzuna;
 
 pub use linkedin::LinkedInAdapter as LinkedIn;
 pub use indeed::IndeedAdapter as Indeed;
 pub use greenhouse::GreenhouseAdapter as Greenhouse;
+pub use adzuna::AdzunaAdapter;
 
 use crate::services::job::{DiscoveredJob, JobSearchQuery};
 use crate::db::error::{DbError, DbResult};

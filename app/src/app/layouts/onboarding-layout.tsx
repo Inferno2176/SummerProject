@@ -81,12 +81,15 @@ export default function OnboardingLayout() {
     );
   }
 
+  const isAuth = localStorage.getItem("user_session") === "true";
+
   /*
     REDIRECT COMPLETED USERS
-    AWAY FROM ONBOARDING
+    AWAY FROM ONBOARDING (ONLY IF LOGGED IN)
   */
   if (
     onboardingCompleted &&
+    isAuth &&
     !location.pathname.startsWith(
       "/app",
     )
@@ -94,6 +97,23 @@ export default function OnboardingLayout() {
     return (
       <Navigate
         to="/app/dashboard"
+        replace
+      />
+    );
+  }
+
+  /*
+    REDIRECT COMPLETED UN-AUTHENTICATED USERS
+    TO LOGIN
+  */
+  if (
+    onboardingCompleted &&
+    !isAuth &&
+    location.pathname === "/"
+  ) {
+    return (
+      <Navigate
+        to="/login"
         replace
       />
     );

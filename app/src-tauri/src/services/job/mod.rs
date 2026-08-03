@@ -23,13 +23,21 @@ pub trait JobSourceAdapter: Send + Sync {
     async fn search(&self, query: &JobSearchQuery) -> DbResult<Vec<DiscoveredJob>>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct JobSearchQuery {
     pub title: Option<String>,
     pub location: Option<String>,
     pub skills: Vec<String>,
     pub experience_years: Option<f32>,
     pub remote: bool,
+    pub page: Option<u32>,
+    pub results_per_page: Option<u32>,
+    pub salary_min: Option<u32>,
+    pub salary_max: Option<u32>,
+    pub job_type: Option<String>,
+    pub contract_type: Option<String>,
+    pub internship: Option<bool>,
+    pub sort_by: Option<String>,
 }
 
 const _JOB_FRESHNESS_HOURS: i64 = 24;

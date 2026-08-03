@@ -116,6 +116,7 @@ impl JobScheduler {
                                     skills: vec![],
                                     experience_years: None,
                                     remote: false,
+                                    ..Default::default()
                                 });
                             }
                         }
@@ -142,6 +143,7 @@ impl JobScheduler {
                     skills: vec![skill.clone()],
                     experience_years: None,
                     remote: true, // Try remote for skill-based broad search
+                    ..Default::default()
                 });
             }
         }
@@ -154,6 +156,7 @@ impl JobScheduler {
                 skills: vec![],
                 experience_years: None,
                 remote: false,
+                ..Default::default()
             });
         }
 

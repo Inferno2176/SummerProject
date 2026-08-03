@@ -309,7 +309,9 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
             ('7', 'resume_parser_enabled', 'true', 'boolean', 'Enable resume parsing', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('8', 'ai_response_streaming', 'true', 'boolean', 'Stream AI responses', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             ('9', 'job_scheduler_enabled', 'true', 'boolean', 'Enable background job search', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-            ('10', 'job_scheduler_frequency', '60', 'number', 'Job search frequency in minutes', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            ('10', 'job_scheduler_frequency', '60', 'number', 'Job search frequency in minutes', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('11', 'adzuna_app_id', '468957de', 'string', 'Adzuna API Application ID', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('12', 'adzuna_app_key', '7c00d75de70832590f63d0530445e1be', 'string', 'Adzuna API Application Key', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
             "
         ),
         migration!(
@@ -335,6 +337,14 @@ pub fn get_migrations() -> Vec<crate::db::migration::Migration> {
 
             CREATE INDEX IF NOT EXISTS idx_gen_resumes_user_job ON generated_resumes(user_id, job_id);
             CREATE INDEX IF NOT EXISTS idx_gen_cover_letters_user_job ON generated_cover_letters(user_id, job_id);
+            "
+        ),
+        migration!(
+            "003_adzuna_settings",
+            "
+            INSERT OR IGNORE INTO settings (id, key, value, data_type, description, created_at, updated_at) VALUES
+            ('11', 'adzuna_app_id', '468957de', 'string', 'Adzuna API Application ID', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            ('12', 'adzuna_app_key', '7c00d75de70832590f63d0530445e1be', 'string', 'Adzuna API Application Key', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
             "
         ),
     ]
