@@ -300,3 +300,144 @@ pub async fn db_delete_generated_cover_letter(
         .await
         .map_err(|e| e.to_string())
 }
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct AtsAnalysisResult {
+    pub score: i32,
+    pub feedback: Vec<String>,
+    pub missing_keywords: Vec<String>,
+}
+
+#[tauri::command]
+pub async fn analyze_ats_local(
+    app: AppHandle,
+    resume_id: String,
+    job_description: String,
+) -> Result<AtsAnalysisResult, String> {
+    use crate::db::SettingRepository;
+    use crate::types::{OllamaChatRequest, OllamaChatMessage, OllamaGenerationOptions};
+    use reqwest::Client;
+
+    let pool = app.state::<DbPool>();
+
+    // 1. Get resume
+    let resume = ResumeRepository::get_by_id(&pool, &resume_id)
+        .await
+        .map_err(|e| format!("Database error: {}", e))?
+        .ok_or("Resume not found")?;
+
+    // 2. Extract parsed content JSON
+    let parsed_json = resume.parsed_content.as_deref().unwrap_or("{}");
+    
+    // Get active model
+    let model = match SettingRepository::get_string(&pool, "selected_model").await {
+        Ok(m) if !m.trim().is_empty() => m,
+        _ => "llama3.2:1b".to_string(),
+    };
+
+    let client = Client::new();
+    let url = "http://localhost:11434/api/chat";
+
+    let system_prompt = r#"You are an ATS (Applicant Tracking System) optimizer. 
+Compare the user's resume against the provided job description.
+Determine the match score (0-100), key feedback/strengths (as bullet points), and missing keywords/skills.
+Strictly return a JSON object with this exact structure:
+{
+  "score": 75,
+  "feedback": ["Strong match for Python and machine learning.", "Needs to emphasize data visualization."],
+  "missingKeywords": ["Tableau", "AWS", "Docker"]
+}
+Output ONLY the JSON object, no other text."#;
+
+    let user_prompt = format!(
+        "Resume JSON:\n{}\n\nJob Description:\n{}",
+        parsed_json, job_description
+    );
+
+    let request = OllamaChatRequest {
+        model,
+        stream: false,
+        messages: vec![
+            OllamaChatMessage {
+                role: "system".to_string(),
+                content: system_prompt.to_string(),
+            },
+            OllamaChatMessage {
+                role: "user".to_string(),
+                content: user_prompt,
+            },
+        ],
+        options: OllamaGenerationOptions {
+            temperature: 0.2,
+            top_p: 0.9,
+            repeat_penalty: 1.1,
+            num_predict: 1000,
+        },
+    };
+
+    let response = client.post(url)
+        .json(&request)
+        .send()
+        .await;
+
+    match response {
+        Ok(resp) if resp.status().is_success() => {
+            if let Ok(result_val) = resp.json::<serde_json::Value>().await {
+                if let Some(content) = result_val["message"]["content"].as_str() {
+                    let json_str = if content.contains("```json") {
+                        content.split("```json").nth(1).unwrap().split("```").next().unwrap().trim()
+                    } else if content.contains("```") {
+                        content.split("```").nth(1).unwrap().split("```").next().unwrap().trim()
+                    } else {
+                        content.trim()
+                    };
+
+                    let clean_json = json_str.replace("\\n", "\n").replace("\\\"", "\"");
+
+                    if let Ok(parsed_res) = serde_json::from_str::<AtsAnalysisResult>(&clean_json) {
+                        return Ok(parsed_res);
+                    }
+                }
+            }
+            log::warn!("Failed to parse Ollama JSON response. Falling back to local heuristics.");
+        }
+        _ => {
+            log::warn!("Ollama is offline. Falling back to local heuristic keyword matching.");
+        }
+    }
+
+    // Heuristic Fallback
+    let mut resume_skills = Vec::new();
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&parsed_json) {
+        if let Some(arr) = val["skills"].as_array() {
+            resume_skills = arr.iter().filter_map(|s| s.as_str()).map(|s| s.to_lowercase()).collect();
+        }
+    }
+    
+    let jd_lower = job_description.to_lowercase();
+    let mut matched = Vec::new();
+    let mut missing = Vec::new();
+    
+    for skill in &resume_skills {
+        if jd_lower.contains(skill) {
+            matched.push(skill.clone());
+        } else {
+            missing.push(skill.clone());
+        }
+    }
+    
+    let score = if resume_skills.is_empty() {
+        60
+    } else {
+        (matched.len() as f64 / resume_skills.len() as f64 * 100.0) as i32
+    };
+    
+    Ok(AtsAnalysisResult {
+        score,
+        feedback: vec![
+            format!("Matched {} core skills out of {}.", matched.len(), resume_skills.len()),
+            "Please run Ollama locally for deep semantic analysis and custom recommendations.".to_string(),
+        ],
+        missing_keywords: missing.iter().take(5).map(|s| s.to_string()).collect(),
+    })
+}

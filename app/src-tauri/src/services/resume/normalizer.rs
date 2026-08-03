@@ -19,15 +19,15 @@ pub async fn generate_ats_score(resume: &ParsedResume, model: &str) -> DbResult<
     let resume_json = serde_json::to_string(resume).unwrap();
     
     let system_prompt = r#"You are an ATS (Applicant Tracking System) expert. 
-Analyze the provided resume JSON and provide an ATS compatibility score (0-100) and feedback.
-Strictly follow this structure:
+Analyze the provided resume JSON and calculate a realistic compatibility score (0 to 100) based on structure, depth of experience, and skill variety.
+Strictly output a JSON object with this exact structure:
 {
-  "score": 85.5,
+  "score": 75,
   "strengths": ["List of strengths"],
   "weaknesses": ["List of weaknesses"],
   "recommendations": ["Actionable steps to improve"]
 }
-Output ONLY the JSON object."#;
+Make sure the "score" field is a number reflecting your actual assessment, not just copying the example value 75. Output ONLY valid JSON."#;
 
     let request = OllamaChatRequest {
         model: model.to_string(),

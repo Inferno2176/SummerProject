@@ -1,7 +1,7 @@
 use tauri::{AppHandle, Manager};
 use crate::db::{Resume, ResumeRepository, DbPool, UserRepository};
 use crate::services::resume::extractor::extract_resume_text;
-use crate::services::resume::parser::parse_resume_text_regex;
+use crate::services::resume::parser::{parse_resume_text_regex, parse_resume_text};
 use std::fs;
 
 #[tauri::command]
@@ -142,8 +142,14 @@ pub async fn upload_resume(app: AppHandle, path: String) -> Result<Resume, Strin
     // Use a default model for parsing, or try to get from state if available
     let model = "llama3.2:1b"; // Default fast model
 
-    // Parse text with regex first (fast, reliable for structure)
-    let parsed = parse_resume_text_regex(&raw_text);
+    // Parse text using AI first, with a fast regex fallback
+    let parsed = match parse_resume_text(&raw_text, model).await {
+        Ok(p) => p,
+        Err(e) => {
+            log::warn!("AI resume parsing failed: {}. Falling back to regex parser.", e);
+            parse_resume_text_regex(&raw_text)
+        }
+    };
     let parsed_json = serde_json::to_string(&parsed).map_err(|e| e.to_string())?;
 
     // Generate ATS score and analysis using AI
@@ -278,12 +284,19 @@ pub async fn parse_and_store_resume(
     // Extract text
     let raw_text = extract_resume_text(&dest_str).await.map_err(|e| e.to_string())?;
 
-    // Parse text with regex
-    let parsed = parse_resume_text_regex(&raw_text);
+    let model = "llama3.2:1b";
+
+    // Parse text using AI first, with a fast regex fallback
+    let parsed = match parse_resume_text(&raw_text, model).await {
+        Ok(p) => p,
+        Err(e) => {
+            log::warn!("AI resume parsing failed: {}. Falling back to regex parser.", e);
+            parse_resume_text_regex(&raw_text)
+        }
+    };
     let parsed_json = serde_json::to_string(&parsed).map_err(|e| e.to_string())?;
 
     // Generate ATS score and analysis using AI (with fallback)
-    let model = "llama3.2:1b";
     let ats_analysis = generate_ats_score(&parsed, model).await.map_err(|e| e.to_string())?;
     let master_json = generate_master_resume_json(&parsed, &ats_analysis);
 

@@ -100,24 +100,77 @@ pub fn parse_resume_text_regex(text: &str) -> ParsedResume {
     }
 
     // 6. Basic Experience Extraction
-    let exp_re = Regex::new(r"(?i)(?:experience|work history|employment):?\s*([\s\S]+?)(?:\n\n|\n[A-Z][a-z]+|$)").unwrap();
+    let exp_re = Regex::new(r"(?i)(?:experience|work history|employment|professional history):?\s*([\s\S]+?)(?:\n{2,}(?i)\b(?:education|skills|certifications|projects|languages)\b|$)").unwrap();
     if let Some(caps) = exp_re.captures(text) {
         let exp_text = caps.get(1).map_or("", |m| m.as_str().trim());
-        // Split by double newline or common separators
-        for block in exp_text.split("\n\n") {
-            if block.trim().is_empty() { continue; }
-            let block_lines: Vec<&str> = block.lines().collect();
-            if !block_lines.is_empty() {
-                parsed.experience.push(WorkExperience {
-                    title: Some(block_lines[0].trim().to_string()),
-                    company: block_lines.get(1).map(|l| l.trim().to_string()),
+        let mut current_exp: Option<WorkExperience> = None;
+        for line in exp_text.lines() {
+            let trimmed = line.trim();
+            if trimmed.is_empty() { continue; }
+            
+            // Check if line represents a section boundary
+            let lower_trimmed = trimmed.to_lowercase();
+            if lower_trimmed.starts_with("education") || lower_trimmed.starts_with("skills") || lower_trimmed.starts_with("certifications") || lower_trimmed.starts_with("projects") {
+                break;
+            }
+            
+            if trimmed.starts_with('•') || trimmed.starts_with('-') || trimmed.starts_with('*') {
+                if let Some(ref mut exp) = current_exp {
+                    exp.bullets.push(trimmed.trim_start_matches(['•', '-', '*', ' ']).trim().to_string());
+                }
+            } else {
+                if let Some(exp) = current_exp.take() {
+                    parsed.experience.push(exp);
+                }
+                
+                let parts: Vec<&str> = trimmed.split(&['|', '@', ','][..]).collect();
+                let title = Some(parts[0].trim().to_string());
+                let company = parts.get(1).map(|c| c.trim().to_string());
+                
+                current_exp = Some(WorkExperience {
+                    title,
+                    company,
                     location: None,
-                    duration: None,
-                    description: Some(block.to_string()),
-                    bullets: block_lines.iter().skip(2)
-                        .filter(|l| l.trim().starts_with('•') || l.trim().starts_with('-'))
-                        .map(|l| l.trim().trim_start_matches(['•', '-', ' ']).trim().to_string())
-                        .collect(),
+                    duration: Some("Present".to_string()),
+                    description: Some(trimmed.to_string()),
+                    bullets: Vec::new(),
+                });
+            }
+        }
+        if let Some(exp) = current_exp {
+            parsed.experience.push(exp);
+        }
+    }
+
+    // 7. Basic Education Extraction
+    let edu_re = Regex::new(r"(?i)(?:education|academic profile|qualification|university):?\s*([\s\S]+?)(?:\n{2,}(?i)\b(?:experience|skills|certifications|projects|languages)\b|$)").unwrap();
+    if let Some(caps) = edu_re.captures(text) {
+        let edu_text = caps.get(1).map_or("", |m| m.as_str().trim());
+        for line in edu_text.lines() {
+            let trimmed = line.trim();
+            if trimmed.is_empty() { continue; }
+            
+            let lower_trimmed = trimmed.to_lowercase();
+            if lower_trimmed.starts_with("experience") || lower_trimmed.starts_with("skills") || lower_trimmed.starts_with("projects") {
+                break;
+            }
+            
+            let degree_keywords = ["bachelor", "master", "doctor", "diploma", "b.tech", "m.tech", "b.e", "b.sc", "m.sc", "phd", "bba", "mba", "bsc", "msc", "ph.d."];
+            let is_degree = degree_keywords.iter().any(|&kw| lower_trimmed.contains(kw));
+            
+            if is_degree || parsed.education.is_empty() {
+                let parts: Vec<&str> = trimmed.split(&['|', ',', '-'][..]).collect();
+                let degree = Some(parts[0].trim().to_string());
+                let institution = parts.get(1).map(|i| i.trim().to_string());
+                
+                let yr_re = Regex::new(r"\b(19|20)\d{2}\b").unwrap();
+                let year = yr_re.find(trimmed).map(|m| m.as_str().to_string());
+                
+                parsed.education.push(Education {
+                    degree,
+                    institution,
+                    location: None,
+                    year: year.or(Some("Graduated".to_string())),
                 });
             }
         }

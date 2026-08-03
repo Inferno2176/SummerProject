@@ -141,19 +141,31 @@ export default function ATSPage() {
     if (!selectedResume || !jobDescription) return;
     
     setAnalyzing(true);
-    // Simulate AI analysis for now
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setResult({
-      score: 72,
-      feedback: [
-        "Your experience with React is well-highlighted.",
-        "Consider adding more metrics to your achievements.",
-        "Ensure your contact information is at the very top."
-      ],
-      missingKeywords: ["Docker", "Kubernetes", "GraphQL", "Agile Methodology"]
-    });
-    setAnalyzing(false);
+    try {
+      const res = await invoke<{
+        score: number;
+        feedback: string[];
+        missing_keywords: string[];
+      }>("analyze_ats_local", {
+        resumeId: selectedResume.id,
+        jobDescription: jobDescription,
+      });
+      
+      setResult({
+        score: res.score,
+        feedback: res.feedback,
+        missingKeywords: res.missing_keywords,
+      });
+    } catch (err: any) {
+      console.error("[ATS] Local analysis failed:", err);
+      setResult({
+        score: 65,
+        feedback: ["Failed to run local AI analysis. Make sure Ollama is running."],
+        missingKeywords: [],
+      });
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const handleDeleteGenerated = async (id: string, type: 'resume' | 'cv') => {
@@ -624,24 +636,28 @@ export default function ATSPage() {
                       Work Experience
                     </h3>
                     <div className="space-y-6">
-                      {parsedProfile.experience?.map((exp: any, i: number) => (
-                        <div key={i} className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-[1px] before:bg-white/10">
-                          <div className="absolute left-[-4px] top-2 h-2 w-2 rounded-full bg-orange-500" />
-                          <h4 className="font-medium">{exp.title}</h4>
-                          <p className="text-sm text-orange-400/80">{exp.company} • {exp.duration}</p>
-                          <p className="mt-2 text-sm text-[var(--muted)] leading-relaxed">
-                            {exp.description}
-                          </p>
-                          <ul className="mt-2 space-y-1">
-                            {exp.bullets?.map((bullet: string, j: number) => (
-                              <li key={j} className="text-xs text-[var(--muted)] flex gap-2">
-                                <span className="text-orange-500">•</span>
-                                {bullet}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
+                      {parsedProfile.experience && parsedProfile.experience.length > 0 ? (
+                        parsedProfile.experience.map((exp: any, i: number) => (
+                          <div key={i} className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-[1px] before:bg-white/10">
+                            <div className="absolute left-[-4px] top-2 h-2 w-2 rounded-full bg-orange-500" />
+                            <h4 className="font-medium">{exp.title}</h4>
+                            <p className="text-sm text-orange-400/80">{exp.company} • {exp.duration || "Present"}</p>
+                            <p className="mt-2 text-sm text-[var(--muted)] leading-relaxed">
+                              {exp.description}
+                            </p>
+                            <ul className="mt-2 space-y-1">
+                              {exp.bullets?.map((bullet: string, j: number) => (
+                                <li key={j} className="text-xs text-[var(--muted)] flex gap-2">
+                                  <span className="text-orange-500">•</span>
+                                  {bullet}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-[var(--muted)] italic">No work experience listed.</p>
+                      )}
                     </div>
                   </div>
 
@@ -651,12 +667,16 @@ export default function ATSPage() {
                       Education
                     </h3>
                     <div className="space-y-4">
-                      {parsedProfile.education?.map((edu: any, i: number) => (
-                        <div key={i}>
-                          <h4 className="font-medium">{edu.degree}</h4>
-                          <p className="text-sm text-[var(--muted)]">{edu.institution} • {edu.year}</p>
-                        </div>
-                      ))}
+                      {parsedProfile.education && parsedProfile.education.length > 0 ? (
+                        parsedProfile.education.map((edu: any, i: number) => (
+                          <div key={i}>
+                            <h4 className="font-medium">{edu.degree}</h4>
+                            <p className="text-sm text-[var(--muted)]">{edu.institution} • {edu.year || "N/A"}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-[var(--muted)] italic">No education details listed.</p>
+                      )}
                     </div>
                   </div>
                 </>

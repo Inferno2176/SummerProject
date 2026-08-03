@@ -1021,6 +1021,7 @@ pub fn run() {
     mark_job_as_applied,
     db_list_applications,
     db_get_application_by_job,
+    analyze_ats_local,
 
     // Interview Commands
     db_create_interview_session,

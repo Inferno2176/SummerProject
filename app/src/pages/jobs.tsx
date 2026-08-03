@@ -187,7 +187,7 @@ export default function JobsPage() {
   };
 
   const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
+    let list = jobs.filter((job) => {
       const matchesTab = job.status === activeTab;
       const matchesSearch = 
         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -195,6 +195,12 @@ export default function JobsPage() {
         (job.location && job.location.toLowerCase().includes(searchTerm.toLowerCase()));
       return matchesTab && matchesSearch;
     });
+
+    if (activeTab === "recommended") {
+      list = [...list].sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+    }
+
+    return list;
   }, [jobs, activeTab, searchTerm]);
 
   return (
@@ -362,9 +368,20 @@ function JobCard({
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10 text-blue-400">
             <Building className="h-5 w-5" />
           </div>
-          <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-blue-400 uppercase tracking-wider">
-            {job.source || "LinkedIn"}
-          </span>
+          <div className="flex flex-col items-end gap-1.5">
+            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold text-blue-400 uppercase tracking-wider">
+              {job.source || "LinkedIn"}
+            </span>
+            {job.match_score !== undefined && job.match_score !== null && job.match_score > 0 && (
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider ${
+                job.match_score >= 80 ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                job.match_score >= 50 ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" :
+                "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20"
+              }`}>
+                {Math.round(job.match_score)}% Match
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="mt-4">
