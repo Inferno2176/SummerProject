@@ -209,3 +209,20 @@ If you like the idea:
 
 * “Forge Your Career with AI”
 
+## 🙌 Acknowledgements
+
+This project, originally created by **Joshi** under the name *CareerForges*, has been modified by:
+- **Shalom Jadhav**
+- **Shalom Koshy**
+- **Blesson Belly**
+- **Roshwyn Fernandes**
+
+### Changes Added
+- Implemented ATS score optimization and hybrid resume parser.
+- Fixed ATS score consistency across uploads.
+- Added job listings filtering by skills and expanded sources beyond Accenture and ABB.
+- Updated UI: sign‑out option on profile icon, improved profile analysis display, and changed app tray logo to `hyrd.png`.
+- Enhanced optimization button functionality.
+- Various UI/UX improvements and bug fixes.
+
+
