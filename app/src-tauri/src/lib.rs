@@ -172,7 +172,7 @@ fn generation_options_for(model: &str, mode: &str) -> OllamaGenerationOptions {
             temperature: if mode == "coding" { 0.45 } else { 0.7 },
             top_p: 0.9,
             repeat_penalty: 1.15,
-            num_predict: 450,
+            num_predict: 2048,
         };
     }
     if lowered.contains("phi") {
@@ -180,7 +180,7 @@ fn generation_options_for(model: &str, mode: &str) -> OllamaGenerationOptions {
             temperature: 0.45,
             top_p: 0.85,
             repeat_penalty: 1.1,
-            num_predict: 350,
+            num_predict: 2048,
         };
     }
     if lowered.contains("mistral") {
@@ -188,14 +188,14 @@ fn generation_options_for(model: &str, mode: &str) -> OllamaGenerationOptions {
             temperature: 0.8,
             top_p: 0.92,
             repeat_penalty: 1.12,
-            num_predict: 500,
+            num_predict: 2048,
         };
     }
     OllamaGenerationOptions {
         temperature: 0.6,
         top_p: 0.9,
         repeat_penalty: 1.1,
-        num_predict: 380,
+        num_predict: 2048,
     }
 }
 
@@ -830,15 +830,7 @@ pub fn run() {
 
                 // Ensure local user exists after migrations
                 log::info!("Ensuring local user exists...");
-                let user_result = crate::db::UserRepository::get_by_email(&pool, "localuser@hyrd.local").await;
-                if let Ok(None) = user_result {
-                    let _ = crate::db::UserRepository::create(
-                        &pool,
-                        "localuser@hyrd.local",
-                        Some("Local User".to_string()),
-                    )
-                    .await;
-                }
+                let _ = crate::db::UserRepository::get_current_user(&pool).await;
 
                 log::info!("Migrations completed successfully");
 

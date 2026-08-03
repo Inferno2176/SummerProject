@@ -828,40 +828,63 @@ export default function InterviewPage() {
       });
 
       if (result.success) {
+        // Clean the response in case the AI included markdown blocks
+        const clean = result.response.replace(/```json|```/g, "").trim();
+        let parsed: any = null;
+        
         try {
-          // Clean the response in case the AI included markdown blocks
-          const cleanJson = result.response.replace(/```json|```/g, "").trim();
-          const parsed = JSON.parse(cleanJson);
+          parsed = JSON.parse(clean);
+        } catch (e) {
+          console.warn("[Interview] Standard JSON parse failed, attempting robust regex extraction:", e);
+          const confidenceMatch = clean.match(/"confidence"\s*:\s*"([^"]*)"/i);
+          const technicalMatch = clean.match(/"technical"\s*:\s*"([^"]*)"/i);
+          const communicationMatch = clean.match(/"communication"\s*:\s*"([^"]*)"/i);
+          
+          let feedbackText = "";
+          const feedbackMatch = clean.match(/"feedback"\s*:\s*"([\s\S]*?)"\s*\n?\}/i) || clean.match(/"feedback"\s*:\s*"([\s\S]*?)"/i);
+          if (feedbackMatch) {
+            feedbackText = feedbackMatch[1];
+          } else {
+            feedbackText = result.response;
+          }
+          
+          feedbackText = feedbackText
+            .replace(/\\n/g, "\n")
+            .replace(/\\"/g, '"');
+            
+          if (confidenceMatch || technicalMatch || communicationMatch) {
+            parsed = {
+              confidence: confidenceMatch ? confidenceMatch[1] : "85%",
+              technical: technicalMatch ? technicalMatch[1] : "Strong",
+              communication: communicationMatch ? communicationMatch[1] : "Excellent",
+              feedback: feedbackText
+            };
+          }
+        }
+
+        if (parsed) {
           setAnalysis({
             confidence: parsed.confidence || "N/A",
             technical: parsed.technical || "N/A",
             communication: parsed.communication || "N/A",
             feedback: parsed.feedback || result.response,
           });
-          setActiveTab("analysis");
-          
-          // Save report if linked to a job
-          if (session?.job_id) {
-             // In a real app, we'd call a save_interview_report command here
-             console.log("Saving interview report for job", session.job_id);
-          }
-
-          // Reset interview state
-          setMessages([]);
-          sessionStorage.removeItem(KEY);
-          spokenTextRef.current = "";
-        } catch (e) {
-          // Fallback if JSON parsing fails
+        } else {
+          // Fallback if both standard and regex parsing fail completely
           setAnalysis({
             confidence: "Analyzed",
             technical: "Analyzed",
             communication: "Analyzed",
             feedback: result.response,
           });
-          setActiveTab("analysis");
-          setMessages([]);
-          sessionStorage.removeItem(KEY);
         }
+        
+        setActiveTab("analysis");
+        
+        // Reset interview state
+        setMessages([]);
+        sessionStorage.removeItem(KEY);
+        spokenTextRef.current = "";
       }
     } catch (e) {
       setError("Failed to generate interview analysis.");

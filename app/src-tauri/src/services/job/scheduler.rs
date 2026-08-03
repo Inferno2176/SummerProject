@@ -81,15 +81,8 @@ impl JobScheduler {
         
         let engine = JobDiscoveryEngine::new(self.pool.clone());
         
-        // Get default user or create if not exists
-        let user = match UserRepository::get_by_email(&self.pool, "localuser@hyrd.local").await {
-            Ok(Some(u)) => u,
-            _ => {
-                log::info!("Scheduler: Creating local user...");
-                UserRepository::create(&self.pool, "localuser@hyrd.local", Some("Local User".to_string())).await
-                    .map_err(|e| format!("Failed to create local user: {}", e))?
-            }
-        };
+        let user = UserRepository::get_current_user(&self.pool).await
+            .map_err(|e| format!("Failed to get current user: {}", e))?;
 
         // Requirement 6: Global Discovery Strategy
         // Generate multiple broad search queries based on resume.

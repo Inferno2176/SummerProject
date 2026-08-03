@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/db/cloud-client";
 import { ArrowRight, Loader2, Mail, Lock } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -17,12 +18,21 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // In a real app we'd call supabase.auth.signInWithPassword here
-      // For now we will mock a successful login to unblock the UI
-      // const { error } = await supabase.auth.signInWithPassword({ email, password });
-      // if (error) throw error;
+      const dbUser = await invoke<any>("db_get_user_by_email", { email });
+      if (!dbUser) {
+        throw new Error("No account found with this email. Please sign up first.");
+      }
+      
+      // Set active user email in DB settings
+      await invoke("db_set_setting", { key: "active_user_email", value: email });
       
       localStorage.setItem("user_session", "true");
+      localStorage.setItem("user_profile", JSON.stringify({ 
+        id: dbUser.id, 
+        email: dbUser.email, 
+        name: dbUser.name || "User" 
+      }));
+      
       navigate("/upload-resume");
     } catch (err: any) {
       setError(err.message || "Failed to login");

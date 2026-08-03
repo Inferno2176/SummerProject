@@ -39,6 +39,23 @@ pub struct UserRepository;
 
 impl UserRepository {
     /*
+        GET CURRENT USER (SESSION PERSISTENCE)
+    */
+    pub async fn get_current_user(
+        pool: &DbPool,
+    ) -> DbResult<User> {
+        let active_email = match crate::db::SettingRepository::get_string(pool, "active_user_email").await {
+            Ok(email) if !email.trim().is_empty() => email,
+            _ => "localuser@hyrd.local".to_string(),
+        };
+
+        match Self::get_by_email(pool, &active_email).await? {
+            Some(u) => Ok(u),
+            None => Self::create(pool, &active_email, Some("Local User".to_string())).await,
+        }
+    }
+
+    /*
         CREATE
     */
     pub async fn create(

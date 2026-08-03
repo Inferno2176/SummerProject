@@ -6,7 +6,6 @@ import {
   Sparkles,
   MessageSquare,
   UserCheck,
-  Users,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -37,11 +36,7 @@ const items = [
     icon: FileText,
     path: "/app/interview",
   },
-  {
-    label: "Community",
-    icon: Users,
-    path: "/app/community",
-  },
+
   {
     label: "Chat",
     icon: MessageSquare,

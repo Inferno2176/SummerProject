@@ -1,5 +1,6 @@
 import { useThemeStore } from "../store/theme-store";
 import { useSidebarStore } from "../store/sidebar-store";
+import { useNavigate } from "react-router-dom";
 
 import {
   Moon,
@@ -23,6 +24,9 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 
 export default function Topbar() {
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const { theme, setTheme } =
     useThemeStore();
 
@@ -331,16 +335,56 @@ export default function Topbar() {
         </div>
 
         {/* PROFILE */}
-        <div className="topbar-chip flex h-11 items-center gap-3 rounded-xl px-3">
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="topbar-chip flex h-11 items-center gap-3 rounded-xl px-3 hover:bg-[var(--surface-2)] transition"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-white">
+              {initials}
+            </div>
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-white">
-            {initials}
-          </div>
+            <p className="text-sm font-medium text-[var(--text)]">
+              {firstName}
+            </p>
+          </button>
 
-          <p className="text-sm font-medium text-[var(--text)]">
-            {firstName}
-          </p>
-
+          {menuOpen && (
+            <>
+              {/* Overlay backing to click outside */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setMenuOpen(false)} 
+              />
+              
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-4 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="space-y-1 pb-3 border-b border-[var(--border)]">
+                  <p className="text-[10px] text-[var(--muted)] uppercase tracking-wider font-semibold">Logged in as</p>
+                  <p className="text-sm font-bold text-[var(--text)] truncate">{userProfile.name}</p>
+                  <p className="text-xs text-[var(--muted)] truncate">{userProfile.email || "localuser@hyrd.local"}</p>
+                </div>
+                
+                <div className="pt-2">
+                  <button
+                    onClick={async () => {
+                      setMenuOpen(false);
+                      try {
+                        await invoke("db_set_setting", { key: "active_user_email", value: "" });
+                      } catch (e) {
+                        console.error("Failed to clear active user setting", e);
+                      }
+                      localStorage.removeItem("user_session");
+                      localStorage.removeItem("user_profile");
+                      navigate("/login");
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/20 transition"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
       </div>

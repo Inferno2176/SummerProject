@@ -10,7 +10,7 @@ import DashboardPage from "../pages/dashboard";
 import ATSPage from "../pages/ats";
 import JobsPage from "../pages/jobs";
 import InterviewPage from "../pages/interview";
-import CommunityPage from "../pages/community";
+
 import ChatPage from "../pages/chat";
 import SettingsPage from "../pages/settings";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -79,10 +79,7 @@ export const router = createBrowserRouter([
             path: "interview",
             element: <InterviewPage />,
           },
-          {
-            path: "community",
-            element: <CommunityPage />,
-          },
+
           {
             path: "chat",
             element: <ChatPage />,

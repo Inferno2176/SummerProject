@@ -109,12 +109,8 @@ use crate::services::resume::normalizer::{generate_ats_score, generate_master_re
 pub async fn upload_resume(app: AppHandle, path: String) -> Result<Resume, String> {
     let pool = app.state::<DbPool>();
 
-    // Get or create default user
-    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
-        Ok(Some(u)) => u,
-        _ => UserRepository::create(&pool, "localuser@hyrd.local", Some("Local User".to_string())).await
-            .map_err(|e| format!("Failed to create local user: {}", e))?,
-    };
+    // Get active user dynamically
+    let user = UserRepository::get_current_user(&pool).await.map_err(|e| e.to_string())?;
 
     let file_path = std::path::Path::new(&path);
     let file_name = file_path.file_name()
@@ -267,12 +263,8 @@ pub async fn parse_and_store_resume(
 ) -> Result<Resume, String> {
     let pool = app.state::<DbPool>();
 
-    // Get or create default user
-    let user = match UserRepository::get_by_email(&pool, "localuser@hyrd.local").await {
-        Ok(Some(u)) => u,
-        _ => UserRepository::create(&pool, "localuser@hyrd.local", Some("Local User".to_string())).await
-            .map_err(|e| format!("Failed to create local user: {}", e))?,
-    };
+    // Get active user dynamically
+    let user = UserRepository::get_current_user(&pool).await.map_err(|e| e.to_string())?;
 
     let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let resumes_dir = app_data_dir.join("resumes");

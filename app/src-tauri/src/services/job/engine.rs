@@ -123,6 +123,18 @@ impl JobDiscoveryEngine {
                 continue; // Skip already existing URL
             }
 
+            // Deduplicate by Title, Company, Location
+            if let Ok(Some(_)) = JobRepository::check_exists(
+                &self.pool,
+                &discovered.title,
+                &discovered.company,
+                discovered.location.as_deref().unwrap_or(""),
+            )
+            .await
+            {
+                continue; // Skip if same role at same company already exists
+            }
+
             // Requirement 1 & 7: Do NOT reject jobs because metadata (posted_date, company, etc.) is missing.
             // We use resume matching as the primary quality filter.
 

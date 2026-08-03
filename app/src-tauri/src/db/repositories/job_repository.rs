@@ -206,6 +206,64 @@ impl JobRepository {
     }
 
     /*
+        CHECK EXISTS (DEDUPLICATION)
+    */
+    pub async fn check_exists(
+        pool: &DbPool,
+        title: &str,
+        company: &str,
+        location: &str,
+    ) -> DbResult<Option<Job>> {
+        query_row(
+            pool,
+            "
+            SELECT
+                id, user_id, title, company, url, description, requirements,
+                salary_min, salary_max, location, job_type, posted_date,
+                status, match_score, notes, created_at, updated_at,
+                source, source_url, matched_skills, missing_skills,
+                experience_match, title_match, discovered_at
+            FROM jobs
+            WHERE LOWER(title) = LOWER(?1) 
+              AND LOWER(company) = LOWER(?2) 
+              AND LOWER(location) = LOWER(?3) 
+              AND deleted_at IS NULL
+            LIMIT 1
+            ",
+            (title.to_string(), company.to_string(), location.to_string()),
+            |row| {
+                Ok(Job {
+                    id: row.get(0)?,
+                    user_id: row.get(1)?,
+                    title: row.get(2)?,
+                    company: row.get(3)?,
+                    url: row.get(4)?,
+                    description: row.get(5)?,
+                    requirements: row.get(6)?,
+                    salary_min: row.get(7)?,
+                    salary_max: row.get(8)?,
+                    location: row.get(9)?,
+                    job_type: row.get(10)?,
+                    posted_date: row.get(11)?,
+                    status: row.get(12)?,
+                    match_score: row.get(13)?,
+                    notes: row.get(14)?,
+                    created_at: row.get(15)?,
+                    updated_at: row.get(16)?,
+                    source: row.get(17)?,
+                    source_url: row.get(18)?,
+                    matched_skills: row.get(19)?,
+                    missing_skills: row.get(20)?,
+                    experience_match: row.get(21)?,
+                    title_match: row.get(22)?,
+                    discovered_at: row.get(23)?,
+                })
+            },
+        )
+        .await
+    }
+
+    /*
         GET BY ID
     */
     pub async fn get_by_id(

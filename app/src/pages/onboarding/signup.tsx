@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/db/cloud-client";
 import { ArrowRight, Loader2, Mail, Lock, User, Briefcase, Code } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -26,12 +27,13 @@ export default function SignupPage() {
     setError("");
 
     try {
-      // In a real app we'd call supabase.auth.signUp and insert into profiles table
-      // const { data, error } = await supabase.auth.signUp({ email, password });
-      // if (error) throw error;
+      // Create user in local SQLite DB
+      await invoke("db_create_user", { email, name: name || null });
+      // Set active user email in DB settings
+      await invoke("db_set_setting", { key: "active_user_email", value: email });
       
       localStorage.setItem("user_session", "true");
-      localStorage.setItem("user_profile", JSON.stringify({ name, experience, skills }));
+      localStorage.setItem("user_profile", JSON.stringify({ name, email, experience, skills }));
       
       navigate("/upload-resume");
     } catch (err: any) {
