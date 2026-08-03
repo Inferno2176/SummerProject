@@ -441,3 +441,115 @@ Output ONLY the JSON object, no other text."#;
         missing_keywords: missing.iter().take(5).map(|s| s.to_string()).collect(),
     })
 }
+
+#[tauri::command]
+pub async fn optimize_resume_adhoc(
+    app: AppHandle,
+    resume_id: String,
+    job_description: String,
+) -> Result<GeneratedResume, String> {
+    use crate::db::UserRepository;
+
+    let pool = app.state::<DbPool>();
+
+    // 1. Get current user
+    let user = UserRepository::get_current_user(&pool).await.map_err(|e| e.to_string())?;
+
+    // 2. Create dummy job for ad-hoc optimization
+    let job = JobRepository::create(
+        &pool,
+        &user.id,
+        "Custom Match",
+        Some("Ad-hoc Optimizer".to_string()),
+        None, // url
+        Some(job_description.clone()),
+        None, // location
+        Some("hyrd_ats".to_string()), // source
+        None, // source_url
+        None, // match_score
+        None, // matched_skills
+        None, // missing_skills
+        None, // experience_match
+        None, // title_match
+        None, // posted_date
+        Some("recommended".to_string()), // status
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let job_id = job.id.clone();
+
+    // 3. Generate ATS resume
+    let resume = ResumeRepository::get_by_id(&pool, &resume_id)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("Resume not found")?;
+
+    let master_json = resume.master_resume_json.ok_or("Resume has no master data")?;
+    
+    // Get active model
+    let model = match crate::db::SettingRepository::get_string(&pool, "selected_model").await {
+        Ok(m) if !m.trim().is_empty() => m,
+        _ => "llama3.2:1b".to_string(),
+    };
+
+    let optimized = AtsGenerator::generate_optimized_resume(&master_json, &job_description, &model)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let optimized_summary = optimized.summary.clone();
+    let optimized_skills = optimized.skills.clone();
+    let optimized_experience_bullets = optimized.experience_bullets.clone();
+    let ats_strengths = optimized.strengths.clone();
+    let ats_weaknesses = optimized.weaknesses.clone();
+    let ats_recommendations = optimized.recommendations.clone();
+    let master_value = serde_json::from_str::<serde_json::Value>(&master_json)
+        .unwrap_or_else(|_| json!({ "raw": master_json }));
+
+    let generated_resume_json = json!({
+        "source": "hyrd_ats",
+        "job": {
+            "id": job.id.clone(),
+            "title": job.title.clone(),
+            "company": job.company.clone(),
+            "description": job_description.clone()
+        },
+        "master_resume": master_value,
+        "optimized": {
+            "summary": optimized_summary,
+            "skills": optimized_skills,
+            "experience_bullets": optimized_experience_bullets,
+            "ats_score": optimized.ats_score,
+            "strengths": ats_strengths,
+            "weaknesses": ats_weaknesses,
+            "recommendations": ats_recommendations
+        }
+    });
+
+    // 4. Save to DB
+    let gen = GeneratedDocumentRepository::create_resume(
+        &pool,
+        &user.id,
+        &job_id,
+        &resume_id,
+        Some(job.title.clone()),
+        Some(master_json),
+        Some(generated_resume_json.to_string()),
+        Some(optimized.ats_score),
+        Some(optimized.strengths.join("\n")),
+        Some(optimized.weaknesses.join("\n")),
+        Some(optimized.recommendations.join("\n")),
+        Some(generated_resume_json["optimized"]["summary"].as_str().unwrap_or_default().to_string()),
+        Some(
+            generated_resume_json["optimized"]["skills"]
+                .as_array()
+                .map(|skills| skills.iter().filter_map(|skill| skill.as_str()).collect::<Vec<_>>().join(", "))
+                .unwrap_or_default()
+        ),
+        Some(generated_resume_json["optimized"]["experience_bullets"].to_string()),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(gen)
+}

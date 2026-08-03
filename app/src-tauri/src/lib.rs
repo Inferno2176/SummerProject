@@ -1022,6 +1022,7 @@ pub fn run() {
     db_list_applications,
     db_get_application_by_job,
     analyze_ats_local,
+    optimize_resume_adhoc,
 
     // Interview Commands
     db_create_interview_session,

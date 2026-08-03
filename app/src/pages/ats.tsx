@@ -34,6 +34,7 @@ export default function ATSPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<"analysis" | "profile" | "history">("analysis");
   const [uploading, setUploading] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dialog = useDialog();
 
@@ -165,6 +166,55 @@ export default function ATSPage() {
       });
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleOptimizeResume = async () => {
+    if (!selectedResume || !jobDescription) return;
+
+    setOptimizing(true);
+    try {
+      const generated = await invoke<any>("optimize_resume_adhoc", {
+        resumeId: selectedResume.id,
+        jobDescription: jobDescription,
+      });
+
+      // Reload lists
+      await loadData();
+
+      // Retrieve full data (including dummy job details) from history lists
+      const users = await db.listUsers();
+      if (users.length > 0) {
+        const userId = users[0].id;
+        const allResumes = await db.listAllGeneratedResumes(userId);
+        const allJobs = await db.listAllJobs();
+        const found = allResumes.find(r => r.id === generated.id);
+        const linkedJob = allJobs.find(j => j.id === generated.job_id);
+
+        setPreviewDoc({
+          type: "resume",
+          data: {
+            ...found,
+            job: linkedJob,
+          },
+        });
+      }
+
+      // Switch to history tab
+      setActiveTab("history");
+
+      await dialog.success({
+        title: "Resume optimized!",
+        description: "Your optimized resume version has been generated and is ready to view.",
+      });
+    } catch (err: any) {
+      console.error("[ATS] Optimization failed:", err);
+      await dialog.error({
+        title: "Optimization failed",
+        description: err.toString() || "Make sure your Ollama service is active.",
+      });
+    } finally {
+      setOptimizing(false);
     }
   };
 
@@ -587,9 +637,22 @@ export default function ATSPage() {
                     </div>
                   </div>
 
-                  <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold transition hover:bg-white/10">
-                    Optimize Resume Now
-                    <ArrowRight className="h-4 w-4" />
+                  <button 
+                    onClick={handleOptimizeResume}
+                    disabled={optimizing}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold transition hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {optimizing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin text-orange-500" />
+                        Optimizing Resume...
+                      </>
+                    ) : (
+                      <>
+                        Optimize Resume Now
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
                 </div>
               ) : (
